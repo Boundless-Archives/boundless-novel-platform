@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import Link from "next/link";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -39,6 +40,33 @@ export default async function ProfilePage() {
           <strong>Bio:</strong>{" "}
           {profile?.bio ?? "-"}
         </p>
+
+        <p>
+          <strong>Status:</strong>{" "}
+          {profile?.is_author ? "Author" : "Reader"}
+        </p>
+      </div>
+
+      <div className="mt-6">
+        {profile?.is_author && (
+          <Link
+            href="/stories"
+            className="border rounded px-4 py-2"
+          >
+            Manage Stories
+          </Link>
+        )}
+      </div>
+
+      <div className="mt-6">
+        {!profile?.is_author && (
+      <Link
+        href="/profile/become-author"
+        className="border rounded px-4 py-2"
+      >
+        Become an Author
+      </Link>
+      )}
       </div>
     </main>
   );
