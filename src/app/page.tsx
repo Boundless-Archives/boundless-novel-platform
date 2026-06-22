@@ -1,31 +1,31 @@
-import { supabase } from "@/lib/supabase";
+import Link from "next/link";
 
-export default async function Home() {
-  const { data, error } = await supabase
-    .from("_test_connection")
-    .select("*")
-    .limit(1);
-
+export default function HomePage() {
   return (
     <main className="p-10">
-      <h1 className="text-3xl font-bold">
+      <h1 className="text-4xl font-bold">
         Boundless Novel Platform
       </h1>
 
       <p className="mt-4">
-        Supabase connection test
+        Read stories. Write stories. Build worlds.
       </p>
 
-      <pre className="mt-4">
-        {JSON.stringify(
-          {
-            success: !error,
-            error: error?.message ?? null,
-          },
-          null,
-          2
-        )}
-      </pre>
+      <div className="mt-8 flex gap-4">
+        <Link
+          href="/auth/login"
+          className="rounded border px-4 py-2"
+        >
+          Login
+        </Link>
+
+        <Link
+          href="/auth/signup"
+          className="rounded border px-4 py-2"
+        >
+          Sign Up
+        </Link>
+      </div>
     </main>
   );
 }
