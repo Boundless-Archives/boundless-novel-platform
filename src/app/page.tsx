@@ -24,6 +24,17 @@ export default async function HomePage() {
         community.
       </p>
 
+      <form
+        action="/search"
+        className="mt-6"
+      >
+        <input
+          name="q"
+          placeholder="Search stories..."
+          className="border p-2 rounded w-full"
+        />
+      </form>
+
       <div className="mt-10 space-y-6">
         {stories?.map((story) => (
           <div

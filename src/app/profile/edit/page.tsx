@@ -1,15 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import Button from "@/components/ui/Button";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
 export default function EditProfilePage() {
   const supabase = createClient();
-
+  
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarFile, setAvatarFile] =
+    useState<File | null>(null);
   const [message, setMessage] = useState("");
 
   useEffect(() => {
@@ -27,6 +31,10 @@ export default function EditProfilePage() {
         .single();
 
       if (!data) return;
+      
+      setAvatarUrl(
+        data.avatar_url ?? ""
+      );
 
       setUsername(data.username ?? "");
       setDisplayName(data.display_name ?? "");
@@ -45,6 +53,40 @@ export default function EditProfilePage() {
       data: { user },
     } = await supabase.auth.getUser();
 
+    let avatarUrl: string | undefined;
+
+    if (avatarFile && user) {
+      const fileExt =
+        avatarFile.name.split(".").pop();
+
+      const fileName =
+        `${user.id}.${fileExt}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("avatars")
+          .upload(
+            fileName,
+            avatarFile,
+            {
+              upsert: true,
+            }
+          );
+
+      if (uploadError) {
+        setMessage(uploadError.message);
+        return;
+      }
+
+      const { data: publicUrlData } =
+        supabase.storage
+          .from("avatars")
+          .getPublicUrl(fileName);
+
+      avatarUrl =
+        publicUrlData.publicUrl;
+    }
+
     if (!user) {
       setMessage("Not logged in.");
       return;
@@ -56,6 +98,9 @@ export default function EditProfilePage() {
         username,
         display_name: displayName,
         bio,
+        ...(avatarUrl && {
+          avatar_url: avatarUrl,
+        }),
       })
       .eq("id", user.id);
 
@@ -66,6 +111,16 @@ export default function EditProfilePage() {
 
     setMessage("Profile updated successfully.");
   }
+
+  {avatarUrl && (
+    <Image
+      src={avatarUrl}
+      alt="Avatar"
+      width={120}
+      height={120}
+      className="rounded-full mb-6"
+    />
+  )}
 
   return (
     <main className="p-10 max-w-xl">
@@ -105,6 +160,16 @@ export default function EditProfilePage() {
           rows={5}
         />
         
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) =>
+            setAvatarFile(
+            e.target.files?.[0] ?? null
+          )
+        }
+      />
+
         <Button type="submit">
           Save Profile
         </Button>

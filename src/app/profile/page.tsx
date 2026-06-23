@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
@@ -24,6 +25,16 @@ export default async function ProfilePage() {
       <h1 className="text-4xl font-bold">
         My Profile
       </h1>
+
+      {profile?.avatar_url && (
+        <Image
+          src={profile.avatar_url}
+          alt="Profile Avatar"
+          width={120}
+          height={120}
+          className="rounded-full mt-6 mb-6"
+        />
+      )}
 
       <div className="mt-6 space-y-2">
         <p>

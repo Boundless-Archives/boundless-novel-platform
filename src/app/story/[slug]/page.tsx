@@ -18,7 +18,13 @@ export default async function PublicStoryPage({
 
   const { data: story } = await supabase
     .from("stories")
-    .select("*")
+    .select(`
+      *,
+      profiles (
+        username,
+        display_name
+      )
+    `)
     .eq("slug", slug)
     .single();
 
@@ -51,6 +57,17 @@ export default async function PublicStoryPage({
     <h1 className="text-4xl font-bold">
         {story.title}
       </h1>
+
+      <p className="mt-2">
+        By{" "}
+        <Link
+          href={`/author/${story.profiles?.username}`}
+          className="underline"
+        >
+          {story.profiles?.display_name ??
+          story.profiles?.username}
+        </Link>
+      </p>
 
       <div className="mt-4 space-y-2">
         <p>
