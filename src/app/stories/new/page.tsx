@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
+function createSlug(title: string) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-");
+}
+
 export default function NewStoryPage() {
   const supabase = createClient();
 
   const [title, setTitle] = useState("");
-  const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("");
 
@@ -15,6 +22,8 @@ export default function NewStoryPage() {
     e: React.FormEvent<HTMLFormElement>
   ) {
     e.preventDefault();
+
+    setMessage("");
 
     const {
       data: { user },
@@ -25,12 +34,28 @@ export default function NewStoryPage() {
       return;
     }
 
+    // Check whether a story with this title already exists
+    const { data: existingStory } = await supabase
+      .from("stories")
+      .select("id")
+      .eq("title", title)
+      .maybeSingle();
+
+    if (existingStory) {
+      setMessage(
+        "A story with this title already exists."
+      );
+      return;
+    }
+
+    const generatedSlug = createSlug(title);
+
     const { error } = await supabase
       .from("stories")
       .insert({
         author_id: user.id,
         title,
-        slug,
+        slug: generatedSlug,
         description,
       });
 
@@ -40,6 +65,9 @@ export default function NewStoryPage() {
     }
 
     setMessage("Story created successfully.");
+
+    setTitle("");
+    setDescription("");
   }
 
   return (
@@ -58,16 +86,6 @@ export default function NewStoryPage() {
             setTitle(e.target.value)
           }
           placeholder="Story Title"
-          className="border p-2 rounded"
-          required
-        />
-
-        <input
-          value={slug}
-          onChange={(e) =>
-            setSlug(e.target.value)
-          }
-          placeholder="story-slug"
           className="border p-2 rounded"
           required
         />

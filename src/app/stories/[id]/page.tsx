@@ -65,6 +65,13 @@ export default async function StoryPage({
         >
           Manage Chapters
         </Link>
+
+        <Link
+          href={`/story/${story.slug}`}
+          className="border rounded px-4 py-2"
+        >
+          View Public Story
+        </Link>
       </div>
     </main>
   );

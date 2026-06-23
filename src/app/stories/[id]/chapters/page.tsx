@@ -76,7 +76,12 @@ export default async function ChaptersPage({
               Chapter {chapter.chapter_number}
             </h2>
 
-            <p>{chapter.title}</p>
+            <Link
+              href={`/stories/${id}/chapters/${chapter.id}/edit`}
+              className="underline"
+            >
+              {chapter.title}
+            </Link>
           </div>
         ))}
       </div>
