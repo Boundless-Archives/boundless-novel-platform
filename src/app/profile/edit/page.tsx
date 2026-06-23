@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -103,13 +104,10 @@ export default function EditProfilePage() {
           className="border p-2 rounded"
           rows={5}
         />
-
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+        
+        <Button type="submit">
           Save Profile
-        </button>
+        </Button>
       </form>
 
       {message && (

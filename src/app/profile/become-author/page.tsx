@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -44,13 +45,10 @@ export default function BecomeAuthorPage() {
       <p className="mt-4">
         Becoming an author allows you to publish stories on Boundless.
       </p>
-
-      <button
-        onClick={becomeAuthor}
-        className="mt-6 border rounded px-4 py-2"
-      >
+      
+      <Button type="submit">
         Become an Author
-      </button>
+      </Button>
 
       {message && (
         <p className="mt-4">

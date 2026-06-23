@@ -1,6 +1,8 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 function createSlug(title: string) {
@@ -13,9 +15,11 @@ function createSlug(title: string) {
 
 export default function NewStoryPage() {
   const supabase = createClient();
-
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [coverFile, setCoverFile] =
+    useState<File | null>(null);
   const [message, setMessage] = useState("");
 
   async function handleSubmit(
@@ -50,24 +54,54 @@ export default function NewStoryPage() {
 
     const generatedSlug = createSlug(title);
 
-    const { error } = await supabase
+    let coverUrl: string | null = null;
+
+    if (coverFile) {
+      const fileExt =
+        coverFile.name.split(".").pop();
+
+      const fileName =
+        `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } =
+        await supabase.storage
+          .from("story-covers")
+          .upload(fileName, coverFile);
+
+      if (uploadError) {
+        setMessage(
+          "Cover upload failed."
+        );
+        return;
+      }
+
+      const { data } = supabase.storage
+        .from("story-covers")
+        .getPublicUrl(fileName);
+
+      coverUrl = data.publicUrl;
+    }
+
+    const { data, error } = await supabase
       .from("stories")
       .insert({
         author_id: user.id,
         title,
         slug: generatedSlug,
         description,
-      });
+        cover_url: coverUrl,
+      })
+      .select()
+      .single();
 
     if (error) {
       setMessage(error.message);
       return;
     }
 
-    setMessage("Story created successfully.");
-
-    setTitle("");
-    setDescription("");
+    router.push(
+      `/author/stories/${data.id}`
+    );
   }
 
   return (
@@ -90,6 +124,17 @@ export default function NewStoryPage() {
           required
         />
 
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) =>
+            setCoverFile(
+              e.target.files?.[0] ?? null
+            )
+          }
+          className="border p-2 rounded"
+        />
+
         <textarea
           value={description}
           onChange={(e) =>
@@ -100,12 +145,10 @@ export default function NewStoryPage() {
           className="border p-2 rounded"
         />
 
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+  
+        <Button type="submit">
           Create Story
-        </button>
+        </Button>
       </form>
 
       {message && (

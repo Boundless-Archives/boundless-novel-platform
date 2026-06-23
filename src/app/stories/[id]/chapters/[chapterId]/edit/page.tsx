@@ -1,7 +1,11 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 export default function EditChapterPage() {
@@ -11,6 +15,11 @@ export default function EditChapterPage() {
 
   const chapterId =
     params.chapterId as string;
+
+  const storyId =
+  params.id as string;
+
+  const router = useRouter();
 
   const [chapterNumber, setChapterNumber] =
     useState("");
@@ -66,8 +75,8 @@ export default function EditChapterPage() {
       return;
     }
 
-    setMessage(
-      "Chapter updated successfully."
+    router.push(
+      `/stories/${storyId}`
     );
   }
 
@@ -112,13 +121,10 @@ export default function EditChapterPage() {
           rows={20}
           className="border p-2 rounded"
         />
-
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+        
+        <Button type="submit">
           Save Changes
-        </button>
+        </Button>
       </form>
 
       {message && (

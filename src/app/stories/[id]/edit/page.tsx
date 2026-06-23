@@ -1,7 +1,11 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 export default function EditStoryPage() {
@@ -9,6 +13,8 @@ export default function EditStoryPage() {
 
   const params = useParams();
   const storyId = params.id as string;
+
+  const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] =
@@ -59,8 +65,8 @@ export default function EditStoryPage() {
       return;
     }
 
-    setMessage(
-      "Story updated successfully."
+    router.push(
+      `/stories/${storyId}`
     );
   }
 
@@ -109,12 +115,10 @@ export default function EditStoryPage() {
           <option>Dropped</option>
         </select>
 
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+        
+        <Button type="submit">
           Save Changes
-        </button>
+        </Button>
       </form>
 
       {message && (

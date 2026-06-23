@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
@@ -65,13 +66,10 @@ export default function LoginPage() {
           className="border p-2 rounded"
           required
         />
-
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+       
+        <Button type="submit">
           Login
-        </button>
+        </Button>
       </form>
 
       {message && (

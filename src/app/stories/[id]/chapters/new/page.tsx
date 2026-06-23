@@ -1,7 +1,11 @@
 "use client";
 
+import Button from "@/components/ui/Button";
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import {
+  useParams,
+  useRouter,
+} from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 
 export default function NewChapterPage() {
@@ -9,6 +13,8 @@ export default function NewChapterPage() {
 
   const params = useParams();
   const storyId = params.id as string;
+
+  const router = useRouter();
 
   const [chapterNumber, setChapterNumber] =
     useState("");
@@ -39,8 +45,8 @@ export default function NewChapterPage() {
       return;
     }
 
-    setMessage(
-      "Chapter created successfully."
+    router.push(
+      `/stories/${storyId}`
     );
   }
 
@@ -87,13 +93,10 @@ export default function NewChapterPage() {
           className="border p-2 rounded"
           required
         />
-
-        <button
-          type="submit"
-          className="border rounded p-2"
-        >
+       
+        <Button type="submit">
           Create Chapter
-        </button>
+        </Button>
       </form>
 
       {message && (

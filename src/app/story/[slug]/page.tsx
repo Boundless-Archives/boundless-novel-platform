@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -25,6 +26,10 @@ export default async function PublicStoryPage({
     notFound();
   }
 
+  if (story.status === "Draft") {
+    notFound();
+  }
+
   const { data: chapters } = await supabase
     .from("chapters")
     .select("*")
@@ -33,11 +38,33 @@ export default async function PublicStoryPage({
 
   return (
     <main className="p-10 max-w-4xl">
-      <h1 className="text-4xl font-bold">
+    {story.cover_url && (
+      <Image
+        src={story.cover_url}
+        alt={story.title}
+        width={250}
+        height={375}
+        className="rounded mb-6"
+      />
+    )}
+    
+    <h1 className="text-4xl font-bold">
         {story.title}
       </h1>
 
-      <p className="mt-4">
+      <div className="mt-4 space-y-2">
+        <p>
+          <strong>Status:</strong>{" "}
+          {story.status}
+        </p>
+
+        <p>
+          <strong>Chapters:</strong>{" "}
+          {chapters?.length ?? 0}
+        </p>
+      </div>
+
+      <p className="mt-6">
         {story.description}
       </p>
 
