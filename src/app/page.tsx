@@ -7,7 +7,13 @@ export default async function HomePage() {
 
   const { data: stories } = await supabase
     .from("stories")
-    .select("*")
+    .select(`
+      *,
+      profiles (
+        username,
+        display_name
+      )
+    `)
     .neq("status", "Draft")
     .order("created_at", {
       ascending: false,
@@ -58,6 +64,17 @@ export default async function HomePage() {
             >
               {story.title}
             </Link>
+
+            <p className="mt-1">
+              By{" "}
+              <Link
+                href={`/author/${story.profiles?.username}`}
+                className="underline"
+              >
+                {story.profiles?.display_name ??
+                story.profiles?.username}
+              </Link>
+            </p>
 
             <p className="mt-2">
               Status: {story.status}
