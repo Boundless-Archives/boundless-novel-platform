@@ -105,57 +105,120 @@ export default function NewStoryPage() {
   }
 
   return (
-    <main className="p-10 max-w-2xl">
-      <h1 className="text-4xl font-bold mb-6">
+
+  <main className="max-w-4xl mx-auto p-8">
+
+```
+<div
+  className="rounded-xl border p-8"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <h1 className="text-5xl font-bold">
+    Create New Story
+  </h1>
+
+  <p className="mt-3 opacity-70">
+    Start a new story and prepare it for publication.
+  </p>
+
+  <form
+    onSubmit={handleSubmit}
+    className="mt-8 flex flex-col gap-6"
+  >
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Story Title
+      </label>
+
+      <input
+        value={title}
+        onChange={(e) =>
+          setTitle(e.target.value)
+        }
+        placeholder="Enter story title"
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+        required
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Cover Image
+      </label>
+
+      <input
+        type="file"
+        accept="image/*"
+        onChange={(e) =>
+          setCoverFile(
+            e.target.files?.[0] ?? null
+          )
+        }
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Description
+      </label>
+
+      <textarea
+        value={description}
+        onChange={(e) =>
+          setDescription(
+            e.target.value
+          )
+        }
+        placeholder="Describe your story..."
+        rows={8}
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+      />
+    </div>
+
+    <div className="pt-2">
+      <Button type="submit">
         Create Story
-      </h1>
+      </Button>
+    </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4"
-      >
-        <input
-          value={title}
-          onChange={(e) =>
-            setTitle(e.target.value)
-          }
-          placeholder="Story Title"
-          className="border p-2 rounded"
-          required
-        />
+  </form>
 
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) =>
-            setCoverFile(
-              e.target.files?.[0] ?? null
-            )
-          }
-          className="border p-2 rounded"
-        />
+  {message && (
+    <div
+      className="mt-6 border rounded-lg p-4"
+      style={{
+        borderColor:
+          "var(--card-border)",
+      }}
+    >
+      {message}
+    </div>
+  )}
 
-        <textarea
-          value={description}
-          onChange={(e) =>
-            setDescription(e.target.value)
-          }
-          placeholder="Story Description"
-          rows={6}
-          className="border p-2 rounded"
-        />
+</div>
+```
 
-  
-        <Button type="submit">
-          Create Story
-        </Button>
-      </form>
-
-      {message && (
-        <p className="mt-4">
-          {message}
-        </p>
-      )}
-    </main>
-  );
+  </main>
+);
 }

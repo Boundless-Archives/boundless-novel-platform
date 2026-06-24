@@ -71,61 +71,145 @@ export default function EditStoryPage() {
   }
 
   return (
-    <main className="p-10 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-6">
-        Edit Story
-      </h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4"
+  <main className="max-w-4xl mx-auto p-8">
+
+```
+<div
+  className="rounded-xl border p-8"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <h1 className="text-5xl font-bold">
+    Edit Story
+  </h1>
+
+  <p className="mt-3 opacity-70">
+    Update your story information and publication status.
+  </p>
+
+  <form
+    onSubmit={handleSubmit}
+    className="mt-8 flex flex-col gap-6"
+  >
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Story Title
+      </label>
+
+      <input
+        value={title}
+        onChange={(e) =>
+          setTitle(e.target.value)
+        }
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Description
+      </label>
+
+      <textarea
+        value={description}
+        onChange={(e) =>
+          setDescription(
+            e.target.value
+          )
+        }
+        rows={8}
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Status
+      </label>
+
+      <select
+        value={status}
+        onChange={(e) =>
+          setStatus(
+            e.target.value
+          )
+        }
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
       >
-        <input
-          value={title}
-          onChange={(e) =>
-            setTitle(e.target.value)
-          }
-          className="border p-2 rounded"
-        />
+        <option>Draft</option>
+        <option>Ongoing</option>
+        <option>Completed</option>
+        <option>Hiatus</option>
+        <option>Dropped</option>
+      </select>
+    </div>
 
-        <textarea
-          value={description}
-          onChange={(e) =>
-            setDescription(
-              e.target.value
-            )
-          }
-          rows={6}
-          className="border p-2 rounded"
-        />
+    <div className="flex gap-3 pt-2">
 
-        <select
-          value={status}
-          onChange={(e) =>
-            setStatus(
-              e.target.value
-            )
-          }
-          className="border p-2 rounded"
-        >
-          <option>Draft</option>
-          <option>Ongoing</option>
-          <option>Completed</option>
-          <option>Hiatus</option>
-          <option>Dropped</option>
-        </select>
+      <Button type="submit">
+        Save Changes
+      </Button>
 
-        
-        <Button type="submit">
-          Save Changes
-        </Button>
-      </form>
+      <button
+        type="button"
+        onClick={() =>
+          router.push(
+            `/stories/${storyId}`
+          )
+        }
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
+      >
+        Cancel
+      </button>
 
-      {message && (
-        <p className="mt-4">
-          {message}
-        </p>
-      )}
-    </main>
-  );
+    </div>
+
+  </form>
+
+  {message && (
+    <div
+      className="mt-6 border rounded-lg p-4"
+      style={{
+        borderColor:
+          "var(--card-border)",
+      }}
+    >
+      {message}
+    </div>
+  )}
+
+</div>
+```
+
+  </main>
+);
 }

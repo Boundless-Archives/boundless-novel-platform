@@ -44,47 +44,173 @@ export default async function ChaptersPage({
     .order("chapter_number");
 
   return (
-    <main className="p-10">
-      <h1 className="text-4xl font-bold">
-        {story.title}
-      </h1>
 
-      <p className="mt-2">
-        Manage Chapters
-      </p>
+  <main className="max-w-6xl mx-auto p-8">
 
-      <div className="mt-6">
+```
+<div className="flex items-center justify-between mb-8">
+
+  <div>
+    <h1 className="text-5xl font-bold">
+      {story.title}
+    </h1>
+
+    <p className="mt-2 opacity-70">
+      Manage Chapters
+    </p>
+  </div>
+
+  <Link
+    href={`/stories/${id}/chapters/new`}
+    className="
+      border
+      rounded-lg
+      px-5
+      py-3
+      font-medium
+    "
+    style={{
+      borderColor: "var(--card-border)",
+    }}
+  >
+    + Create Chapter
+  </Link>
+
+</div>
+
+<div className="mb-8 opacity-70">
+  {chapters?.length ?? 0} chapter
+  {(chapters?.length ?? 0) === 1 ? "" : "s"}
+</div>
+
+{!chapters?.length && (
+  <div
+    className="rounded-xl border p-10 text-center"
+    style={{
+      backgroundColor: "var(--card)",
+      borderColor: "var(--card-border)",
+    }}
+  >
+    <h2 className="text-2xl font-semibold">
+      No chapters yet
+    </h2>
+
+    <p className="mt-3 opacity-70">
+      Start writing your story by
+      creating the first chapter.
+    </p>
+
+    <Link
+      href={`/stories/${id}/chapters/new`}
+      className="
+        inline-block
+        mt-6
+        border
+        rounded-lg
+        px-5
+        py-3
+      "
+      style={{
+        borderColor: "var(--card-border)",
+      }}
+    >
+      Create First Chapter
+    </Link>
+  </div>
+)}
+
+<div className="space-y-4">
+
+  {chapters?.map((chapter) => (
+    <div
+      key={chapter.id}
+      className="
+        rounded-xl
+        border
+        p-5
+        flex
+        items-center
+        justify-between
+      "
+      style={{
+        backgroundColor: "var(--card)",
+        borderColor: "var(--card-border)",
+      }}
+    >
+
+      <div>
+
+        <div className="text-sm opacity-70">
+          Chapter {chapter.chapter_number}
+        </div>
+
+        <h2 className="text-xl font-semibold mt-1">
+          {chapter.title}
+        </h2>
+
+      </div>
+
+      <div className="flex gap-3">
+
         <Link
-          href={`/stories/${id}/chapters/new`}
-          className="border rounded px-4 py-2"
+          href={`/chapter/${chapter.id}`}
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
         >
-          Create Chapter
+          Preview
         </Link>
+
+        <Link
+          href={`/stories/${id}/chapters/${chapter.id}/edit`}
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          Edit
+        </Link>
+
       </div>
 
-      <div className="mt-8 space-y-4">
-        {chapters?.length === 0 && (
-          <p>No chapters yet.</p>
-        )}
+    </div>
+  ))}
 
-        {chapters?.map((chapter) => (
-          <div
-            key={chapter.id}
-            className="border rounded p-4"
-          >
-            <h2 className="font-semibold">
-              Chapter {chapter.chapter_number}
-            </h2>
+</div>
 
-            <Link
-              href={`/stories/${id}/chapters/${chapter.id}/edit`}
-              className="underline"
-            >
-              {chapter.title}
-            </Link>
-          </div>
-        ))}
-      </div>
-    </main>
-  );
+<div className="mt-10">
+
+  <Link
+    href={`/stories/${id}`}
+    className="
+      border
+      rounded-lg
+      px-4
+      py-2
+    "
+    style={{
+      borderColor: "var(--card-border)",
+    }}
+  >
+    ← Back to Story Dashboard
+  </Link>
+
+</div>
+```
+
+  </main>
+);
 }

@@ -37,54 +37,216 @@ export default async function AuthorPage({
       });
 
   return (
-    <main className="p-10 max-w-4xl">
-      {profile.avatar_url && (
+
+  <main className="max-w-6xl mx-auto p-8">
+
+```
+<div
+  className="rounded-xl border p-8 mb-10"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <div className="flex flex-col md:flex-row gap-8 items-start">
+
+    <div>
+      {profile.avatar_url ? (
         <Image
-        src={profile.avatar_url}
-        alt={profile.username}
-        width={120}
-        height={120}
-        className="rounded-full mb-6"
+          src={profile.avatar_url}
+          alt={profile.username}
+          width={140}
+          height={140}
+          className="rounded-full"
         />
-    )}
+      ) : (
+        <div
+          className="
+            w-[140px]
+            h-[140px]
+            rounded-full
+            border
+            flex
+            items-center
+            justify-center
+            text-4xl
+            font-bold
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          {(profile.display_name ??
+            profile.username)
+            .charAt(0)
+            .toUpperCase()}
+        </div>
+      )}
+    </div>
+
+    <div className="flex-1">
+
       <h1 className="text-4xl font-bold">
         {profile.display_name ??
           profile.username}
       </h1>
 
-      <p className="mt-2 text-gray-600">
+      <p className="mt-2 opacity-70">
         @{profile.username}
       </p>
 
-      {profile.bio && (
-        <p className="mt-6">
-          {profile.bio}
+      <div className="mt-4">
+        <span
+          className="
+            inline-block
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          Author
+        </span>
+      </div>
+
+      <div className="mt-6">
+        <h2 className="font-semibold text-lg">
+          Bio
+        </h2>
+
+        <p className="mt-2 opacity-90">
+          {profile.bio ||
+            "This author hasn't added a bio yet."}
         </p>
+      </div>
+
+      <div className="mt-6 text-sm opacity-70">
+        {stories?.length ?? 0} published
+        stor{stories?.length === 1 ? "y" : "ies"}
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<h2 className="text-3xl font-bold mb-6">
+  Stories
+</h2>
+
+{!stories?.length && (
+  <div
+    className="rounded-xl border p-8"
+    style={{
+      backgroundColor: "var(--card)",
+      borderColor: "var(--card-border)",
+    }}
+  >
+    No published stories yet.
+  </div>
+)}
+
+<div className="grid gap-6 md:grid-cols-2">
+
+  {stories?.map((story) => (
+    <div
+      key={story.id}
+      className="
+        rounded-xl
+        border
+        p-5
+        transition
+        duration-200
+        hover:-translate-y-1
+        hover:shadow-lg
+      "
+      style={{
+        backgroundColor: "var(--card)",
+        borderColor: "var(--card-border)",
+      }}
+    >
+
+      {story.cover_url && (
+        <Image
+          src={story.cover_url}
+          alt={story.title}
+          width={300}
+          height={450}
+          className="
+            rounded-lg
+            mb-4
+            w-full
+            h-auto
+          "
+        />
       )}
 
-      <h2 className="text-2xl font-semibold mt-10 mb-4">
-        Stories
-      </h2>
+      <Link
+        href={`/story/${story.slug}`}
+        className="
+          text-2xl
+          font-bold
+          hover:underline
+        "
+      >
+        {story.title}
+      </Link>
 
-      <div className="space-y-4">
-        {stories?.map((story) => (
-          <div
-            key={story.id}
-            className="border rounded p-4"
-          >
-            <Link
-              href={`/story/${story.slug}`}
-              className="text-xl font-semibold underline"
-            >
-              {story.title}
-            </Link>
-
-            <p className="mt-2">
-              {story.description}
-            </p>
-          </div>
-        ))}
+      <div className="mt-3">
+        <span
+          className="
+            inline-block
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          {story.status}
+        </span>
       </div>
-    </main>
-  );
+
+      <p className="mt-4 opacity-90">
+        {story.description}
+      </p>
+
+      <Link
+        href={`/story/${story.slug}`}
+        className="
+          inline-block
+          mt-5
+          border
+          rounded-lg
+          px-4
+          py-2
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
+      >
+        Read Story →
+      </Link>
+
+    </div>
+  ))}
+
+</div>
+```
+
+  </main>
+);
 }

@@ -51,59 +51,145 @@ export default function NewChapterPage() {
   }
 
   return (
-    <main className="p-10 max-w-3xl">
-      <h1 className="text-4xl font-bold mb-6">
+
+  <main className="max-w-5xl mx-auto p-8">
+
+```
+<div
+  className="rounded-xl border p-8"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <h1 className="text-5xl font-bold">
+    Create Chapter
+  </h1>
+
+  <p className="mt-3 opacity-70">
+    Add a new chapter to your story.
+  </p>
+
+  <form
+    onSubmit={handleSubmit}
+    className="mt-8 flex flex-col gap-6"
+  >
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Chapter Number
+      </label>
+
+      <input
+        type="number"
+        value={chapterNumber}
+        onChange={(e) =>
+          setChapterNumber(
+            e.target.value
+          )
+        }
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+        required
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Chapter Title
+      </label>
+
+      <input
+        value={title}
+        onChange={(e) =>
+          setTitle(
+            e.target.value
+          )
+        }
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+        required
+      />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Chapter Content
+      </label>
+
+      <textarea
+        value={content}
+        onChange={(e) =>
+          setContent(
+            e.target.value
+          )
+        }
+        rows={25}
+        className="
+          w-full
+          border
+          rounded-lg
+          p-3
+        "
+        required
+      />
+    </div>
+
+    <div className="flex gap-3">
+
+      <Button type="submit">
         Create Chapter
-      </h1>
+      </Button>
 
-      <form
-        onSubmit={handleSubmit}
-        className="flex flex-col gap-4"
+      <button
+        type="button"
+        onClick={() =>
+          router.push(
+            `/stories/${storyId}/chapters`
+          )
+        }
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
       >
-        <input
-          type="number"
-          value={chapterNumber}
-          onChange={(e) =>
-            setChapterNumber(
-              e.target.value
-            )
-          }
-          placeholder="Chapter Number"
-          className="border p-2 rounded"
-          required
-        />
+        Cancel
+      </button>
 
-        <input
-          value={title}
-          onChange={(e) =>
-            setTitle(e.target.value)
-          }
-          placeholder="Chapter Title"
-          className="border p-2 rounded"
-          required
-        />
+    </div>
 
-        <textarea
-          value={content}
-          onChange={(e) =>
-            setContent(e.target.value)
-          }
-          placeholder="Chapter Content"
-          rows={20}
-          className="border p-2 rounded"
-          required
-        />
-       
-        <Button type="submit">
-          Create Chapter
-        </Button>
-      </form>
+  </form>
 
-      {message && (
-        <p className="mt-4">
-          {message}
-        </p>
-      )}
-    </main>
-  );
+  {message && (
+    <div
+      className="mt-6 border rounded-lg p-4"
+      style={{
+        borderColor:
+          "var(--card-border)",
+      }}
+    >
+      {message}
+    </div>
+  )}
+
+</div>
+```
+
+  </main>
+);
 }

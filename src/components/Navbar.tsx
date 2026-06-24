@@ -2,76 +2,141 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function Navbar() {
-  const supabase = await createClient();
+const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+const {
+data: { user },
+} = await supabase.auth.getUser();
 
-  let isAuthor = false;
+let isAuthor = false;
 
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("is_author")
-      .eq("id", user.id)
-      .single();
+if (user) {
+const { data: profile } = await supabase
+.from("profiles")
+.select("is_author")
+.eq("id", user.id)
+.single();
 
-    isAuthor = profile?.is_author ?? false;
-  }
 
-  return (
-    <header className="border-b">
-      <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+isAuthor = profile?.is_author ?? false;
 
-        <Link
-          href="/"
-          className="text-2xl font-bold"
-        >
-          Boundless
-        </Link>
+}
 
-        <nav className="flex items-center gap-6">
+return (
+<header
+className="sticky top-0 z-50 backdrop-blur border-b"
+style={{
+backgroundColor: "rgba(255,255,255,0.75)",
+borderColor: "var(--card-border)",
+}}
+> <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
 
-          <Link href="/">
-            Home
+    <Link
+      href="/"
+      className="flex items-center gap-3"
+    >
+      <span className="text-3xl font-bold">
+        ∞
+      </span>
+
+      <span className="text-2xl font-bold">
+        Boundless
+      </span>
+    </Link>
+
+    <nav className="flex items-center gap-5">
+
+      <Link
+        href="/"
+        className="hover:opacity-70 transition"
+      >
+        Home
+      </Link>
+
+      {user && (
+        <>
+          <Link
+            href="/library"
+            className="hover:opacity-70 transition"
+          >
+            Library
           </Link>
 
-          {user && (
-            <>
-              <Link href="/library">
-                Library
-              </Link>
+          <Link
+            href="/profile"
+            className="hover:opacity-70 transition"
+          >
+            Profile
+          </Link>
+        </>
+      )}
 
-              <Link href="/profile">
-                Profile
-              </Link>
-            </>
-          )}
+      {isAuthor && (
+        <Link
+          href="/stories"
+          className="
+            px-3
+            py-2
+            rounded-lg
+            border
+            hover:shadow-md
+            transition
+          "
+          style={{
+            borderColor: "var(--card-border)",
+          }}
+        >
+          Manage Stories
+        </Link>
+      )}
 
-          {isAuthor && (
-            <Link href="/stories">
-              Manage Stories
-            </Link>
-          )}
+      {!user ? (
+        <>
+          <Link
+            href="/auth/login"
+            className="hover:opacity-70 transition"
+          >
+            Login
+          </Link>
 
-          {!user ? (
-            <>
-              <Link href="/auth/login">
-                Login
-              </Link>
-
-              <Link href="/auth/sign-up">
-                Sign Up
-              </Link>
-            </>
-          ) : (
-            <Link href="/auth/logout">
-              Logout
-            </Link>
-          )}
-        </nav>
-      </div>
-    </header>
-  );
+          <Link
+            href="/auth/sign-up"
+            className="
+              px-4
+              py-2
+              rounded-lg
+              border
+              font-medium
+              hover:shadow-md
+              transition
+            "
+            style={{
+              borderColor: "var(--card-border)",
+            }}
+          >
+            Sign Up
+          </Link>
+        </>
+      ) : (
+        <Link
+          href="/auth/logout"
+          className="
+            px-4
+            py-2
+            rounded-lg
+            border
+            hover:shadow-md
+            transition
+          "
+          style={{
+            borderColor: "var(--card-border)",
+          }}
+        >
+          Logout
+        </Link>
+      )}
+    </nav>
+  </div>
+</header>
+);
 }

@@ -62,45 +62,135 @@ export default async function ChapterPage({
       .maybeSingle();
 
   return (
-    <main className="p-10 max-w-4xl">
-      <h1 className="text-4xl font-bold">
-        {chapter.title}
-      </h1>
 
-      <div className="mt-8 whitespace-pre-wrap">
-        {chapter.content}
-      </div>
+  <main className="max-w-5xl mx-auto px-6 py-10">
 
-      <div className="mt-12 flex gap-4">
-        {previousChapter ? (
-          <Link
-            href={`/chapter/${previousChapter.id}`}
-            className="border rounded px-4 py-2"
-          >
-            ← Previous Chapter
-          </Link>
-        ) : (
-          <div />
-        )}
+```
+<div className="text-center">
 
-        <Link
-          href={`/story/${story.slug}`}
-          className="border rounded px-4 py-2"
-        >
-          Back to Story
-        </Link>
+  <Link
+    href={`/story/${story.slug}`}
+    className="
+      text-sm
+      opacity-70
+      hover:underline
+      hover:text-cyan-400
+    "
+  >
+    {story.title}
+  </Link>
 
-        {nextChapter ? (
-          <Link
-            href={`/chapter/${nextChapter.id}`}
-            className="border rounded px-4 py-2"
-          >
-            Next Chapter →
-          </Link>
-        ) : (
-          <div />
-        )}
-      </div>
-    </main>
-  );
+  <h1 className="text-4xl font-bold mt-2">
+    Chapter {chapter.chapter_number}
+  </h1>
+
+  <h2 className="text-2xl mt-3 opacity-90">
+    {chapter.title}
+  </h2>
+
+</div>
+
+<article
+  className="
+    mt-12
+    mx-auto
+    max-w-2xl
+    text-lg
+    leading-10
+    whitespace-pre-wrap
+  "
+>
+  {chapter.content}
+
+  <p
+    className="
+      mt-16
+      text-center
+      text-sm
+      opacity-60
+    "
+  >
+    End of Chapter
+  </p>
+</article>
+
+<div
+  className="
+    mt-16
+    border-t
+    pt-8
+    flex
+    justify-between flex-wrap
+    items-center
+    gap-4
+  "
+  style={{
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <div>
+    {previousChapter && (
+      <Link
+        href={`/chapter/${previousChapter.id}`}
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+          transition
+          hover:shadow-md
+        "
+        style={{
+          borderColor: "var(--card-border)",
+        }}
+      >
+        ← Previous
+      </Link>
+    )}
+  </div>
+
+  <Link
+    href={`/story/${story.slug}`}
+    className="
+      border
+      rounded-lg
+      px-4
+      py-2
+      transition
+      hover:shadow-md
+    "
+    style={{
+      borderColor: "var(--card-border)",
+    }}
+  >
+    Back to Story
+  </Link>
+
+  <div>
+    {nextChapter && (
+      <Link
+        href={`/chapter/${nextChapter.id}`}
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+          transition
+          hover:shadow-md
+        "
+        style={{
+          borderColor: "var(--card-border)",
+        }}
+      >
+        Next →
+      </Link>
+    )}
+  </div>
+
+</div>
+```
+
+  </main>
+);
 }

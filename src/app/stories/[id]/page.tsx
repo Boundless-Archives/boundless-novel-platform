@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -38,41 +39,141 @@ export default async function StoryPage({
   }
 
   return (
-    <main className="p-10">
-      <h1 className="text-4xl font-bold">
+
+  <main className="max-w-6xl mx-auto p-8">
+
+```
+<div
+  className="rounded-xl border p-8"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <div className="flex flex-col md:flex-row gap-8">
+
+    {story.cover_url && (
+      <Image
+        src={story.cover_url}
+        alt={story.title}
+        width={300}
+        height={450}
+        className="rounded-lg"
+      />
+    )}
+
+    <div className="flex-1">
+
+      <h1 className="text-5xl font-bold">
         {story.title}
       </h1>
 
-      <p className="mt-4">
-        Status: {story.status}
-      </p>
-
-      <div className="mt-6">
-        <p>{story.description}</p>
+      <div className="mt-4">
+        <span
+          className="
+            inline-block
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          {story.status}
+        </span>
       </div>
 
-      <div className="mt-8 flex gap-4">
+      <div className="mt-6">
+        <h2 className="text-xl font-semibold">
+          Description
+        </h2>
+
+        <p className="mt-3 opacity-90">
+          {story.description ||
+            "No description provided."}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-3 mt-8">
+
         <Link
           href={`/stories/${story.id}/edit`}
-          className="border rounded px-4 py-2"
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
         >
           Edit Story
         </Link>
 
         <Link
           href={`/stories/${story.id}/chapters`}
-          className="border rounded px-4 py-2"
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
         >
           Manage Chapters
         </Link>
 
         <Link
+          href={`/stories/${story.id}/chapters/new`}
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          + Add Chapter
+        </Link>
+
+        <Link
           href={`/story/${story.slug}`}
-          className="border rounded px-4 py-2"
+          className="
+            border
+            rounded-lg
+            px-4
+            py-2
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
         >
           View Public Story
         </Link>
+
       </div>
-    </main>
-  );
+
+    </div>
+
+  </div>
+
+</div>
+```
+
+  </main>
+);
 }

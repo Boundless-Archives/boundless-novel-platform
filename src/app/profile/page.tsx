@@ -21,71 +21,192 @@ export default async function ProfilePage() {
     .single();
 
   return (
-    <main className="p-10">
-      <h1 className="text-4xl font-bold">
-        My Profile
-      </h1>
 
-      {profile?.avatar_url && (
+  <main className="max-w-4xl mx-auto p-8">
+
+```
+<h1 className="text-5xl font-bold mb-8">
+  My Profile
+</h1>
+
+<div
+  className="rounded-xl border p-8"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+
+  <div className="flex flex-col md:flex-row gap-8 items-start">
+
+    <div>
+
+      {profile?.avatar_url ? (
         <Image
           src={profile.avatar_url}
           alt="Profile Avatar"
-          width={120}
-          height={120}
-          className="rounded-full mt-6 mb-6"
+          width={140}
+          height={140}
+          className="rounded-full"
         />
+      ) : (
+        <div
+          className="
+            w-[140px]
+            h-[140px]
+            rounded-full
+            border
+            flex
+            items-center
+            justify-center
+            text-4xl
+            font-bold
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          {(profile?.display_name ??
+            profile?.username ??
+            "U")
+            .charAt(0)
+            .toUpperCase()}
+        </div>
       )}
 
-      <div className="mt-6 space-y-2">
-        <p>
-          <strong>Username:</strong>{" "}
-          {profile?.username ?? "-"}
-        </p>
+    </div>
 
-        <p>
-          <strong>Display Name:</strong>{" "}
-          {profile?.display_name ?? "-"}
-        </p>
+    <div className="flex-1">
 
-        <p>
-          <strong>Bio:</strong>{" "}
-          {profile?.bio ?? "-"}
-        </p>
+      <h2 className="text-3xl font-bold">
+        {profile?.display_name ??
+          "Unnamed User"}
+      </h2>
 
-        <p>
-          <strong>Status:</strong>{" "}
-          {profile?.is_author ? "Author" : "Reader"}
-        </p>
+      <p className="mt-2 opacity-70">
+        @{profile?.username ?? "unknown"}
+      </p>
+
+      <div className="mt-4">
+        <span
+          className="
+            inline-block
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+          "
+          style={{
+            borderColor:
+              "var(--card-border)",
+          }}
+        >
+          {profile?.is_author
+            ? "Author"
+            : "Reader"}
+        </span>
       </div>
 
       <div className="mt-6">
-        {profile?.is_author && (
-          <Link
-            href="/stories"
-            className="border rounded px-4 py-2"
-          >
-            Manage Stories
-          </Link>
-        )}
+        <h3 className="font-semibold text-lg">
+          Bio
+        </h3>
+
+        <p className="mt-2 opacity-90">
+          {profile?.bio ||
+            "No bio added yet."}
+        </p>
       </div>
 
+    </div>
+
+  </div>
+
+  <div className="mt-8 flex flex-wrap gap-4">
+
+    <Link
+      href="/profile/edit"
+      className="
+        border
+        rounded-lg
+        px-4
+        py-2
+        transition
+        hover:shadow-md
+      "
+      style={{
+        borderColor:
+          "var(--card-border)",
+      }}
+    >
+      Edit Profile
+    </Link>
+
+    <Link
+      href="/library"
+      className="
+        border
+        rounded-lg
+        px-4
+        py-2
+        transition
+        hover:shadow-md
+      "
+      style={{
+        borderColor:
+          "var(--card-border)",
+      }}
+    >
+      My Library
+    </Link>
+
+    {profile?.is_author && (
       <Link
-        href="/library"
-        className="border rounded px-4 py-2 ml-4"
+        href="/stories"
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+          transition
+          hover:shadow-md
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
       >
-        My Library
+        Manage Stories
       </Link>
+    )}
 
-      <div className="mt-6">
-        {!profile?.is_author && (
+    {!profile?.is_author && (
       <Link
         href="/profile/become-author"
-        className="border rounded px-4 py-2"
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+          transition
+          hover:shadow-md
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
       >
         Become an Author
       </Link>
-      )}
-      </div>
-    </main>
-  );
+    )}
+
+  </div>
+
+</div>
+```
+
+  </main>
+);
 }
