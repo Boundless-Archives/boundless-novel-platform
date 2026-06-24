@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import SaveStoryButton from "@/components/SaveStoryButton";
 
 type Props = {
   params: Promise<{
@@ -68,6 +69,10 @@ export default async function PublicStoryPage({
           story.profiles?.username}
         </Link>
       </p>
+
+      <SaveStoryButton
+        storyId={story.id}
+      />
 
       <div className="mt-4 space-y-2">
         <p>

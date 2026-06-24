@@ -69,6 +69,13 @@ export default async function ProfilePage() {
         )}
       </div>
 
+      <Link
+        href="/library"
+        className="border rounded px-4 py-2 ml-4"
+      >
+        My Library
+      </Link>
+
       <div className="mt-6">
         {!profile?.is_author && (
       <Link
