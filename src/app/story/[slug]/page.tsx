@@ -47,7 +47,7 @@ export default async function PublicStoryPage({
 
   <main className="max-w-6xl mx-auto p-8">
 
-```
+
 <div
   className="rounded-xl border p-6"
   style={{
@@ -159,47 +159,68 @@ export default async function PublicStoryPage({
     Chapters
   </h2>
 
-  <div className="mt-6 space-y-3">
+{!chapters?.length ? (
+<div
+className="
+mt-6
+rounded-xl
+border
+p-10
+text-center
+"
+style={{
+backgroundColor: "var(--card)",
+borderColor: "var(--card-border)",
+}}
+> <div className="text-5xl mb-4">
+✍️ </div>
 
-    {chapters?.map((chapter) => (
-      <Link
-        key={chapter.id}
-        href={`/chapter/${chapter.id}`}
-        className="
-          block
-          rounded-xl
-          border
-          p-4
-          transition
-          hover:shadow-md
-        "
-        style={{
-          backgroundColor: "var(--card)",
-          borderColor: "var(--card-border)",
-        }}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="font-semibold">
-              Chapter {chapter.chapter_number}
-            </div>
 
-            <div className="opacity-80">
-              {chapter.title}
-            </div>
-          </div>
+  <h3 className="text-2xl font-semibold">
+    Chapters coming soon
+  </h3>
 
-          <div className="text-sm opacity-70">
-            Read →
+  <p className="mt-3 opacity-80">
+    This story has not published any chapters yet.
+  </p>
+</div>
+
+
+) : ( <div className="mt-6 space-y-3">
+{chapters.map((chapter) => (
+<Link
+key={chapter.id}
+href={`/chapter/${chapter.id}`}
+className="
+block
+rounded-xl
+border
+p-4
+transition
+hover:shadow-md
+"
+style={{
+backgroundColor: "var(--card)",
+borderColor: "var(--card-border)",
+}}
+> <div className="flex items-center justify-between"> <div> <div className="font-semibold">
+Chapter {chapter.chapter_number} </div>
+
+
+          <div className="opacity-80">
+            {chapter.title}
           </div>
         </div>
-      </Link>
-    ))}
 
-  </div>
+        <div className="text-sm opacity-70">
+          Read →
+        </div>
+      </div>
+    </Link>
+  ))}
 </div>
-```
-
+)}
+</div>
   </main>
 );
 }

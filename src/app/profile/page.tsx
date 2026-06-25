@@ -22,10 +22,9 @@ export default async function ProfilePage() {
 
   return (
 
-  <main className="max-w-4xl mx-auto p-8">
+  <main className="max-w-4xl mx-auto p-6 md:p-8">
 
-```
-<h1 className="text-5xl font-bold mb-8">
+<h1 className="text-4xl md:text-5xl font-bold mb-8">
   My Profile
 </h1>
 
@@ -37,7 +36,18 @@ export default async function ProfilePage() {
   }}
 >
 
-  <div className="flex flex-col md:flex-row gap-8 items-start">
+  <div
+    className="
+      flex
+      flex-col
+      md:flex-row
+      gap-8
+      items-center
+      md:items-start
+      text-center
+      md:text-left
+    "
+  >
 
     <div>
 
@@ -45,15 +55,17 @@ export default async function ProfilePage() {
         <Image
           src={profile.avatar_url}
           alt="Profile Avatar"
-          width={140}
-          height={140}
+          width={120}
+          height={120}
           className="rounded-full"
         />
       ) : (
         <div
           className="
-            w-[140px]
-            h-[140px]
+            w-[120px]
+            h-[120px]
+            md:w-[140px]
+            md:h-[140px]
             rounded-full
             border
             flex
@@ -86,6 +98,10 @@ export default async function ProfilePage() {
 
       <p className="mt-2 opacity-70">
         @{profile?.username ?? "unknown"}
+      </p>
+
+      <p className="mt-1 text-sm opacity-60">
+        {user.email}
       </p>
 
       <div className="mt-4">
@@ -124,7 +140,16 @@ export default async function ProfilePage() {
 
   </div>
 
-  <div className="mt-8 flex flex-wrap gap-4">
+  <div
+    className="
+      mt-8
+      flex
+      flex-col
+      sm:flex-row
+      flex-wrap
+      gap-4
+    "
+>
 
     <Link
       href="/profile/edit"
@@ -133,6 +158,9 @@ export default async function ProfilePage() {
         rounded-lg
         px-4
         py-2
+        text-center
+        w-full
+        sm:w-auto
         transition
         hover:shadow-md
       "
@@ -180,7 +208,26 @@ export default async function ProfilePage() {
       >
         Manage Stories
       </Link>
-    )}
+      )}
+      
+      <Link
+        href="/auth/logout"
+        className="
+          border
+          rounded-lg
+          px-4
+          py-2
+          transition
+          hover:shadow-md
+        "
+        style={{
+          borderColor:
+            "var(--card-border)",
+        }}
+      >
+        Logout
+    </Link>
+      
 
     {!profile?.is_author && (
       <Link
@@ -205,7 +252,6 @@ export default async function ProfilePage() {
   </div>
 
 </div>
-```
 
   </main>
 );

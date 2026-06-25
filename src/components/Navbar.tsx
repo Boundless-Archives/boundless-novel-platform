@@ -29,22 +29,47 @@ style={{
 backgroundColor: "rgba(255,255,255,0.75)",
 borderColor: "var(--card-border)",
 }}
-> <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+> <div
+    className="
+      max-w-6xl
+      mx-auto
+      px-4
+      py-4
+      flex
+      flex-col
+      gap-4
+      md:flex-row
+      md:items-center
+      md:justify-between
+    "
+  >
 
     <Link
       href="/"
-      className="flex items-center gap-3"
+      className="
+        flex
+        items-center
+        gap-2
+        text-2xl
+        font-bold
+      "
     >
-      <span className="text-3xl font-bold">
+      <span className="text-3xl">
         ∞
       </span>
 
-      <span className="text-2xl font-bold">
+      <span>
         Boundless
       </span>
     </Link>
-
-    <nav className="flex items-center gap-5">
+    <nav
+      className="
+        flex
+        flex-wrap
+        gap-4
+        md:gap-6
+      " 
+    >
 
       <Link
         href="/"

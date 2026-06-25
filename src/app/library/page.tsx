@@ -32,10 +32,10 @@ export default async function LibraryPage() {
 
   return (
 
-  <main className="max-w-6xl mx-auto p-8">
+  <main className="max-w-6xl mx-auto px-4 py-6 md:p-8">
 
 ```
-<h1 className="text-5xl font-bold mb-10">
+<h1 className="text-3xl md:text-5xl font-bold mb-8 md:mb-10">
   My Library
 </h1>
 
@@ -82,7 +82,8 @@ export default async function LibraryPage() {
       className="
         rounded-xl
         border
-        p-5
+        p-4
+        md:p-5
         transition
         duration-200
         hover:-translate-y-1
@@ -95,11 +96,13 @@ export default async function LibraryPage() {
     >
 
       {entry.stories.cover_url && (
-        <img
+       <img
           src={entry.stories.cover_url}
           alt={entry.stories.title}
           className="
             w-full
+            aspect-[2/3]
+            object-cover
             rounded-lg
             mb-4
           "
@@ -109,9 +112,11 @@ export default async function LibraryPage() {
       <Link
         href={`/story/${entry.stories.slug}`}
         className="
-          text-2xl
+          text-xl
+          md:text-2xl
           font-bold
           hover:underline
+          break-words
         "
       >
         {entry.stories.title}

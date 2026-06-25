@@ -38,9 +38,8 @@ export default async function AuthorPage({
 
   return (
 
-  <main className="max-w-6xl mx-auto p-8">
+  <main className="max-w-6xl mx-auto px-4 py-6 md:p-8">
 
-```
 <div
   className="rounded-xl border p-8 mb-10"
   style={{
@@ -49,7 +48,16 @@ export default async function AuthorPage({
   }}
 >
 
-  <div className="flex flex-col md:flex-row gap-8 items-start">
+  <div
+    className="
+      flex
+      flex-col
+      md:flex-row
+      gap-8
+      items-center
+      md:items-start
+    "
+  >
 
     <div>
       {profile.avatar_url ? (
@@ -58,13 +66,15 @@ export default async function AuthorPage({
           alt={profile.username}
           width={140}
           height={140}
-          className="rounded-full"
+          className="rounded-full w-[100px] h-[100px] md:w-[140px] md:h-[140px]"
         />
       ) : (
         <div
           className="
-            w-[140px]
-            h-[140px]
+            w-[100px]
+            h-[100px]
+            md:w-[140px]
+            md:h-[140px]
             rounded-full
             border
             flex
@@ -86,9 +96,9 @@ export default async function AuthorPage({
       )}
     </div>
 
-    <div className="flex-1">
+    <div className="flex-1 text-center md:text-left">
 
-      <h1 className="text-4xl font-bold">
+      <h1 className="text-3xl md:text-4xl font-bold">
         {profile.display_name ??
           profile.username}
       </h1>
@@ -138,7 +148,7 @@ export default async function AuthorPage({
 
 </div>
 
-<h2 className="text-3xl font-bold mb-6">
+<h2 className="text-2xl md:text-3xl font-bold mb-6">
   Stories
 </h2>
 
@@ -245,8 +255,6 @@ export default async function AuthorPage({
   ))}
 
 </div>
-```
-
   </main>
 );
 }

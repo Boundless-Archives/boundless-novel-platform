@@ -47,7 +47,6 @@ export default async function ChaptersPage({
 
   <main className="max-w-6xl mx-auto p-8">
 
-```
 <div className="flex items-center justify-between mb-8">
 
   <div>
@@ -79,36 +78,41 @@ export default async function ChaptersPage({
 </div>
 
 <div className="mb-8 opacity-70">
-  {chapters?.length ?? 0} chapter
+  📖 {chapters?.length ?? 0} chapter
   {(chapters?.length ?? 0) === 1 ? "" : "s"}
 </div>
 
 {!chapters?.length && (
   <div
-    className="rounded-xl border p-10 text-center"
+    className="rounded-2xl border p-12 text-center"
     style={{
       backgroundColor: "var(--card)",
       borderColor: "var(--card-border)",
     }}
   >
-    <h2 className="text-2xl font-semibold">
-      No chapters yet
+    <div className="text-6xl mb-4">
+      ✍️
+    </div>
+
+    <h2 className="text-3xl font-bold">
+      Your story begins here
     </h2>
 
-    <p className="mt-3 opacity-70">
-      Start writing your story by
-      creating the first chapter.
+    <p className="mt-4 opacity-70 max-w-md mx-auto">
+      Every great story starts with a first chapter.
+      Create Chapter 1 and begin building your world.
     </p>
 
     <Link
       href={`/stories/${id}/chapters/new`}
       className="
         inline-block
-        mt-6
-        border
-        rounded-lg
-        px-5
+        mt-8
+        rounded-xl
+        px-6
         py-3
+        font-medium
+        border
       "
       style={{
         borderColor: "var(--card-border)",
@@ -209,7 +213,6 @@ export default async function ChaptersPage({
   </Link>
 
 </div>
-```
 
   </main>
 );

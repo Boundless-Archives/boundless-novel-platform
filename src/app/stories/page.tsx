@@ -34,6 +34,7 @@ export default async function StoriesPage() {
   <main className="max-w-6xl mx-auto p-8">
 
 ```
+
 <div className="flex items-center justify-between mb-8">
 
   <div>
@@ -68,38 +69,42 @@ export default async function StoriesPage() {
 
 {!stories?.length && (
   <div
-    className="rounded-xl border p-10 text-center"
+  className="rounded-xl border p-10 text-center"
+  style={{
+    backgroundColor: "var(--card)",
+    borderColor: "var(--card-border)",
+  }}
+>
+  <div className="text-5xl mb-4">
+    ✍️
+  </div>
+
+  <h2 className="text-2xl font-semibold">
+    No stories yet
+  </h2>
+
+  <p className="mt-3 opacity-70">
+    Create your first story and start
+    publishing chapters.
+  </p>
+
+  <Link
+    href="/stories/new"
+    className="
+      inline-block
+      mt-6
+      border
+      rounded-lg
+      px-5
+      py-3
+    "
     style={{
-      backgroundColor: "var(--card)",
       borderColor: "var(--card-border)",
     }}
   >
-    <h2 className="text-2xl font-semibold">
-      No stories yet
-    </h2>
-
-    <p className="mt-3 opacity-70">
-      Create your first story and start
-      publishing chapters.
-    </p>
-
-    <Link
-      href="/stories/new"
-      className="
-        inline-block
-        mt-6
-        border
-        rounded-lg
-        px-5
-        py-3
-      "
-      style={{
-        borderColor: "var(--card-border)",
-      }}
-    >
-      Create Story
-    </Link>
-  </div>
+    Create Story
+  </Link>
+</div>
 )}
 
 <div className="grid gap-6 md:grid-cols-2">
