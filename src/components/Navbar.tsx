@@ -125,7 +125,7 @@ borderColor: "var(--card-border)",
           </Link>
 
           <Link
-            href="/auth/sign-up"
+            href="/auth/signup"
             className="
               px-4
               py-2
