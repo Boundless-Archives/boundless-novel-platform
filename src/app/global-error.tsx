@@ -12,7 +12,7 @@ export default function GlobalError() {
             </div>
 
             <h1 className="text-4xl font-bold">
-              By The Gods - Boundless Crashed
+              By The Gods - The Archives Have Collapsed
             </h1>
 
             <p className="mt-4 opacity-70">
@@ -20,11 +20,22 @@ export default function GlobalError() {
             </p>
 
             <button
-              className="mt-8 border rounded-lg px-5 py-3"
               onClick={() => location.reload()}
+              className="
+                mt-8
+                px-5
+                py-3
+                rounded-lg
+                border
+                transition
+                hover:shadow-md
+              "
+              style={{
+                borderColor: "var(--card-border)",
+              }}
             >
-              Reload to Save the Universe
-            </button>
+              Reload Boundless
+          </button>
 
           </div>
         </main>

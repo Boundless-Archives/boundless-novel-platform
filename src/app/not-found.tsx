@@ -13,10 +13,10 @@ export default function NotFound() {
       </h1>
 
       <p className="mt-4 text-lg opacity-70">
-        We searched through every leaf and 
-        record in the Boundless Archives but yet
-        the knowledge you seek could not be found,
-        perhaps it never existed to being with.
+        We searched every shelf, scroll, and 
+        forgotten corner of the Boundless Archives, 
+        yet the knowledge you seek could not be found. 
+        Perhaps it never existed to begin with.
 
       </p>
 
