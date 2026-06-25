@@ -1,7 +1,7 @@
 "use client";
 
-import Button from "@/components/ui/Button";
 import { useState } from "react";
+import Button from "@/components/ui/Button";
 import { createClient } from "@/utils/supabase/client";
 
 export default function SignupPage() {
@@ -9,6 +9,8 @@ export default function SignupPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   async function handleSignup(
@@ -16,61 +18,141 @@ export default function SignupPage() {
   ) {
     e.preventDefault();
 
-    setMessage("Creating account...");
+    if (loading) return;
+
+    setLoading(true);
+    setMessage("");
 
     const { error } = await supabase.auth.signUp({
-      email,
+      email: email.trim(),
       password,
     });
 
     if (error) {
-      setMessage(error.message);
+      switch (error.message) {
+        case "Email rate limit exceeded":
+          setMessage(
+            "Too many sign-up attempts were made recently. Please wait a few minutes before trying again."
+          );
+          break;
+
+        case "User already registered":
+          setMessage(
+            "An account with this email already exists."
+          );
+          break;
+
+        case "Password should be at least 6 characters":
+          setMessage(
+            "Your password must be at least 6 characters long."
+          );
+          break;
+
+        default:
+          setMessage(error.message);
+      }
+
+      setLoading(false);
       return;
     }
 
+    setEmail("");
+    setPassword("");
+
     setMessage(
-      "Account created. Check your email for confirmation."
+      "✅ Account created successfully! Check your email to verify your account before logging in."
     );
+
+    setLoading(false);
   }
 
   return (
-    <main className="p-10 max-w-md">
-      <h1 className="text-3xl font-bold mb-6">
-        Sign Up
-      </h1>
+    <main className="max-w-md mx-auto px-6 py-16">
 
-      <form
-        onSubmit={handleSignup}
-        className="flex flex-col gap-4"
+      <div
+        className="rounded-2xl border p-8"
+        style={{
+          backgroundColor: "var(--card)",
+          borderColor: "var(--card-border)",
+        }}
       >
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="border p-2 rounded"
-          required
-        />
-       
-        <Button type="submit">
+        <h1 className="text-4xl font-bold">
           Create Account
-        </Button>
-      </form>
+        </h1>
 
-      {message && (
-        <p className="mt-4">
-          {message}
+        <p className="mt-3 opacity-70">
+          Join Boundless and start building your personal library,
+          discovering amazing stories, and publishing your own worlds.
         </p>
-      )}
+
+        <form
+          onSubmit={handleSignup}
+          className="mt-8 flex flex-col gap-5"
+        >
+
+          <input
+            type="email"
+            placeholder="Email address"
+            value={email}
+            disabled={loading}
+            onChange={(e) =>
+              setEmail(e.target.value)
+            }
+            className="border rounded-lg p-3"
+            style={{
+              borderColor: "var(--card-border)",
+            }}
+            required
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            disabled={loading}
+            onChange={(e) =>
+              setPassword(e.target.value)
+            }
+            className="border rounded-lg p-3"
+            style={{
+              borderColor: "var(--card-border)",
+            }}
+            required
+          />
+
+          <Button
+            type="submit"
+            disabled={loading}
+          >
+            {loading
+              ? "Creating Account..."
+              : "Create Account"}
+          </Button>
+
+        </form>
+
+        {message && (
+          <div
+            className="mt-6 rounded-lg border p-4 text-sm"
+            style={{
+              borderColor: "var(--card-border)",
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        <div className="mt-8 text-center text-sm opacity-70">
+          Already have an account?{" "}
+          <a
+            href="/auth/login"
+            className="underline font-medium"
+          >
+            Log in
+          </a>
+        </div>
+      </div>
     </main>
   );
 }
