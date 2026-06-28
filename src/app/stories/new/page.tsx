@@ -4,6 +4,7 @@ import Button from "@/components/ui/Button";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { useEffect } from "react";
 
 function createSlug(title: string) {
   return title
@@ -16,11 +17,71 @@ function createSlug(title: string) {
 export default function NewStoryPage() {
   const supabase = createClient();
   const router = useRouter();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [coverFile, setCoverFile] =
     useState<File | null>(null);
   const [message, setMessage] = useState("");
+
+  const [genres, setGenres] = useState<any[]>([]);
+  const [tags, setTags] =useState<any[]>([]);
+
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  const [loading, setLoading] = useState(false);
+
+  function toggleGenre(id: string) {
+    if (selectedGenres.includes(id)) {
+      setSelectedGenres(
+        selectedGenres.filter((g) => g !== id)
+      );
+      return;
+    }
+
+    if (selectedGenres.length >= 3) return;
+  
+    setSelectedGenres([
+      ...selectedGenres,
+      id,
+    ]);
+  }
+
+  function toggleTag(id: string) {
+    if (selectedTags.includes(id)) {
+      setSelectedTags(
+        selectedTags.filter((t) => t !== id)
+      );
+      return;
+    }
+
+    if (selectedTags.length >= 6) return;
+
+    setSelectedTags([
+      ...selectedTags,
+      id,
+    ]);
+  }
+
+  useEffect(() => {
+    async function loadData() {
+      const { data: genreData } = await supabase
+        .from("genres")
+        .select("*")
+        .order("name");
+
+      const { data: tagData } = await supabase
+        .from("tags")
+        .select("*")
+        .order("name");
+
+      setGenres(genreData ?? []);
+      setTags(tagData ?? []);
+    }
+
+    loadData();
+  }, []);
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -97,6 +158,28 @@ export default function NewStoryPage() {
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (selectedGenres.length) {
+      await supabase
+        .from("story_genres")
+        .insert(
+          selectedGenres.map((genreId) => ({
+            story_id: data.id,
+            genre_id: genreId,
+          }))
+        );
+    }
+
+    if (selectedTags.length) {
+      await supabase
+        .from("story_tags")
+        .insert(
+          selectedTags.map((tagId) => ({
+            story_id: data.id,
+            tag_id: tagId,
+          }))
+        );
     }
 
     router.push(
@@ -194,6 +277,74 @@ export default function NewStoryPage() {
           p-3
         "
       />
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Genres (max 3)
+      </label>
+
+      <div className="flex flex-wrap gap-2">
+        {genres.map((genre) => (
+          <button
+            type="button"
+            key={genre.id}
+            onClick={() => toggleGenre(genre.id)}
+            className={`
+              px-3
+              py-2
+              rounded-full
+              border
+              transition
+              ${
+                selectedGenres.includes(genre.id)
+                  ? "bg-black text-white"
+                  : ""
+              }
+            `}
+          >
+            {genre.name}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-sm opacity-60 mt-2">
+        {selectedGenres.length}/3 selected
+      </p>
+    </div>
+
+    <div>
+      <label className="block mb-2 font-medium">
+        Tags (max 6)
+      </label>
+
+      <div className="flex flex-wrap gap-2">
+        {tags.map((tag) => (
+          <button
+            type="button"
+            key={tag.id}
+            onClick={() => toggleTag(tag.id)}
+            className={`
+              px-3
+              py-2
+              rounded-full
+              border
+              transition
+              ${
+                selectedTags.includes(tag.id)
+                  ? "bg-black text-white"
+                  : ""
+              }
+            `}
+          >
+            {tag.name}
+          </button>
+        ))}
+      </div>
+
+      <p className="text-sm opacity-60 mt-2">
+        {selectedTags.length}/6 selected
+      </p>
     </div>
 
     <div className="pt-2">

@@ -43,6 +43,82 @@ export default async function PublicStoryPage({
     .eq("story_id", story.id)
     .order("chapter_number");
 
+  const { data: storyGenres } = await supabase
+    .from("story_genres")
+    .select(`
+      genres (
+        id,
+        name,
+        slug
+      )
+    `)
+    .eq("story_id", story.id);
+  
+  const genreIds =
+  storyGenres
+    ?.map((g: any) => g.genres.id)
+    .filter(Boolean) ?? [];
+
+  const { data: relatedStoryLinks } =
+    genreIds.length > 0
+      ? await supabase
+          .from("story_genres")
+          .select(`
+            story_id,
+            genre_id
+          `)
+          .in("genre_id", genreIds)
+      : { data: [] };
+
+  const recommendationScores = new Map<string, number>();
+
+  (relatedStoryLinks ?? []).forEach((item) => {
+    if (item.story_id === story.id) return;
+
+    recommendationScores.set(
+      item.story_id,
+      (recommendationScores.get(item.story_id) ?? 0) + 1
+    );
+  });
+
+  const relatedStoryIds = [...recommendationScores.keys()];
+
+  const { data: relatedStories } =
+    relatedStoryIds.length > 0
+      ? await supabase
+          .from("stories")
+          .select(`
+            id,
+            title,
+            slug,
+            cover_url,
+            description,
+            status
+          `)
+          .in("id", relatedStoryIds)
+          .neq("status", "Draft")
+          .limit(6)
+      : { data: [] };
+
+  relatedStories?.sort(
+    (a, b) =>
+      (recommendationScores.get(b.id) ?? 0) -
+      (recommendationScores.get(a.id) ?? 0)
+  );
+
+  const { data: storyTags } = await supabase
+    .from("story_tags")
+    .select(`
+      tags (
+        id,
+        name,
+        slug
+      )
+    `)
+    .eq("story_id", story.id);
+
+    console.log(storyTags);
+
   return (
 
   <main className="max-w-6xl mx-auto p-8">
@@ -102,9 +178,90 @@ export default async function PublicStoryPage({
           }}
         >
           {chapters?.length ?? 0} Chapters
-        </span>
-
+        </span>   
       </div>
+
+      {(storyGenres?.length ?? 0) > 0 && (
+  <div className="mt-6">
+
+    <h3 className="text-sm font-semibold mb-2">
+      Genres
+    </h3>
+
+    <div className="flex flex-wrap gap-2">
+      {(
+        storyGenres as unknown as {
+          genres: {
+            id: string;
+            name: string;
+            slug: string;
+          };
+        }[]
+      ).map((item) => (
+        <Link
+          key={item.genres.id}
+          href={`/search?genre=${item.genres.slug}`}
+          className="
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+            hover:bg-black
+            hover:text-white
+            transition
+          "
+          style={{
+            borderColor: "var(--card-border)",
+          }}
+        >
+          {item.genres.name}
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
+
+{(storyTags?.length ?? 0) > 0 && (
+  <div className="mt-5">
+
+    <h3 className="text-sm font-semibold mb-2">
+      Tags
+    </h3>
+
+    <div className="flex flex-wrap gap-2">
+      {(
+        storyTags as unknown as {
+          tags: {
+            id: string;
+            name: string;
+            slug: string;
+          };
+        }[]
+      ).map((item) => (
+        <Link
+          key={item.tags.id}
+          href={`/search?tag=${item.tags.slug}`}
+          className="
+            px-3
+            py-1
+            rounded-full
+            border
+            text-sm
+            hover:bg-black
+            hover:text-white
+            transition
+          "
+          style={{
+            borderColor: "var(--card-border)",
+          }}
+        >
+          {item.tags.name}
+        </Link>
+      ))}
+    </div>
+  </div>
+)}
 
       <div className="mt-6 flex flex-wrap gap-3 items-center">
         <SaveStoryButton
@@ -221,6 +378,64 @@ Chapter {chapter.chapter_number} </div>
 </div>
 )}
 </div>
+
+{relatedStories && relatedStories.length > 0 && (
+  <section className="mt-16">
+
+    <h2 className="text-3xl font-bold mb-6">
+      More Like This
+    </h2>
+
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+      {relatedStories.map((related) => (
+        <Link
+          key={related.id}
+          href={`/story/${related.slug}`}
+          className="
+            rounded-xl
+            border
+            overflow-hidden
+            transition
+            hover:-translate-y-1
+            hover:shadow-lg
+          "
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+
+          {related.cover_url && (
+            <Image
+              src={related.cover_url}
+              alt={related.title}
+              width={300}
+              height={450}
+              className="w-full h-64 object-cover"
+            />
+          )}
+
+          <div className="p-5">
+
+            <h3 className="text-xl font-bold">
+              {related.title}
+            </h3>
+
+            <p className="mt-3 opacity-80 line-clamp-3">
+              {related.description}
+            </p>
+
+          </div>
+
+        </Link>
+      ))}
+
+    </div>
+
+  </section>
+)}
+
   </main>
 );
 }
