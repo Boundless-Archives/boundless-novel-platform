@@ -15,6 +15,10 @@ export default async function ChapterPage({
 
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: chapter } = await supabase
     .from("chapters")
     .select("*")
@@ -37,6 +41,22 @@ export default async function ChapterPage({
 
   if (story.status === "Draft") {
     notFound();
+  }
+
+  if (user) {
+    await supabase
+      .from("reading_history")
+      .upsert(
+        {
+          user_id: user.id,
+          story_id: story.id,
+          chapter_id: chapter.id,
+          last_read_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "user_id,story_id",
+        }
+      );
   }
 
   const { data: previousChapter } =
