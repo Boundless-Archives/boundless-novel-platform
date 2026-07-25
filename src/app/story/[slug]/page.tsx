@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SaveStoryButton from "@/components/SaveStoryButton";
+import LikeButton from "@/components/story/LikeButton";
+import ReviewForm from "@/components/story/ReviewForm";
 
 type Props = {
   params: Promise<{
@@ -16,6 +18,10 @@ export default async function PublicStoryPage({
   const { slug } = await params;
 
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: story } = await supabase
     .from("stories")
@@ -36,6 +42,29 @@ export default async function PublicStoryPage({
   if (story.status === "Draft") {
     notFound();
   }
+
+  const { data: storyStats } = await supabase
+    .from("story_stats")
+    .select(`
+      likes,
+      reviews,
+      average_rating
+    `)
+    .eq("story_id", story.id)
+    .maybeSingle();
+
+    let liked = false;
+
+    if (user) {
+      const { data } = await supabase
+        .from("story_likes")
+        .select("id")
+        .eq("story_id", story.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      liked = !!data;
+    }
 
   const { data: chapters } = await supabase
     .from("chapters")
@@ -118,6 +147,48 @@ export default async function PublicStoryPage({
     .eq("story_id", story.id);
 
     console.log(storyTags);
+
+  const { data: reviews } = await supabase
+    .from("story_reviews")
+    .select("*")
+    .eq("story_id", story.id)
+    .order("created_at", {
+      ascending: false,
+    });
+
+    const reviewerIds =
+      reviews?.map((r) => r.user_id) ?? [];
+
+    const { data: reviewerProfiles } =
+      reviewerIds.length
+        ? await supabase
+            .from("profiles")
+            .select(`
+              id,
+              username,
+              display_name
+            `)
+            .in("id", reviewerIds)
+        : { data: [] };
+  const profileMap = new Map(
+    (reviewerProfiles ?? []).map((profile) => [
+      profile.id,
+      profile,
+    ])
+  );
+
+  let myReview = null;
+
+  if (user) {
+    const { data } = await supabase
+      .from("story_reviews")
+      .select("*")
+      .eq("story_id", story.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    myReview = data;
+  }
 
   return (
 
@@ -268,6 +339,13 @@ export default async function PublicStoryPage({
           storyId={story.id}
         />
 
+        <LikeButton
+          storyId={story.id}
+          storySlug={story.slug}
+          liked={liked}
+          likes={storyStats?.likes ?? 0}
+        />
+
         {chapters?.[0] && (
           <Link
             href={`/chapter/${chapters[0].id}`}
@@ -310,6 +388,113 @@ export default async function PublicStoryPage({
 
   </div>
 </div>
+
+<section className="mt-12">
+
+  <div className="flex items-center gap-4 mb-6">
+
+    <h2 className="text-3xl font-bold">
+      Reviews
+    </h2>
+
+    <span
+      className="
+        rounded-full
+        border
+        px-3
+        py-1
+        text-sm
+      "
+      style={{
+        borderColor: "var(--card-border)",
+      }}
+    >
+      ⭐ {storyStats?.average_rating ?? "0.0"} · {storyStats?.reviews ?? 0} reviews
+    </span>
+
+  </div>
+
+  {user ? (
+    <ReviewForm
+      storyId={story.id}
+      storySlug={story.slug}
+      initialRating={myReview?.rating ?? 0}
+      initialReview={myReview?.review ?? ""}
+    />
+  ) : (
+    <div
+      className="rounded-xl border p-6"
+      style={{
+        borderColor: "var(--card-border)",
+        backgroundColor: "var(--card)",
+      }}
+    >
+      <p className="opacity-80">
+        Log in to leave a review.
+      </p>
+    </div>
+  )}
+
+  <div className="mt-10 space-y-5">
+
+    {reviews?.length ? (
+      reviews.map((review: any) => (
+        <div
+          key={review.id}
+          className="rounded-xl border p-5"
+          style={{
+            borderColor: "var(--card-border)",
+            backgroundColor: "var(--card)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+
+            <div>
+
+              <h3 className="font-semibold">
+                {profileMap.get(review.user_id)?.display_name ??
+                profileMap.get(review.user_id)?.username ??
+                "Unknown Reader"}
+              </h3>
+
+              <div className="text-yellow-500 mt-1">
+                {"★".repeat(review.rating)}
+                {"☆".repeat(5 - review.rating)}
+              </div>
+
+            </div>
+
+            <div className="text-sm opacity-60">
+              {new Date(
+                review.updated_at
+              ).toLocaleDateString()}
+            </div>
+
+          </div>
+
+          <p className="mt-4 whitespace-pre-wrap opacity-90">
+            {review.review}
+          </p>
+
+        </div>
+      ))
+    ) : (
+      <div
+        className="rounded-xl border p-8 text-center"
+        style={{
+          borderColor: "var(--card-border)",
+          backgroundColor: "var(--card)",
+        }}
+      >
+        <p className="opacity-70">
+          No reviews yet.
+        </p>
+      </div>
+    )}
+
+  </div>
+
+</section>
 
 <div className="mt-10">
   <h2 className="text-3xl font-bold">
