@@ -85,7 +85,7 @@ export default async function ExplorePage() {
         <div className="space-y-6">
             {stories.map((story: any) => {
 
-  const stats = story.story_stats?.[0];
+  const stats = story.story_stats;
 
   return (
 

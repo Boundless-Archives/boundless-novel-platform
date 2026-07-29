@@ -27,7 +27,7 @@ export default async function TrendingPage() {
   const rankedStories =
     (stories ?? [])
       .map((story: any) => {
-        const stats = story.story_stats?.[0];
+        const stats = story.story_stats;
 
         const score =
           (stats?.views ?? 0) +
@@ -113,7 +113,7 @@ export default async function TrendingPage() {
         <div className="space-y-6">
             {rankedStories.map((story: any, index) => {
 
-  const stats = story.story_stats?.[0];
+  const stats = story.story_stats;
 
   return (
 

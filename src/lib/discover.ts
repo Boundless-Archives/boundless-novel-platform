@@ -30,8 +30,8 @@ export async function getTrendingStories() {
 
   const ranked =
     (data ?? []).sort((a: any, b: any) => {
-      const aStats = a.story_stats?.[0];
-      const bStats = b.story_stats?.[0];
+      const aStats = a.story_stats;
+      const bStats = b.story_stats;
 
       const aScore =
         (aStats?.views ?? 0) * 1 +
@@ -82,8 +82,8 @@ export async function getPopularStories() {
 
   const ranked =
     (data ?? []).sort((a: any, b: any) => {
-      const aStats = a.story_stats?.[0];
-      const bStats = b.story_stats?.[0];
+      const aStats = a.story_stats;
+      const bStats = b.story_stats;
 
       const aScore =
         (aStats?.views ?? 0) +

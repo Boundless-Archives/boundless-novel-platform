@@ -20,7 +20,7 @@ export default async function TrendingStories() {
         </h2>
 
         <Link
-          href="/#latest"
+          href="/trending"
           className="opacity-70 hover:opacity-100 transition"
         >
           View All →
@@ -32,7 +32,7 @@ export default async function TrendingStories() {
 
         {stories.map((story: any) => {
 
-          const stats = story.story_stats?.[0];
+          const stats = story.story_stats;
 
           return (
 

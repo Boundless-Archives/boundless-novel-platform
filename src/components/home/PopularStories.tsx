@@ -17,22 +17,14 @@ export default async function PopularStories() {
 
         <h2 className="text-3xl font-bold">
           ⭐ Popular Stories
-        </h2>
-
-        <Link
-          href="/#latest"
-          className="opacity-70 hover:opacity-100 transition"
-        >
-          View All →
-        </Link>
-
+        </h2> 
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
 
         {stories.map((story: any) => {
 
-          const stats = story.story_stats?.[0];
+          const stats = story.story_stats;
 
           return (
 
