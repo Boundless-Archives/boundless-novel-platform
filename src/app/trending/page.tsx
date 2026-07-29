@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import { createClient } from "@/utils/supabase/server";
+import StoryGrid from "@/components/story/StoryGrid";
 
 export default async function TrendingPage() {
   const supabase = await createClient();
@@ -110,173 +110,10 @@ export default async function TrendingPage() {
 
       ) : (
 
-        <div className="space-y-6">
-            {rankedStories.map((story: any, index) => {
-
-  const stats = story.story_stats;
-
-  return (
-
-    <Link
-      key={story.id}
-      href={`/story/${story.slug}`}
-      className="
-        flex
-        gap-5
-        rounded-2xl
-        border
-        p-5
-        transition
-        hover:-translate-y-1
-        hover:shadow-xl
-      "
-      style={{
-        backgroundColor: "var(--card)",
-        borderColor: "var(--card-border)",
-      }}
-    >
-
-      {story.cover_url && (
-
-        <Image
-          src={story.cover_url}
-          alt={story.title}
-          width={120}
-          height={170}
-          className="
-            h-[170px]
-            w-[120px]
-            rounded-xl
-            object-cover
-            shrink-0
-          "
+        <StoryGrid
+          stories={rankedStories}
+          variant="ranking"
         />
-
-      )}
-
-      <div className="flex flex-col flex-1">
-
-        <div className="flex items-center gap-3">
-
-          <span
-            className="
-              rounded-full
-              bg-orange-500
-              px-3
-              py-1
-              text-sm
-              font-bold
-              text-white
-            "
-          >
-            #{index + 1}
-          </span>
-
-          <h2
-            className="
-              text-2xl
-              font-bold
-              transition
-              hover:text-blue-600
-            "
-          >
-            {story.title}
-          </h2>
-
-        </div>
-
-        <p className="mt-2 text-sm opacity-80">
-
-          by{" "}
-
-          {story.profiles?.display_name ??
-            story.profiles?.username}
-
-        </p>
-
-        <div className="mt-4">
-
-          <span
-            className="
-              inline-block
-              rounded-full
-              border
-              px-3
-              py-1
-              text-sm
-            "
-            style={{
-              borderColor:
-                "var(--card-border)",
-            }}
-          >
-            {story.status}
-          </span>
-
-        </div>
-
-        <p
-          className="
-            mt-5
-            opacity-80
-            line-clamp-3
-          "
-        >
-          {story.description}
-        </p>
-
-        <div
-          className="
-            mt-auto
-            pt-6
-            flex
-            flex-wrap
-            items-center
-            gap-5
-            text-sm
-            opacity-70
-          "
-        >
-
-          {(stats?.views ?? 0) > 0 && (
-            <span>👁 {stats.views}</span>
-          )}
-
-          {(stats?.likes ?? 0) > 0 && (
-            <span>❤ {stats.likes}</span>
-          )}
-
-          {(stats?.library_adds ?? 0) > 0 && (
-            <span>📚 {stats.library_adds}</span>
-          )}
-
-          {(stats?.reviews ?? 0) > 0 && (
-            <span>💬 {stats.reviews}</span>
-          )}
-
-          {(stats?.average_rating ?? 0) > 0 && (
-            <span>
-              ⭐ {Number(
-                stats.average_rating
-              ).toFixed(1)}
-            </span>
-          )}
-
-          <span className="ml-auto font-semibold">
-            🔥 Score: {story.trendingScore}
-          </span>
-
-        </div>
-
-      </div>
-
-    </Link>
-
-  );
-
-})}
-
-        </div>
 
       )}
 

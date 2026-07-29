@@ -2,10 +2,12 @@ import StoryCard from "./StoryCard";
 
 type StoryGridProps = {
   stories: any[];
+  variant?: "default" | "compact" | "ranking";
 };
 
 export default function StoryGrid({
   stories,
+  variant = "default",
 }: StoryGridProps) {
   if (!stories?.length) {
     return (
@@ -42,6 +44,7 @@ export default function StoryGrid({
         <StoryCard
           key={story.id}
           story={story}
+          variant={variant}
         />
       ))}
     </div>

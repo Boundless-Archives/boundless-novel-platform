@@ -5,19 +5,22 @@ import StoryStats from "./StoryStats";
 
 type StoryCardProps = {
   story: any;
+  variant?: "default" | "compact" | "ranking";
 };
 
 export default function StoryCard({
   story,
+  variant = "default",
 }: StoryCardProps) {
   const stats = story.story_stats;
-console.log("StoryCard:", story.title);
-console.log("story_stats =", story.story_stats);
 
   const author =
     story.profiles?.display_name ??
     story.profiles?.username ??
     "Unknown Author";
+
+  const compact = variant === "compact";
+  const ranking = variant === "ranking";
 
   return (
     <Link
@@ -42,14 +45,17 @@ console.log("story_stats =", story.story_stats);
       {/* Cover */}
 
       <div
-        className="
+        className={`
           relative
-          h-[180px]
-          w-[125px]
           shrink-0
           overflow-hidden
           rounded-xl
-        "
+          ${
+            compact
+              ? "h-[140px] w-[95px]"
+              : "h-[180px] w-[125px]"
+          }
+        `}
       >
         {story.cover_url ? (
           <Image
@@ -70,7 +76,6 @@ console.log("story_stats =", story.story_stats);
               h-full
               items-center
               justify-center
-              rounded-xl
               text-5xl
             "
             style={{
@@ -84,23 +89,43 @@ console.log("story_stats =", story.story_stats);
 
       {/* Content */}
 
-      <div
-        className="
-          flex
-          min-w-0
-          flex-1
-          flex-col
-        "
-      >
+      <div className="flex min-w-0 flex-1 flex-col">
+
+        {/* Ranking badge */}
+
+        {ranking && (
+          <div className="mb-3 flex items-center justify-between">
+
+            <span
+              className="
+                rounded-full
+                bg-orange-500
+                px-3
+                py-1
+                text-sm
+                font-bold
+                text-white
+              "
+            >
+              🔥 {story.trendingScore}
+            </span>
+
+          </div>
+        )}
+
         {/* Title */}
 
         <h3
-          className="
-            text-2xl
+          className={`
             font-bold
             transition-colors
             group-hover:text-cyan-500
-          "
+            ${
+              compact
+                ? "text-xl"
+                : "text-2xl"
+            }
+          `}
         >
           {story.title}
         </h3>
@@ -119,15 +144,17 @@ console.log("story_stats =", story.story_stats);
 
         {/* Description */}
 
-        <p
-          className="
-            mt-4
-            line-clamp-3
-            opacity-85
-          "
-        >
-          {story.description}
-        </p>
+        {!compact && (
+          <p
+            className="
+              mt-4
+              line-clamp-3
+              opacity-85
+            "
+          >
+            {story.description}
+          </p>
+        )}
 
         {/* Stats */}
 
@@ -183,6 +210,7 @@ console.log("story_stats =", story.story_stats);
             Read →
           </span>
         </div>
+
       </div>
     </Link>
   );
