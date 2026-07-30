@@ -67,8 +67,8 @@ export default function LoginPage() {
           required
         />
        
-        <Button type="submit">
-          Login
+        <Button type="submit" fullWidth>
+          Log In
         </Button>
       </form>
 

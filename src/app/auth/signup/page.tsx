@@ -124,6 +124,7 @@ export default function SignupPage() {
           <Button
             type="submit"
             disabled={loading}
+            fullWidth
           >
             {loading
               ? "Creating Account..."

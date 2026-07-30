@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 import SaveStoryButton from "@/components/SaveStoryButton";
 import LikeButton from "@/components/story/LikeButton";
 import ReviewForm from "@/components/story/ReviewForm";
+import Card from "@/components/ui/Card";
 
 type Props = {
   params: Promise<{
@@ -502,19 +503,11 @@ export default async function PublicStoryPage({
   </h2>
 
 {!chapters?.length ? (
-<div
-className="
-mt-6
-rounded-xl
-border
-p-10
-text-center
-"
-style={{
-backgroundColor: "var(--card)",
-borderColor: "var(--card-border)",
-}}
-> <div className="text-5xl mb-4">
+<Card
+padding="lg"
+className="text-center"
+> 
+<div className="text-5xl mb-4">
 ✍️ </div>
 
 
@@ -525,7 +518,7 @@ borderColor: "var(--card-border)",
   <p className="mt-3 opacity-80">
     This story has not published any chapters yet.
   </p>
-</div>
+</Card>
 
 
 ) : ( <div className="mt-6 space-y-3">

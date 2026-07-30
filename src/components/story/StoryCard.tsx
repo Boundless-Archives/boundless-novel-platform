@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import StoryStats from "./StoryStats";
+import Card from "@/components/ui/Card";
 
 type StoryCardProps = {
   story: any;
@@ -23,7 +23,8 @@ export default function StoryCard({
   const ranking = variant === "ranking";
 
   return (
-    <Link
+    <Card hover padding="md">
+      <Link
       href={`/story/${story.slug}`}
       className="
         group
@@ -44,48 +45,55 @@ export default function StoryCard({
     >
       {/* Cover */}
 
-      <div
-        className={`
-          relative
-          shrink-0
-          overflow-hidden
-          rounded-xl
-          ${
-            compact
-              ? "h-[140px] w-[95px]"
-              : "h-[180px] w-[125px]"
-          }
-        `}
-      >
-        {story.cover_url ? (
-          <Image
-            src={story.cover_url}
-            alt={story.title}
-            fill
-            className="
-              object-cover
-              transition-transform
-              duration-300
-              group-hover:scale-105
-            "
-          />
-        ) : (
-          <div
-            className="
-              flex
-              h-full
-              items-center
-              justify-center
-              text-5xl
-            "
-            style={{
-              backgroundColor: "var(--background)",
-            }}
-          >
-            📖
-          </div>
-        )}
-      </div>
+<div
+  className={`
+    relative
+    shrink-0
+    overflow-hidden
+    rounded-xl
+    ${
+      compact
+        ? "h-[140px] w-[95px]"
+        : "h-[180px] w-[125px]"
+    }
+  `}
+>
+
+  {story.cover_url ? (
+
+    <Image
+      src={story.cover_url}
+      alt={story.title}
+      fill
+      className="
+        object-cover
+        transition-transform
+        duration-300
+        group-hover:scale-105
+      "
+    />
+
+  ) : (
+
+    <div
+      className="
+        flex
+        h-full
+        items-center
+        justify-center
+        rounded-xl
+        text-5xl
+      "
+      style={{
+        backgroundColor: "var(--background)",
+      }}
+    >
+      📖
+    </div>
+
+  )}
+
+</div>
 
       {/* Content */}
 
@@ -212,6 +220,7 @@ export default function StoryCard({
         </div>
 
       </div>
-    </Link>
-  );
+        </Link>
+      </Card>
+    );
 }

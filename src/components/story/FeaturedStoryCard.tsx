@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-
 import StoryStats from "./StoryStats";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 
 type FeaturedStoryCardProps = {
   story: any;
@@ -18,27 +19,22 @@ export default function FeaturedStoryCard({
     "Unknown Author";
 
   return (
-    <section
-      className="
-        relative
-        overflow-hidden
-        rounded-3xl
-        border
-      "
-      style={{
-        backgroundColor: "var(--card)",
-        borderColor: "var(--card-border)",
-      }}
-    >
+    <div className="mb-16">
+      <Card
+        hover
+        elevated
+        padding="lg"
+        className="overflow-hidden"
+      >
+
       <div
         className="
           grid
           gap-10
-          p-8
-          md:grid-cols-[260px_1fr]
-          md:p-10
+          items-center
+          lg:grid-cols-[280px_1fr]
         "
-      >
+>
         {/* Cover */}
 
         <div
@@ -153,25 +149,12 @@ export default function FeaturedStoryCard({
               pt-10
             "
           >
-            <Link
+            <Button
               href={`/story/${story.slug}`}
-              className="
-                rounded-xl
-                px-6
-                py-3
-                font-semibold
-                transition
-                hover:scale-105
-              "
-              style={{
-                backgroundColor:
-                  "var(--button)",
-                color:
-                  "var(--button-text)",
-              }}
+              size="lg"
             >
-              Read Story →
-            </Link>
+              Read Now →
+            </Button>
 
             <span
               className="
@@ -191,7 +174,8 @@ export default function FeaturedStoryCard({
           </div>
 
         </div>
-      </div>
-    </section>
+        </div>
+      </Card>
+    </div>
   );
 }

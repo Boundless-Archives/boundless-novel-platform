@@ -6,6 +6,10 @@ import PopularStories from "@/components/home/PopularStories";
 import { ContinueReading } from "@/types/database";
 import StoryGrid from "@/components/story/StoryGrid";
 import FeaturedStoryCard from "@/components/story/FeaturedStoryCard";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import SectionHeader from "@/components/layout/SectionHeader";
+import EmptyState from "@/components/layout/EmptyState";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -116,42 +120,17 @@ export default async function HomePage() {
             "
           >
 
-            <Link
-              href="#latest"
-              className="
-                rounded-xl
-                px-6
-                py-3
-                font-semibold
-                transition
-                hover:scale-105
-              "
-              style={{
-                backgroundColor: "var(--button)",
-                color: "var(--button-text)",
-              }}
-            >
+            <Button href="#latest">
               Start Reading
-            </Link>
+            </Button>
 
             {!user && (
-              <Link
+              <Button
                 href="/profile/become-author"
-                className="
-                  rounded-xl
-                  border
-                  px-6
-                  py-3
-                  font-semibold
-                  transition
-                  hover:shadow-lg
-                "
-                style={{
-                  borderColor: "var(--card-border)",
-                }}
+                variant="secondary"
               >
                 Become an Author
-              </Link>
+              </Button>
             )}
 
           </div>
@@ -163,17 +142,10 @@ export default async function HomePage() {
       {/* CONTINUE READING */}
 
       {continueReading && (
-        <section
-          className="
-            mb-16
-            rounded-2xl
-            border
-            p-6
-          "
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--card-border)",
-          }}
+        <Card
+          elevated
+          padding="lg"
+          className="mb-16"
         >
 
           <div className="flex gap-6 items-center">
@@ -210,30 +182,15 @@ export default async function HomePage() {
 
               </p>
 
-              <Link
-                href={`/chapters/${continueReading.chapter_id}`}
-                className="
-                  inline-block
-                  mt-5
-                  rounded-xl
-                  px-5
-                  py-3
-                  font-semibold
-                  transition
-                "
-                style={{
-                  backgroundColor: "var(--button)",
-                  color: "var(--button-text)",
-                }}
-              >
+              <Button href={`/chapters/${continueReading.chapter_id}`}>
                 Continue Reading →
-              </Link>
+              </Button>
 
             </div>
 
           </div>
 
-        </section>
+        </Card>
       )}
 
 {featuredStory && (
@@ -327,56 +284,28 @@ export default async function HomePage() {
           "
         >
 
-          <Link
+          <Button
             href="/profile/become-author"
-            className="
-              rounded-xl
-              px-6
-              py-3
-              font-semibold
-              transition
-              hover:scale-105
-            "
-            style={{
-              backgroundColor: "var(--button)",
-              color: "var(--button-text)",
-            }}
+            size="lg"
           >
             Become an Author
-          </Link>
+          </Button>
 
-          <Link
-            href="/#latest"
-            className="
-              rounded-xl
-              border
-              px-6
-              py-3
-              font-semibold
-              transition
-              hover:shadow-lg
-            "
-            style={{
-              borderColor: "var(--card-border)",
-            }}
+          <Button
+            href="/explore"
+            variant="secondary"
+            size="lg"
           >
             Explore Stories
-          </Link>
+          </Button>
 
         </div>
 
       </div>
 
-      <div
-        className="
-          rounded-2xl
-          border
-          p-8
-        "
-        style={{
-          backgroundColor: "var(--card)",
-          borderColor: "var(--card-border)",
-        }}
+      <Card
+        elevated
+        padding="lg"
       >
 
         <div className="space-y-6">
@@ -415,7 +344,7 @@ export default async function HomePage() {
 
         </div>
 
-      </div>
+      </Card>
 
     </div>
 
@@ -426,49 +355,19 @@ export default async function HomePage() {
 
 <section id="latest">
 
-  <div className="flex items-center justify-between mb-8">
-
-    <h2 className="text-4xl font-bold">
-      Latest Stories
-    </h2>
-
-    <Link
-      href="/explore"
-      className="opacity-70 hover:opacity-100 transition"
-    >
-      Browse All →
-    </Link>
-
-  </div>
+  <SectionHeader
+    title="Latest Stories"
+    actionLabel="Browse All"
+    actionHref="/explore"
+  />
 
   {!stories?.length ? (
 
-<div
-  className="
-    rounded-2xl
-    border
-    p-12
-    text-center
-  "
-  style={{
-    backgroundColor: "var(--card)",
-    borderColor: "var(--card-border)",
-  }}
->
-
-  <div className="text-6xl mb-5">
-    📚
-  </div>
-
-  <h3 className="text-3xl font-bold">
-    No stories yet
-  </h3>
-
-  <p className="mt-4 opacity-70">
-    Boundless is waiting for its first adventure.
-  </p>
-
-</div>
+<EmptyState
+  icon="📚"
+  title="No stories yet"
+  description="Boundless is waiting for its first adventure."
+/>
 
 ) : (
 

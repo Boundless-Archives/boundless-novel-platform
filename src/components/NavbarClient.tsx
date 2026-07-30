@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 type NavbarClientProps = {
   user: boolean;
@@ -251,7 +252,7 @@ export default function NavbarClient({
 
           </div>
 
-                    <div
+          <div
             className="
               hidden
               items-center
@@ -306,6 +307,8 @@ export default function NavbarClient({
                 🔍
               </span>
             </form>
+
+            <ThemeToggle />
 
             {!user ? (
               <>
@@ -514,7 +517,7 @@ export default function NavbarClient({
                 ))}
                 </nav>
 
-              <div
+            <div
               className="
                 mt-5
                 border-t
@@ -525,6 +528,15 @@ export default function NavbarClient({
                   "var(--card-border)",
               }}
             >
+
+              <div className="mb-5 flex items-center justify-between">
+                <span className="text-sm opacity-70">
+                  Theme
+                </span>
+
+                <ThemeToggle />
+              </div>
+
               {!user ? (
                 <div className="flex flex-col gap-2">
 
