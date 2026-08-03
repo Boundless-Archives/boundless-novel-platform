@@ -84,7 +84,6 @@ export default function EditChapterPage() {
 
   <main className="max-w-5xl mx-auto p-8">
 
-```
 <div
   className="rounded-xl border p-8"
   style={{
@@ -215,7 +214,6 @@ export default function EditChapterPage() {
   )}
 
 </div>
-```
 
   </main>
 );

@@ -1,12 +1,14 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useParams,
   useRouter,
 } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import LexicalEditor from "@/components/editor/LexicalEditor";
+import EditorToolbar from "@/components/editor/EditorToolbar";
 
 export default function NewChapterPage() {
   const supabase = createClient();
@@ -17,13 +19,36 @@ export default function NewChapterPage() {
   const router = useRouter();
 
   const [chapterNumber, setChapterNumber] =
-    useState("");
+  useState<number>(1);
 
   const [title, setTitle] = useState("");
 
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState<string>("");
 
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    async function loadNextChapterNumber() {
+      const { data } = await supabase
+        .from("chapters")
+        .select("chapter_number")
+        .eq("story_id", storyId)
+        .order("chapter_number", {
+          ascending: false,
+        })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setChapterNumber(
+          data[0].chapter_number + 1
+        );
+      } else {
+        setChapterNumber(1);
+      }
+    }
+
+    loadNextChapterNumber();
+  }, [storyId]);
 
   async function handleSubmit(
     e: React.FormEvent<HTMLFormElement>
@@ -34,8 +59,7 @@ export default function NewChapterPage() {
       .from("chapters")
       .insert({
         story_id: storyId,
-        chapter_number:
-          Number(chapterNumber),
+        chapter_number: chapterNumber,
         title,
         content,
       });
@@ -54,7 +78,6 @@ export default function NewChapterPage() {
 
   <main className="max-w-5xl mx-auto p-8">
 
-```
 <div
   className="rounded-xl border p-8"
   style={{
@@ -71,33 +94,14 @@ export default function NewChapterPage() {
     Add a new chapter to your story.
   </p>
 
+  <p className="mt-2 text-sm opacity-70">
+    Chapter {chapterNumber}
+  </p>
+
   <form
     onSubmit={handleSubmit}
     className="mt-8 flex flex-col gap-6"
   >
-
-    <div>
-      <label className="block mb-2 font-medium">
-        Chapter Number
-      </label>
-
-      <input
-        type="number"
-        value={chapterNumber}
-        onChange={(e) =>
-          setChapterNumber(
-            e.target.value
-          )
-        }
-        className="
-          w-full
-          border
-          rounded-lg
-          p-3
-        "
-        required
-      />
-    </div>
 
     <div>
       <label className="block mb-2 font-medium">
@@ -126,22 +130,12 @@ export default function NewChapterPage() {
         Chapter Content
       </label>
 
-      <textarea
+      <LexicalEditor
         value={content}
-        onChange={(e) =>
-          setContent(
-            e.target.value
-          )
-        }
-        rows={25}
-        className="
-          w-full
-          border
-          rounded-lg
-          p-3
-        "
-        required
-      />
+        onChange={setContent}
+      >
+        <EditorToolbar />
+      </LexicalEditor>
     </div>
 
     <div className="flex gap-3">
@@ -188,7 +182,6 @@ export default function NewChapterPage() {
   )}
 
 </div>
-```
 
   </main>
 );

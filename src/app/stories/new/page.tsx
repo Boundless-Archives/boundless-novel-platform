@@ -191,7 +191,6 @@ export default function NewStoryPage() {
 
   <main className="max-w-4xl mx-auto p-8">
 
-```
 <div
   className="rounded-xl border p-8"
   style={{
@@ -368,7 +367,6 @@ export default function NewStoryPage() {
   )}
 
 </div>
-```
 
   </main>
 );

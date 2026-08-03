@@ -33,7 +33,6 @@ export default async function StoriesPage() {
 
   <main className="max-w-6xl mx-auto p-8">
 
-```
 
 <div className="flex items-center justify-between mb-8">
 
@@ -207,7 +206,6 @@ export default async function StoriesPage() {
   ))}
 
 </div>
-```
 
   </main>
 );

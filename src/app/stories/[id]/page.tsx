@@ -42,7 +42,6 @@ export default async function StoryPage({
 
   <main className="max-w-6xl mx-auto p-8">
 
-```
 <div
   className="rounded-xl border p-8"
   style={{
@@ -172,7 +171,6 @@ export default async function StoryPage({
   </div>
 
 </div>
-```
 
   </main>
 );
