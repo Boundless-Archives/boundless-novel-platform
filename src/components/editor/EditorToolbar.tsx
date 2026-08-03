@@ -14,14 +14,25 @@ import {
 import {
   $createHeadingNode,
 } from "@lexical/rich-text";
-
 import {
   $createParagraphNode,
 } from "lexical";
-
 import {
   $setBlocksType,
 } from "@lexical/selection";
+import {
+  INSERT_UNORDERED_LIST_COMMAND,
+  INSERT_ORDERED_LIST_COMMAND,
+  REMOVE_LIST_COMMAND,
+} from "@lexical/list";
+import {
+  $createQuoteNode,
+} from "@lexical/rich-text";
+import { $createCodeNode } from "@lexical/code";
+import {
+  UNDO_COMMAND,
+  REDO_COMMAND,
+} from "lexical";
 
 export default function EditorToolbar() {
   const [editor] =
@@ -31,6 +42,10 @@ export default function EditorToolbar() {
     bold: false,
     italic: false,
     underline: false,
+    bullet: false,
+    numbered: false,
+    quote: false,
+    code: false, 
   });
 
   const [blockType, setBlockType] = useState("Normal");
@@ -41,16 +56,9 @@ export default function EditorToolbar() {
         const selection = $getSelection();
 
       if ($isRangeSelection(selection)) {
-        editorState.read(() => {
   const selection = $getSelection();
 
-  if (!$isRangeSelection(selection)) return;
-
-  setFormats({
-    bold: selection.hasFormat("bold"),
-    italic: selection.hasFormat("italic"),
-    underline: selection.hasFormat("underline"),
-  });
+  if (!$isRangeSelection(selection)) return; 
 
   const anchorNode = selection.anchor.getNode();
 
@@ -61,6 +69,42 @@ export default function EditorToolbar() {
 
   const type = element.getType();
 
+  const quote = type === "quote";
+
+  const code = type === "code";
+
+  const parent = element.getParent();
+
+const isBullet =
+  type === "list" &&
+  (element as any).getListType?.() === "bullet";
+
+const parentBullet =
+  parent?.getType?.() === "list" &&
+  (parent as any).getListType?.() === "bullet";
+
+const bullet = isBullet || parentBullet;
+
+const isNumbered =
+  type === "list" &&
+  (element as any).getListType?.() === "number";
+
+const parentNumbered =
+  parent?.getType?.() === "list" &&
+  (parent as any).getListType?.() === "number";
+
+const numbered = isNumbered || parentNumbered;
+
+setFormats({
+    bold: selection.hasFormat("bold"),
+    italic: selection.hasFormat("italic"),
+    underline: selection.hasFormat("underline"),
+    bullet,
+    numbered,
+    quote,
+    code,
+  });
+  
   switch (type) {
     case "heading":
       const tag =
@@ -88,11 +132,33 @@ export default function EditorToolbar() {
     default:
       setBlockType("Normal");
   }
-});
       }
     });
   });
 }, [editor]);
+
+function applyQuote() {
+  editor.update(() => {
+    const selection = $getSelection();
+
+    if (!$isRangeSelection(selection)) return;
+
+    $setBlocksType(selection, () => $createQuoteNode());
+  });
+}
+
+function applyCodeBlock() {
+  editor.update(() => {
+    const selection = $getSelection();
+
+    if (!$isRangeSelection(selection)) return;
+
+    $setBlocksType(
+      selection,
+      () => $createCodeNode()
+    );
+  });
+}
 
 function applyHeading(level: 1 | 2 | 3 | "paragraph") {
   editor.update(() => {
@@ -247,6 +313,119 @@ function applyHeading(level: 1 | 2 | 3 | "paragraph") {
     <option>Heading 3</option>
   </select>
 </div>
+
+<button
+  type="button"
+  onClick={() => {
+    if (formats.bullet) {
+      editor.dispatchCommand(
+        REMOVE_LIST_COMMAND,
+        undefined
+      );
+    } else {
+      editor.dispatchCommand(
+        INSERT_UNORDERED_LIST_COMMAND,
+        undefined
+      );
+    }
+  }}
+  className={`
+    rounded-lg
+    px-3
+    py-2
+    transition-colors
+    ${
+      formats.bullet
+        ? "bg-indigo-600 text-white"
+        : "hover:bg-black/10 dark:hover:bg-white/10"
+    }
+  `}
+>
+  • List
+</button>
+
+<button
+  type="button"
+  onClick={() => {
+    if (formats.numbered) {
+      editor.dispatchCommand(
+        REMOVE_LIST_COMMAND,
+        undefined
+      );
+    } else {
+      editor.dispatchCommand(
+        INSERT_ORDERED_LIST_COMMAND,
+        undefined
+      );
+    }
+  }}
+  className={`
+    rounded-lg
+    px-3
+    py-2
+    transition-colors
+    ${
+      formats.numbered
+        ? "bg-indigo-600 text-white"
+        : "hover:bg-black/10 dark:hover:bg-white/10"
+    }
+  `}
+>
+  1.
+</button>
+
+<button
+  type="button"
+  onClick={applyQuote}
+  className={`
+    rounded-lg
+    px-3
+    py-2
+    transition-colors
+    ${
+      formats.quote
+        ? "bg-indigo-600 text-white"
+        : "hover:bg-black/10 dark:hover:bg-white/10"
+    }
+  `}
+>
+  ❝
+</button>
+
+<button
+  type="button"
+  onClick={applyCodeBlock}
+  className={`
+    rounded-lg
+    px-3
+    py-2
+    transition-colors
+    ${
+      formats.code
+        ? "bg-indigo-600 text-white"
+        : "hover:bg-black/10 dark:hover:bg-white/10"
+    }
+  `}
+>
+  {"</>"}
+</button>
+
+<button
+  type="button"
+  onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)}
+  className="rounded-lg px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10"
+>
+  ↶
+</button>
+
+<button
+  type="button"
+  onClick={() => editor.dispatchCommand(REDO_COMMAND, undefined)}
+  className="rounded-lg px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10"
+>
+  ↷
+</button>
+
     </div>
   );
 }

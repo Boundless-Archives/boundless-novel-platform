@@ -28,6 +28,7 @@ import PlaceholderPlugin from "./plugins/PlaceholderPlugin";
 import { $generateHtmlFromNodes } from "@lexical/html";
 import { $getRoot } from "lexical";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
+import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 
 type Props = {
   value: string;
@@ -98,6 +99,8 @@ export default function LexicalEditor({
             ErrorBoundary={LexicalErrorBoundary}
             />
 
+        <ListPlugin />
+        
         <HistoryPlugin />
 
         <MarkdownPlugin />
