@@ -7,7 +7,7 @@ export default function PlaceholderPlugin() {
         pointer-events-none
         absolute
         left-5
-        top-28
+        top-40
         select-none
         opacity-50
       "

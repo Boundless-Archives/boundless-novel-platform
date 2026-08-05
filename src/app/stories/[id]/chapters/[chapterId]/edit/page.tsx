@@ -7,6 +7,8 @@ import {
   useRouter,
 } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import LexicalEditor from "@/components/editor/LexicalEditor";
+import EditorToolbar from "@/components/editor/EditorToolbar";
 
 export default function EditChapterPage() {
   const supabase = createClient();
@@ -30,6 +32,10 @@ export default function EditChapterPage() {
   const [content, setContent] =
     useState("");
 
+  const [status, setStatus] = useState<
+    "Draft" | "Published"
+  >("Draft");
+
   const [message, setMessage] =
     useState("");
 
@@ -50,23 +56,23 @@ export default function EditChapterPage() {
       setTitle(data.title);
 
       setContent(data.content);
+
+      setStatus(data.status);
     }
 
     loadChapter();
   }, [chapterId, supabase]);
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
+  async function saveChapter(
+    nextStatus: "Draft" | "Published"
   ) {
-    e.preventDefault();
-
     const { error } = await supabase
       .from("chapters")
       .update({
-        chapter_number:
-          Number(chapterNumber),
+        chapter_number: Number(chapterNumber),
         title,
         content,
+        status: nextStatus,
       })
       .eq("id", chapterId);
 
@@ -75,9 +81,19 @@ export default function EditChapterPage() {
       return;
     }
 
+    setStatus(nextStatus);
+
     router.push(
-      `/stories/${storyId}`
+      `/stories/${storyId}/chapters`
     );
+  }
+
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
+    e.preventDefault();
+
+    await saveChapter(status);
   }
 
   return (
@@ -153,28 +169,37 @@ export default function EditChapterPage() {
         Chapter Content
       </label>
 
-      <textarea
+      <LexicalEditor
         value={content}
-        onChange={(e) =>
-          setContent(
-            e.target.value
-          )
-        }
-        rows={25}
-        className="
-          w-full
-          border
-          rounded-lg
-          p-3
-        "
-      />
+        onChange={setContent}
+      >
+        <EditorToolbar />
+      </LexicalEditor>
     </div>
 
     <div className="flex gap-3">
 
-      <Button type="submit">
-        Save Changes
-      </Button>
+      {status === "Draft" ? (
+        <>
+          <Button
+            type="button"
+            onClick={() => saveChapter("Draft")}
+          >
+            Save Draft
+          </Button>
+
+          <Button
+            type="button"
+            onClick={() => saveChapter("Published")}
+          >
+            Publish
+          </Button>
+        </>
+      ) : (
+        <Button type="submit">
+          Save Changes
+        </Button>
+      )}
 
       <button
         type="button"

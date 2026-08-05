@@ -16,7 +16,11 @@ import {
   OnChangePlugin,
 } from "@lexical/react/LexicalOnChangePlugin";
 
-import { EditorState } from "lexical";
+import {
+  EditorState,
+  $getRoot,
+  $insertNodes,
+} from "lexical";
 
 import EditorTheme from "./EditorTheme";
 import { editorNodes } from "./nodes";
@@ -25,8 +29,10 @@ import AutoFocusPlugin from "./plugins/AutoFocusPlugin";
 import HistoryPlugin from "./plugins/HistoryPlugin";
 import MarkdownPlugin from "./plugins/MarkdownPlugin";
 import PlaceholderPlugin from "./plugins/PlaceholderPlugin";
-import { $generateHtmlFromNodes } from "@lexical/html";
-import { $getRoot } from "lexical";
+import {
+  $generateHtmlFromNodes,
+  $generateNodesFromDOM,
+} from "@lexical/html";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
 
@@ -35,6 +41,47 @@ type Props = {
   onChange: (value: string) => void;
   children?: React.ReactNode;
 };
+
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { useEffect } from "react";
+
+function InitialContentPlugin({
+  value,
+}: {
+  value: string;
+}) {
+  const [editor] =
+    useLexicalComposerContext();
+
+  useEffect(() => {
+    if (!value) return;
+
+    editor.update(() => {
+      const parser = new DOMParser();
+
+      const dom = parser.parseFromString(
+        value,
+        "text/html"
+      );
+
+      const nodes =
+        $generateNodesFromDOM(
+          editor,
+          dom
+        );
+
+      const root = $getRoot();
+
+      root.clear();
+
+      root.select();
+
+      $insertNodes(nodes);
+    });
+  }, [editor, value]);
+
+  return null;
+}
 
 export default function LexicalEditor({
   value,
@@ -101,6 +148,10 @@ export default function LexicalEditor({
 
         <ListPlugin />
         
+        <InitialContentPlugin
+          value={value}
+        />
+
         <HistoryPlugin />
 
         <MarkdownPlugin />

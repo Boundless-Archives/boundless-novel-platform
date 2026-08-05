@@ -144,11 +144,28 @@ export default async function ChaptersPage({
 
       <div>
 
-        <div className="text-sm opacity-70">
-          Chapter {chapter.chapter_number}
+        <div className="flex items-center gap-3">
+
+          <div className="text-sm opacity-70">
+            Chapter {chapter.chapter_number}
+          </div>
+
+          <span
+            className="px-2 py-1 rounded-full text-xs font-medium"
+            style={{
+              backgroundColor:
+                chapter.status === "Published"
+                  ? "#16a34a"
+                  : "#ca8a04",
+              color: "white",
+            }}
+          >
+            {chapter.status}
+          </span>
+
         </div>
 
-        <h2 className="text-xl font-semibold mt-1">
+        <h2 className="text-xl font-semibold mt-2">
           {chapter.title}
         </h2>
 
@@ -169,7 +186,9 @@ export default async function ChaptersPage({
               "var(--card-border)",
           }}
         >
-          Preview
+          {chapter.status === "Published"
+            ? "Preview"
+            : "Draft Preview"}
         </Link>
 
         <Link

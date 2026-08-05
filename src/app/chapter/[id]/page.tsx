@@ -164,7 +164,11 @@ export default async function ChapterPage({
           whitespace-pre-wrap
         "
       >
-        {chapter.content}
+        <div
+          dangerouslySetInnerHTML={{
+            __html: chapter.content,
+          }}
+        />
 
         <p
           className="
@@ -176,7 +180,6 @@ export default async function ChapterPage({
         >
           End of Chapter
         </p>
-
       </article>
 
       <section

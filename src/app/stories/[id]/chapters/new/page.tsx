@@ -27,6 +27,10 @@ export default function NewChapterPage() {
 
   const [message, setMessage] = useState("");
 
+  const [status, setStatus] = useState<
+    "Draft" | "Published"
+  >("Draft");
+
   useEffect(() => {
     async function loadNextChapterNumber() {
       const { data } = await supabase
@@ -59,9 +63,11 @@ export default function NewChapterPage() {
       .from("chapters")
       .insert({
         story_id: storyId,
-        chapter_number: chapterNumber,
+        chapter_number:
+          Number(chapterNumber),
         title,
         content,
+        status,
       });
 
     if (error) {
@@ -140,8 +146,18 @@ export default function NewChapterPage() {
 
     <div className="flex gap-3">
 
-      <Button type="submit">
-        Create Chapter
+      <Button
+        type="submit"
+        onClick={() => setStatus("Draft")}
+      >
+        Save Draft
+      </Button>
+
+      <Button
+        type="submit"
+        onClick={() => setStatus("Published")}
+      >
+        Publish
       </Button>
 
       <button

@@ -71,6 +71,7 @@ export default async function PublicStoryPage({
     .from("chapters")
     .select("*")
     .eq("story_id", story.id)
+    .eq("status", "Published")
     .order("chapter_number");
 
   const { data: storyGenres } = await supabase
