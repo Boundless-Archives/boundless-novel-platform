@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import PublishChapterButton from "@/components/story/PublishChapterButton";
 
 type Props = {
   params: Promise<{
@@ -171,7 +172,11 @@ export default async function ChaptersPage({
 
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-3 items-center">
+
+        {chapter.status === "Draft" && (
+          <PublishChapterButton chapterId={chapter.id} />
+        )}
 
         <Link
           href={`/chapter/${chapter.id}`}
@@ -182,13 +187,10 @@ export default async function ChaptersPage({
             py-2
           "
           style={{
-            borderColor:
-              "var(--card-border)",
+            borderColor: "var(--card-border)",
           }}
         >
-          {chapter.status === "Published"
-            ? "Preview"
-            : "Draft Preview"}
+          Preview
         </Link>
 
         <Link
@@ -200,8 +202,7 @@ export default async function ChaptersPage({
             py-2
           "
           style={{
-            borderColor:
-              "var(--card-border)",
+            borderColor: "var(--card-border)",
           }}
         >
           Edit

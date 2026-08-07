@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import StoryAnalyticsCard from "@/components/story/StoryAnalyticsCard";
 
 type Props = {
   params: Promise<{
@@ -37,6 +38,24 @@ export default async function StoryPage({
   if (story.author_id !== user.id) {
     redirect("/stories");
   }
+
+  const { data: stats } = await supabase
+  .from("story_stats")
+  .select("*")
+  .eq("story_id", story.id)
+  .maybeSingle();
+
+  const { count: publishedCount } = await supabase
+    .from("chapters")
+    .select("*", { count: "exact", head: true })
+    .eq("story_id", story.id)
+    .eq("status", "Published");
+
+  const { count: draftCount } = await supabase
+    .from("chapters")
+    .select("*", { count: "exact", head: true })
+    .eq("story_id", story.id)
+    .eq("status", "Draft");
 
   return (
 
@@ -171,7 +190,12 @@ export default async function StoryPage({
   </div>
 
 </div>
-
+<StoryAnalyticsCard
+  storyId={story.id}
+  stats={stats}
+  publishedCount={publishedCount ?? 0}
+  draftCount={draftCount ?? 0}
+/>
   </main>
 );
 }
