@@ -74,6 +74,30 @@ export default async function PublicStoryPage({
     .eq("status", "Published")
     .order("chapter_number");
 
+    /*
+   * Check whether this story belongs to a series.
+   */
+  const { data: seriesMembership } = await supabase
+    .from("series_stories")
+    .select(`
+      series_id,
+      position,
+      series (
+        id,
+        title,
+        description,
+        cover_url
+      )
+    `)
+    .eq("story_id", story.id)
+    .maybeSingle();
+
+  const series = seriesMembership?.series
+    ? Array.isArray(seriesMembership.series)
+      ? seriesMembership.series[0]
+      : seriesMembership.series
+    : null;
+
   const { data: storyGenres } = await supabase
     .from("story_genres")
     .select(`
@@ -232,6 +256,45 @@ export default async function PublicStoryPage({
             story.profiles?.username}
         </Link>
       </p>
+
+      {series && seriesMembership && (
+        <div className="mt-4">
+          <Link
+            href={`/series/${series.id}`}
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              px-4
+              py-2
+              transition
+              hover:-translate-y-0.5
+              hover:shadow-md
+            "
+            style={{
+              borderColor: "var(--card-border)",
+              backgroundColor: "var(--background)",
+            }}
+          >
+            <span>📚</span>
+
+            <span>
+              <span className="opacity-60">
+                Part {seriesMembership.position} of
+              </span>{" "}
+              <span className="font-semibold">
+                {series.title}
+              </span>
+            </span>
+
+            <span className="opacity-60">
+              →
+            </span>
+          </Link>
+        </div>
+      )}
 
       <div className="mt-5 flex flex-wrap gap-3">
 
