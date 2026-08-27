@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import CommentForm from "@/components/chapter/CommentForm";
 import CommentList from "@/components/chapter/CommentList";
+import ReadingProgress from "@/components/chapter/ReadingProgress";
 
 type Props = {
   params: Promise<{
@@ -130,6 +131,11 @@ export default async function ChapterPage({
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
 
+      <ReadingProgress
+        storyId={story.id}
+        chapterId={chapter.id}
+      />
+
       <header className="text-center">
 
         <Link
@@ -155,6 +161,7 @@ export default async function ChapterPage({
       </header>
 
       <article
+        id="chapter-reading-content"
         className="
           mx-auto
           mt-16

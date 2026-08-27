@@ -159,8 +159,8 @@ export default function NavbarClient({
               <Image
                 src="/branding/icon.png"
                 alt="Boundless"
-                width={46}
-                height={46}
+                width={76}
+                height={76}
                 priority
               />
 
