@@ -409,12 +409,14 @@ if (!collection.is_public) {
                     >
                       Open Story →
                     </Link>
-                    
+                  
+                  {user?.id === collection.user_id && (
                     <CollectionStoryActions
                         collectionId={collection.id}
                         storyId={story.id}
                         isInCollection={true}
                     />
+                  )}
                   </div>
                 </div>
               </article>
@@ -422,116 +424,118 @@ if (!collection.is_public) {
           </div>
         )}
       </section>
-      <section className="mt-12">
-  <div className="mb-6">
-    <h2 className="text-2xl font-bold">
-      Add Stories
-    </h2>
+      {user?.id === collection.user_id && (
+  <section className="mt-12">
+    <div className="mb-6">
+      <h2 className="text-2xl font-bold">
+        Add Stories
+      </h2>
 
-    <p className="mt-1 text-sm opacity-70">
-      Add stories from your library to this collection.
-    </p>
-  </div>
-
-  {!availableStories.length ? (
-    <div
-      className="
-        rounded-2xl
-        border
-        p-8
-        text-center
-      "
-      style={{
-        backgroundColor: "var(--card)",
-        borderColor: "var(--card-border)",
-      }}
-    >
-      <p className="opacity-70">
-        There are no more saved stories available to add.
+      <p className="mt-1 text-sm opacity-70">
+        Add stories from your library to this collection.
       </p>
     </div>
-  ) : (
-    <div className="space-y-4">
-      {availableStories.map((entry) => {
-        const story = Array.isArray(entry.stories)
-          ? entry.stories[0]
-          : entry.stories;
 
-        if (!story) return null;
+    {!availableStories.length ? (
+      <div
+        className="
+          rounded-2xl
+          border
+          p-8
+          text-center
+        "
+        style={{
+          backgroundColor: "var(--card)",
+          borderColor: "var(--card-border)",
+        }}
+      >
+        <p className="opacity-70">
+          There are no more saved stories available to add.
+        </p>
+      </div>
+    ) : (
+      <div className="space-y-4">
+        {availableStories.map((entry) => {
+          const story = Array.isArray(entry.stories)
+            ? entry.stories[0]
+            : entry.stories;
 
-        return (
-          <div
-            key={entry.story_id}
-            className="
-              flex
-              items-center
-              gap-4
-              rounded-2xl
-              border
-              p-4
-            "
-            style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--card-border)",
-            }}
-          >
-            {story.cover_url ? (
-              <Image
-                src={story.cover_url}
-                alt={story.title}
-                width={60}
-                height={80}
-                className="
-                  h-20
-                  w-14
-                  shrink-0
-                  rounded-lg
-                  object-cover
-                "
-              />
-            ) : (
-              <div
-                className="
-                  flex
-                  h-20
-                  w-14
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-lg
-                  border
-                  text-xl
-                  opacity-40
-                "
-                style={{
-                  borderColor:
-                    "var(--card-border)",
-                }}
-              >
-                📖
+          if (!story) return null;
+
+          return (
+            <div
+              key={entry.story_id}
+              className="
+                flex
+                items-center
+                gap-4
+                rounded-2xl
+                border
+                p-4
+              "
+              style={{
+                backgroundColor: "var(--card)",
+                borderColor: "var(--card-border)",
+              }}
+            >
+              {story.cover_url ? (
+                <Image
+                  src={story.cover_url}
+                  alt={story.title}
+                  width={60}
+                  height={80}
+                  className="
+                    h-20
+                    w-14
+                    shrink-0
+                    rounded-lg
+                    object-cover
+                  "
+                />
+              ) : (
+                <div
+                  className="
+                    flex
+                    h-20
+                    w-14
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-lg
+                    border
+                    text-xl
+                    opacity-40
+                  "
+                  style={{
+                    borderColor:
+                      "var(--card-border)",
+                  }}
+                >
+                  📖
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <Link
+                  href={`/story/${story.slug}`}
+                  className="font-semibold hover:underline"
+                >
+                  {story.title}
+                </Link>
               </div>
-            )}
 
-            <div className="min-w-0 flex-1">
-              <Link
-                href={`/story/${story.slug}`}
-                className="font-semibold hover:underline"
-              >
-                {story.title}
-              </Link>
+              <CollectionStoryActions
+                collectionId={collection.id}
+                storyId={story.id}
+                isInCollection={false}
+              />
             </div>
-
-            <CollectionStoryActions
-              collectionId={collection.id}
-              storyId={story.id}
-              isInCollection={false}
-            />
-          </div>
-        );
-      })}
-    </div>
-  )}
-</section>
+          );
+        })}
+      </div>
+    )}
+  </section>
+)}
     </main>
   );
 }
