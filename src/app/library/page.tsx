@@ -35,6 +35,11 @@ type ReadingHistoryEntry = {
   chapters: Chapter | null;
 };
 
+type StoryChapterCount = {
+  story_id: string;
+  total_chapters: number;
+};
+
 export default async function LibraryPage() {
   const supabase = await createClient();
 
@@ -137,6 +142,37 @@ export default async function LibraryPage() {
         : entry.chapters,
     }));
 
+    /*
+      * --------------------------------------------------
+      * TOTAL CHAPTERS PER STORY
+      * --------------------------------------------------
+      */
+
+      const storyIds = [
+        ...new Set(
+          readingHistory
+            .map((entry) => entry.story_id)
+            .filter(Boolean)
+        ),
+      ];
+
+      const { data: chapterRows } =
+        storyIds.length > 0
+          ? await supabase
+              .from("chapters")
+              .select("story_id")
+              .in("story_id", storyIds)
+          : { data: [] };
+
+      const chapterCounts = new Map<string, number>();
+
+      (chapterRows ?? []).forEach((chapter) => {
+        chapterCounts.set(
+          chapter.story_id,
+          (chapterCounts.get(chapter.story_id) ?? 0) + 1
+        );
+      });
+
   /*
    * --------------------------------------------------
    * CONTINUE READING
@@ -155,30 +191,47 @@ export default async function LibraryPage() {
    */
 
   const uniqueStoryProgress = new Map<
-    string,
-    number
-  >();
+  string,
+  number
+>();
 
-  readingHistory.forEach((entry) => {
-    const progress = Math.min(
-      Math.max(entry.progress ?? 0, 0),
-      100
+readingHistory.forEach((entry) => {
+  const totalChapters =
+    chapterCounts.get(entry.story_id) ?? 0;
+
+  const currentChapter =
+    entry.chapters?.chapter_number ?? 1;
+
+  const chapterProgress = Math.min(
+    Math.max(entry.progress ?? 0, 0),
+    100
+  );
+
+  let overallProgress = 0;
+
+  if (totalChapters > 0) {
+    overallProgress =
+      ((currentChapter - 1) +
+        chapterProgress / 100) /
+      totalChapters *
+      100;
+  }
+
+  overallProgress = Math.min(
+    Math.max(overallProgress, 0),
+    100
+  );
+
+  const existing =
+    uniqueStoryProgress.get(entry.story_id) ?? 0;
+
+  if (overallProgress > existing) {
+    uniqueStoryProgress.set(
+      entry.story_id,
+      overallProgress
     );
-
-    /*
-     * Keep the highest recorded progress for each story.
-     */
-
-    const existing =
-      uniqueStoryProgress.get(entry.story_id) ?? 0;
-
-    if (progress > existing) {
-      uniqueStoryProgress.set(
-        entry.story_id,
-        progress
-      );
-    }
-  });
+  }
+});
 
   const startedCount =
     uniqueStoryProgress.size;
@@ -392,7 +445,26 @@ export default async function LibraryPage() {
                   </span>
 
                   <span className="font-medium">
-                    {continueReading.progress ?? 0}%
+                    {Math.round(
+                      (
+                        (
+                          (continueReading.chapters?.chapter_number ?? 1) - 1 +
+                          Math.min(
+                            Math.max(
+                              continueReading.progress ?? 0,
+                              0
+                            ),
+                            100
+                          ) / 100
+                        ) /
+                        Math.max(
+                          chapterCounts.get(
+                            continueReading.story_id
+                          ) ?? 1,
+                          1
+                        )
+                      ) * 100
+                    )}%
                   </span>
 
                 </div>
@@ -417,13 +489,28 @@ export default async function LibraryPage() {
                       transition-all
                     "
                     style={{
-                      width: `${Math.min(
-                        Math.max(
-                          continueReading.progress ?? 0,
-                          0
-                        ),
-                        100
-                      )}%`,
+                      width: `${
+                        Math.round(
+                          (
+                            (
+                              (continueReading.chapters?.chapter_number ?? 1) - 1 +
+                              Math.min(
+                                Math.max(
+                                  continueReading.progress ?? 0,
+                                  0
+                                ),
+                                100
+                              ) / 100
+                            ) /
+                            Math.max(
+                              chapterCounts.get(
+                                continueReading.story_id
+                              ) ?? 1,
+                              1
+                            )
+                          ) * 100
+                        )
+                      }%`,
                       backgroundColor:
                         "var(--button)",
                     }}
@@ -915,7 +1002,7 @@ export default async function LibraryPage() {
           {/* READING ACTIVITY */}
 
           <Link
-            href="/library/history"
+            href="/library/activity"
             className="
               group
               rounded-2xl

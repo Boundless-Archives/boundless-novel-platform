@@ -54,10 +54,7 @@ export default async function CollectionPage({
   /*
    * Load the collection.
    */
-  const {
-  data: collection,
-  error: collectionError,
-} = await supabase
+  const { data: collection, error: collectionError, } = await supabase
   .from("collections")
   .select(`
       id,
@@ -79,7 +76,12 @@ if (!collection.is_public) {
     notFound();
   }
 }
-  
+  const { data: ownerProfile } = await supabase
+  .from("profiles")
+  .select("username, display_name, is_author")
+  .eq("id", collection.user_id)
+  .maybeSingle();
+
   /*
    * Load stories in collection order.
    */
@@ -203,6 +205,25 @@ if (!collection.is_public) {
           <h1 className="mt-4 text-4xl md:text-5xl font-bold">
             {collection.title}
           </h1>
+
+          <p className="mt-2 text-sm opacity-70">
+            By{" "}
+            {ownerProfile?.is_author ? (
+              <Link
+                href={`/author/${ownerProfile.username}`}
+                className="font-medium hover:underline"
+              >
+                {ownerProfile.display_name ||
+                  ownerProfile.username}
+              </Link>
+            ) : (
+              <span className="font-medium">
+                {ownerProfile?.display_name ||
+                  ownerProfile?.username ||
+                  "Unknown reader"}
+              </span>
+            )}
+          </p>
 
           {collection.description && (
             <p className="mt-3 max-w-3xl text-lg opacity-70">
