@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
+import FollowButton from "@/components/profile/FollowButton";
 import { createClient } from "@/utils/supabase/server";
+
 
 type Props = {
   params: Promise<{
@@ -16,6 +17,10 @@ export default async function AuthorPage({
   const { username } = await params;
 
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   /*
    * Load author profile.
@@ -35,6 +40,43 @@ export default async function AuthorPage({
   if (!profile) {
     notFound();
   }
+
+  /*
+   * Load Following Button
+   */
+
+  let isFollowing = false;
+
+  if (user && user.id !== profile.id) {
+    const { data: follow } = await supabase
+      .from("followers")
+      .select("id")
+      .eq("follower_id", user.id)
+      .eq("following_id", profile.id)
+      .maybeSingle();
+
+    isFollowing = !!follow;
+  }
+
+  /*
+   * Count Followers
+   */
+
+  const { count: followerCount } = await supabase
+    .from("followers")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("following_id", profile.id);
+
+  const { count: followingCount } = await supabase
+    .from("followers")
+    .select("id", {
+      count: "exact",
+      head: true,
+    })
+    .eq("follower_id", profile.id);
 
   /*
    * Load the author's published stories.
@@ -219,6 +261,43 @@ export default async function AuthorPage({
             <p className="mt-1 text-sm opacity-60">
               @{profile.username}
             </p>
+
+            {user && user.id !== profile.id && (
+              <div className="mt-5">
+                <FollowButton
+                  userId={profile.id}
+                  initialFollowing={isFollowing}
+                />
+              </div>
+            )}
+
+            <div className="flex gap-6 text-sm">
+
+              <Link
+                href={`/author/${profile.username}/followers`}
+                className="hover:underline"
+              >
+                <span className="font-bold">
+                  {followerCount ?? 0}
+                </span>{" "}
+                <span className="opacity-60">
+                  Followers
+                </span>
+              </Link>
+
+              <Link
+                href={`/author/${profile.username}/following`}
+                className="hover:underline"
+              >
+                <span className="font-bold">
+                  {followingCount ?? 0}
+                </span>{" "}
+                <span className="opacity-60">
+                  Following
+                </span>
+              </Link>
+
+            </div>
 
             <p className="
               mt-4
