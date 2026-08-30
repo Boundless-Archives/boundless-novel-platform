@@ -9,6 +9,7 @@ export default async function Navbar() {
   } = await supabase.auth.getUser();
 
   let isAuthor = false;
+  let unreadNotificationCount = 0;
 
   if (user) {
     const { data: profile } = await supabase
@@ -18,12 +19,26 @@ export default async function Navbar() {
       .single();
 
     isAuthor = profile?.is_author ?? false;
+
+    const { count } = await supabase
+      .from("notifications")
+      .select("id", {
+        count: "exact",
+        head: true,
+      })
+      .eq("user_id", user.id)
+      .eq("is_read", false);
+
+    unreadNotificationCount = count ?? 0;
   }
 
   return (
     <NavbarClient
       user={!!user}
       isAuthor={isAuthor}
+      unreadNotificationCount={
+        unreadNotificationCount
+      }
     />
   );
 }

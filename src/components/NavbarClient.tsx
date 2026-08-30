@@ -9,11 +9,13 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 type NavbarClientProps = {
   user: boolean;
   isAuthor: boolean;
+  unreadNotificationCount: number;
 };
 
 export default function NavbarClient({
   user,
   isAuthor,
+  unreadNotificationCount,
 }: NavbarClientProps) {
   const pathname = usePathname();
 
@@ -248,6 +250,81 @@ export default function NavbarClient({
                     )}
                   </Link>
                 ))}
+                {user && (
+                  <Link
+                    href="/notifications"
+                    className={`
+                      relative
+                      rounded-xl
+                      px-4
+                      py-2
+                      font-medium
+                      transition-all
+                      duration-200
+                      ${
+                        isActive("/notifications")
+                          ? "font-semibold"
+                          : ""
+                      }
+                    `}
+                    style={{
+                      backgroundColor:
+                        isActive("/notifications")
+                          ? "var(--card)"
+                          : "transparent",
+                    }}
+                  >
+                    <span className="mr-2">
+                      🔔
+                    </span>
+
+                    Notifications
+                
+                    {unreadNotificationCount > 0 && (
+                      <span
+                        className="
+                          absolute
+                          -right-1
+                          -top-1
+                          flex
+                          h-5
+                          min-w-5
+                          items-center
+                          justify-center
+                          rounded-full
+                          px-1
+                          text-[10px]
+                          font-bold
+                        "
+                        style={{
+                          backgroundColor: "var(--button)",
+                          color: "var(--button-text)",
+                        }}
+                      >
+                        {unreadNotificationCount > 99
+                          ? "99+"
+                          : unreadNotificationCount}
+                      </span>
+                    )}
+
+                    {isActive("/notifications") && (
+                      <span
+                        className="
+                          absolute
+                          left-3
+                          right-3
+                          -bottom-1
+                          h-0.5
+                          rounded-full
+                        "
+                        style={{
+                          background:
+                            "linear-gradient(90deg,#06b6d4,#3b82f6)",
+                        }}
+                      />
+                    )}
+                  </Link>
+                )}
             </nav>
 
           </div>
@@ -515,6 +592,71 @@ export default function NavbarClient({
                     {item.label}
                   </Link>
                 ))}
+                {user && (
+                  <Link
+                    href="/notifications"
+                    onClick={() =>
+                      setMobileOpen(false)
+                    }
+                    className={`
+                      relative
+                      rounded-xl
+                      px-4
+                      py-3
+                      transition-all
+                      duration-200
+                      ${
+                        isActive("/notifications")
+                          ? "font-semibold"
+                          : ""
+                      }
+                    `}
+                    style={{
+                      backgroundColor:
+                        isActive("/notifications")
+                          ? "var(--card)"
+                          : "transparent",
+                      borderLeft:
+                        isActive("/notifications")
+                          ? "4px solid #06b6d4"
+                          : "4px solid transparent",
+                    }}
+                  >
+                    <span className="mr-3">
+                      🔔
+                    </span>
+
+                    Notifications
+                
+                    {unreadNotificationCount > 0 && (
+                      <span
+                        className="
+                          absolute
+                          right-4
+                          top-1/2
+                          -translate-y-1/2
+                          flex
+                          h-5
+                          min-w-5
+                          items-center
+                          justify-center
+                          rounded-full
+                          px-1
+                          text-[10px]
+                          font-bold
+                        "
+                        style={{
+                          backgroundColor: "var(--button)",
+                          color: "var(--button-text)",
+                        }}
+                      >
+                        {unreadNotificationCount > 99
+                          ? "99+"
+                          : unreadNotificationCount}
+                      </span>
+                    )}
+                  </Link>
+                )}
                 </nav>
 
             <div
