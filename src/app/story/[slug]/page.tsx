@@ -99,67 +99,124 @@ export default async function PublicStoryPage({
     : null;
 
   const { data: storyGenres } = await supabase
-    .from("story_genres")
-    .select(`
-      genres (
-        id,
-        name,
-        slug
-      )
-    `)
-    .eq("story_id", story.id);
-  
-  const genreIds =
-  storyGenres
-    ?.map((g: any) => g.genres.id)
-    .filter(Boolean) ?? [];
+  .from("story_genres")
+  .select(`
+    genre_id
+  `)
+  .eq("story_id", story.id);
 
-  const { data: relatedStoryLinks } =
-    genreIds.length > 0
-      ? await supabase
-          .from("story_genres")
-          .select(`
-            story_id,
-            genre_id
-          `)
-          .in("genre_id", genreIds)
-      : { data: [] };
+const genreIds =
+  storyGenres?.map((item) => item.genre_id) ?? [];
 
-  const recommendationScores = new Map<string, number>();
+const { data: recommendationTags } = await supabase
+  .from("story_tags")
+  .select(`
+    tag_id
+  `)
+  .eq("story_id", story.id);
 
-  (relatedStoryLinks ?? []).forEach((item) => {
-    if (item.story_id === story.id) return;
+const tagIds =
+  recommendationTags?.map((item) => item.tag_id) ?? [];
 
-    recommendationScores.set(
-      item.story_id,
-      (recommendationScores.get(item.story_id) ?? 0) + 1
-    );
-  });
+/*
+ * Score related stories.
+ *
+ * Genre match = 3 points
+ * Tag match   = 2 points
+ */
+const recommendationScores =
+  new Map<string, number>();
 
-  const relatedStoryIds = [...recommendationScores.keys()];
+/*
+ * Find stories sharing genres.
+ */
+if (genreIds.length > 0) {
+  const { data: relatedGenreLinks } =
+    await supabase
+      .from("story_genres")
+      .select(`
+        story_id,
+        genre_id
+      `)
+      .in("genre_id", genreIds);
 
-  const { data: relatedStories } =
-    relatedStoryIds.length > 0
-      ? await supabase
-          .from("stories")
-          .select(`
-            id,
-            title,
-            slug,
-            cover_url,
-            description,
-            status
-          `)
-          .in("id", relatedStoryIds)
-          .neq("status", "Draft")
-          .limit(6)
-      : { data: [] };
+  (relatedGenreLinks ?? []).forEach(
+    (item) => {
+      if (item.story_id === story.id) {
+        return;
+      }
 
-  relatedStories?.sort(
-    (a, b) =>
-      (recommendationScores.get(b.id) ?? 0) -
-      (recommendationScores.get(a.id) ?? 0)
+      recommendationScores.set(
+        item.story_id,
+        (recommendationScores.get(
+          item.story_id
+        ) ?? 0) + 3
+      );
+    }
   );
+}
+
+/*
+ * Find stories sharing tags.
+ */
+if (tagIds.length > 0) {
+  const { data: relatedTagLinks } =
+    await supabase
+      .from("story_tags")
+      .select(`
+        story_id,
+        tag_id
+      `)
+      .in("tag_id", tagIds);
+
+  (relatedTagLinks ?? []).forEach(
+    (item) => {
+      if (item.story_id === story.id) {
+        return;
+      }
+
+      recommendationScores.set(
+        item.story_id,
+        (recommendationScores.get(
+          item.story_id
+        ) ?? 0) + 2
+      );
+    }
+  );
+}
+
+const relatedStoryIds =
+  [...recommendationScores.keys()];
+
+const { data: relatedStories } =
+  relatedStoryIds.length > 0
+    ? await supabase
+        .from("stories")
+        .select(`
+          id,
+          title,
+          slug,
+          cover_url,
+          description,
+          status
+        `)
+        .in(
+          "id",
+          relatedStoryIds
+        )
+        .neq("status", "Draft")
+        .limit(6)
+    : { data: [] };
+
+relatedStories?.sort(
+  (a, b) =>
+    (recommendationScores.get(
+      b.id
+    ) ?? 0) -
+    (recommendationScores.get(
+      a.id
+    ) ?? 0)
+);
 
   const { data: storyTags } = await supabase
     .from("story_tags")
@@ -333,10 +390,15 @@ export default async function PublicStoryPage({
             slug: string;
           };
         }[]
-      ).map((item) => (
-        <Link
-          key={item.genres.id}
-          href={`/search?genre=${item.genres.slug}`}
+      ).map((item) => {
+        if (!item.genres) {
+          return null;
+        }
+
+        return (
+          <Link
+            key={item.genres.id}
+            href={`/search?genre=${item.genres.slug}`}
           className="
             px-3
             py-1
@@ -353,7 +415,8 @@ export default async function PublicStoryPage({
         >
           {item.genres.name}
         </Link>
-      ))}
+      );
+    })}
     </div>
   </div>
 )}

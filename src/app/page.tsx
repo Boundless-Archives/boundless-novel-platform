@@ -1,15 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
+
 import TrendingStories from "@/components/home/TrendingStories";
 import PopularStories from "@/components/home/PopularStories";
+
 import { ContinueReading } from "@/types/database";
+
 import StoryGrid from "@/components/story/StoryGrid";
 import FeaturedStoryCard from "@/components/story/FeaturedStoryCard";
+
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import SectionHeader from "@/components/layout/SectionHeader";
 import EmptyState from "@/components/layout/EmptyState";
+
+import { getPersonalizedRecommendations } from "@/app/recommendations/actions";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -19,6 +25,10 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   let continueReading: ContinueReading | null = null;
+
+  /*
+   * CONTINUE READING
+   */
 
   if (user) {
     const { data } = await supabase
@@ -46,6 +56,10 @@ export default async function HomePage() {
       data as unknown as ContinueReading;
   }
 
+  /*
+   * ALL PUBLIC STORIES
+   */
+
   const { data: stories } = await supabase
     .from("stories")
     .select(`
@@ -61,10 +75,27 @@ export default async function HomePage() {
       ascending: false,
     });
 
+  /*
+   * FEATURED STORY
+   */
+
   const featuredStory =
     stories?.length
       ? stories[0]
       : null;
+
+  /*
+   * PERSONALIZED RECOMMENDATIONS
+   *
+   * We reuse the same recommendation engine
+   * used by /recommendations.
+   *
+   * Only logged-in users receive personalized
+   * recommendations.
+   */
+  const recommendations = user
+    ? await getPersonalizedRecommendations(5)
+    : [];
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-8">
@@ -100,11 +131,11 @@ export default async function HomePage() {
 
           <p
             className="
-            mt-4
-            max-w-3xl
-            text-xl
-            opacity-80
-          "
+              mt-4
+              max-w-3xl
+              text-xl
+              opacity-80
+            "
           >
             Discover unforgettable worlds, follow incredible
             authors, and build your personal library of stories.
@@ -151,15 +182,17 @@ export default async function HomePage() {
           <div className="flex gap-6 items-center">
 
             {continueReading.stories.cover_url && (
-
               <Image
-                src={continueReading.stories.cover_url}
-                alt={continueReading.stories.title}
+                src={
+                  continueReading.stories.cover_url
+                }
+                alt={
+                  continueReading.stories.title
+                }
                 width={110}
                 height={160}
                 className="rounded-xl object-cover"
               />
-
             )}
 
             <div className="flex-1">
@@ -174,7 +207,8 @@ export default async function HomePage() {
 
               <p className="mt-2 opacity-80">
 
-                Chapter {continueReading.chapters.chapter_number}
+                Chapter{" "}
+                {continueReading.chapters.chapter_number}
 
                 {" — "}
 
@@ -182,7 +216,9 @@ export default async function HomePage() {
 
               </p>
 
-              <Button href={`/chapters/${continueReading.chapter_id}`}>
+              <Button
+                href={`/chapters/${continueReading.chapter_id}`}
+              >
                 Continue Reading →
               </Button>
 
@@ -193,192 +229,331 @@ export default async function HomePage() {
         </Card>
       )}
 
-{featuredStory && (
-  <FeaturedStoryCard story={featuredStory} />
-)}
+      {/* FEATURED STORY */}
 
-{/* TRENDING STORIES */}
+      {featuredStory && (
+        <FeaturedStoryCard story={featuredStory} />
+      )}
 
-<TrendingStories />
+      {/* TRENDING STORIES */}
 
-{/* POPULAR STORIES */}
+      <TrendingStories />
 
-<PopularStories />
+      {/* POPULAR STORIES */}
 
-{/* BECOME AN AUTHOR */}
+      <PopularStories />
 
-{!user && (
-  <section
-    id="latest"
-    className="
-      mt-16
-      mb-16
-      overflow-hidden
-      rounded-3xl
-      border
-      p-10
-      md:p-14
-    "
-    style={{
-      background:
-        "linear-gradient(135deg, rgba(99,102,241,.12), rgba(59,130,246,.05))",
-      borderColor: "var(--card-border)",
-    }}
-  >
+      {/* PERSONALIZED RECOMMENDATIONS */}
 
-    <div className="grid gap-10 md:grid-cols-[1.6fr_1fr] items-center">
+      {user && recommendations.length > 0 && (
+        <section className="mt-16">
 
-      <div>
+          <SectionHeader
+            title="Recommended for You"
+            actionLabel="View All"
+            actionHref="/recommendations"
+          />
 
-        <span
+          <p className="mb-6 text-sm opacity-60">
+            Stories selected based on your reading
+            and library activity.
+          </p>
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-6
+              sm:grid-cols-2
+              lg:grid-cols-3
+              xl:grid-cols-5
+            "
+          >
+
+            {recommendations.map((story) => (
+              <Link
+                key={story.id}
+                href={`/story/${story.slug}`}
+                className="
+                  group
+                  overflow-hidden
+                  rounded-2xl
+                  border
+                  transition
+                  hover:-translate-y-1
+                  hover:shadow-lg
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                  backgroundColor:
+                    "var(--card)",
+                }}
+              >
+
+                {story.cover_url ? (
+                  <Image
+                    src={story.cover_url}
+                    alt={story.title}
+                    width={300}
+                    height={450}
+                    className="
+                      h-64
+                      w-full
+                      object-cover
+                      transition
+                      duration-300
+                      group-hover:scale-[1.02]
+                    "
+                  />
+                ) : (
+                  <div
+                    className="
+                      flex
+                      h-64
+                      w-full
+                      items-center
+                      justify-center
+                      text-5xl
+                      opacity-30
+                    "
+                  >
+                    📖
+                  </div>
+                )}
+
+                <div className="p-4">
+
+                  <h3
+                    className="
+                      line-clamp-2
+                      text-lg
+                      font-bold
+                    "
+                  >
+                    {story.title}
+                  </h3>
+
+                  {story.description && (
+                    <p
+                      className="
+                        mt-2
+                        line-clamp-3
+                        text-sm
+                        opacity-60
+                      "
+                    >
+                      {story.description}
+                    </p>
+                  )}
+
+                  <div className="mt-4">
+
+                    <span
+                      className="
+                        inline-block
+                        rounded-full
+                        border
+                        px-3
+                        py-1
+                        text-xs
+                      "
+                      style={{
+                        borderColor:
+                          "var(--card-border)",
+                      }}
+                    >
+                      {story.status}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </Link>
+            ))}
+
+          </div>
+
+        </section>
+      )}
+
+      {/* BECOME AN AUTHOR */}
+
+      {!user && (
+        <section
+          id="latest"
           className="
-            inline-block
-            rounded-full
+            mt-16
+            mb-16
+            overflow-hidden
+            rounded-3xl
             border
-            px-4
-            py-1
-            text-sm
-            font-medium
+            p-10
+            md:p-14
           "
           style={{
+            background:
+              "linear-gradient(135deg, rgba(99,102,241,.12), rgba(59,130,246,.05))",
             borderColor: "var(--card-border)",
           }}
         >
-          ✍️ Writers Wanted
-        </span>
 
-        <h2
-          className="
-            mt-5
-            text-4xl
-            font-bold
-            leading-tight
-          "
-        >
-          Your story deserves
-          <br />
-          an audience.
-        </h2>
+          <div className="grid gap-10 md:grid-cols-[1.6fr_1fr] items-center">
 
-        <p
-          className="
-            mt-5
-            max-w-2xl
-            text-lg
-            opacity-80
-          "
-        >
-          Publish original novels, web serials and
-          short stories. Build your readership,
-          receive ratings, interact with your
-          community and grow your world one
-          chapter at a time.
-        </p>
+            <div>
 
-        <div
-          className="
-            mt-8
-            flex
-            flex-wrap
-            gap-4
-          "
-        >
+              <span
+                className="
+                  inline-block
+                  rounded-full
+                  border
+                  px-4
+                  py-1
+                  text-sm
+                  font-medium
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                }}
+              >
+                ✍️ Writers Wanted
+              </span>
 
-          <Button
-            href="/profile/become-author"
-            size="lg"
-          >
-            Become an Author
-          </Button>
+              <h2
+                className="
+                  mt-5
+                  text-4xl
+                  font-bold
+                  leading-tight
+                "
+              >
+                Your story deserves
+                <br />
+                an audience.
+              </h2>
 
-          <Button
-            href="/explore"
-            variant="secondary"
-            size="lg"
-          >
-            Explore Stories
-          </Button>
+              <p
+                className="
+                  mt-5
+                  max-w-2xl
+                  text-lg
+                  opacity-80
+                "
+              >
+                Publish original novels, web serials and
+                short stories. Build your readership,
+                receive ratings, interact with your
+                community and grow your world one
+                chapter at a time.
+              </p>
 
-        </div>
+              <div
+                className="
+                  mt-8
+                  flex
+                  flex-wrap
+                  gap-4
+                "
+              >
 
-      </div>
+                <Button
+                  href="/profile/become-author"
+                  size="lg"
+                >
+                  Become an Author
+                </Button>
 
-      <Card
-        elevated
-        padding="lg"
-      >
+                <Button
+                  href="/explore"
+                  variant="secondary"
+                  size="lg"
+                >
+                  Explore Stories
+                </Button>
 
-        <div className="space-y-6">
+              </div>
 
-          <div>
-            <p className="text-3xl font-bold">
-              📚 Unlimited Stories
-            </p>
+            </div>
 
-            <p className="mt-2 opacity-70">
-              Publish without worrying about
-              chapter limits.
-            </p>
+            <Card
+              elevated
+              padding="lg"
+            >
+
+              <div className="space-y-6">
+
+                <div>
+                  <p className="text-3xl font-bold">
+                    📚 Unlimited Stories
+                  </p>
+
+                  <p className="mt-2 opacity-70">
+                    Publish without worrying about
+                    chapter limits.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-3xl font-bold">
+                    🌍 Global Readers
+                  </p>
+
+                  <p className="mt-2 opacity-70">
+                    Reach readers from around the world.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-3xl font-bold">
+                    ⭐ Community Driven
+                  </p>
+
+                  <p className="mt-2 opacity-70">
+                    Likes, reviews, ratings and comments
+                    help your stories grow naturally.
+                  </p>
+                </div>
+
+              </div>
+
+            </Card>
+
           </div>
 
-          <div>
-            <p className="text-3xl font-bold">
-              🌍 Global Readers
-            </p>
+        </section>
+      )}
 
-            <p className="mt-2 opacity-70">
-              Reach readers from around the world.
-            </p>
-          </div>
+      {/* LATEST STORIES */}
 
-          <div>
-            <p className="text-3xl font-bold">
-              ⭐ Community Driven
-            </p>
+      <section id="latest">
 
-            <p className="mt-2 opacity-70">
-              Likes, reviews, ratings and comments
-              help your stories grow naturally.
-            </p>
-          </div>
+        <SectionHeader
+          title="Latest Stories"
+          actionLabel="Browse All"
+          actionHref="/explore"
+        />
 
-        </div>
+        {!stories?.length ? (
 
-      </Card>
+          <EmptyState
+            icon="📚"
+            title="No stories yet"
+            description="Boundless is waiting for its first adventure."
+          />
 
-    </div>
+        ) : (
 
-  </section>
-)}
+          <StoryGrid
+            stories={stories ?? []}
+          />
 
-{/* LATEST STORIES */}
+        )}
 
-<section id="latest">
+      </section>
 
-  <SectionHeader
-    title="Latest Stories"
-    actionLabel="Browse All"
-    actionHref="/explore"
-  />
-
-  {!stories?.length ? (
-
-<EmptyState
-  icon="📚"
-  title="No stories yet"
-  description="Boundless is waiting for its first adventure."
-/>
-
-) : (
-
-<StoryGrid stories={stories ?? []} />
-
-)}
-
-</section>
-
-</main>
-
-);
-
+    </main>
+  );
 }
+
