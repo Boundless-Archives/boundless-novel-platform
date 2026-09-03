@@ -9,16 +9,25 @@ export default async function Navbar() {
   } = await supabase.auth.getUser();
 
   let isAuthor = false;
+  let role:
+    | "reader"
+    | "author"
+    | "editor"
+    | "admin"
+    | "superadmin"
+    | null = null;
+
   let unreadNotificationCount = 0;
 
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("is_author")
+      .select("is_author, role")
       .eq("id", user.id)
       .single();
 
     isAuthor = profile?.is_author ?? false;
+    role = profile?.role ?? null;
 
     const { count } = await supabase
       .from("notifications")
@@ -36,9 +45,8 @@ export default async function Navbar() {
     <NavbarClient
       user={!!user}
       isAuthor={isAuthor}
-      unreadNotificationCount={
-        unreadNotificationCount
-      }
+      role={role}
+      unreadNotificationCount={unreadNotificationCount}
     />
   );
 }

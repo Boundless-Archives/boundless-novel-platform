@@ -6,24 +6,48 @@ import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 
+type UserRole =
+  | "reader"
+  | "author"
+  | "editor"
+  | "admin"
+  | "superadmin"
+  | null;
+
 type NavbarClientProps = {
   user: boolean;
   isAuthor: boolean;
+  role: UserRole;
   unreadNotificationCount: number;
 };
 
 export default function NavbarClient({
   user,
   isAuthor,
+  role,
   unreadNotificationCount,
 }: NavbarClientProps) {
   const pathname = usePathname();
 
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
-  const [search, setSearch] =
-    useState("");
+  const canManage =
+    role === "editor" ||
+    role === "admin" ||
+    role === "superadmin";
+
+  const manageHref =
+    role === "editor"
+      ? "/editor"
+      : "/admin";
+
+  const manageLabel =
+    role === "editor"
+      ? "Editor"
+      : role === "superadmin"
+        ? "Admin"
+        : "Manage";
 
   const navItems = useMemo(
     () => [
@@ -61,7 +85,6 @@ export default function NavbarClient({
         icon: "✍️",
         show: isAuthor,
       },
-      
     ],
     [user, isAuthor]
   );
@@ -86,8 +109,7 @@ export default function NavbarClient({
       style={{
         backgroundColor:
           "color-mix(in srgb,var(--background) 88%,transparent)",
-        borderColor:
-          "var(--card-border)",
+        borderColor: "var(--card-border)",
       }}
     >
       <div
@@ -98,7 +120,6 @@ export default function NavbarClient({
           py-4
         "
       >
-
         <div
           className="
             flex
@@ -107,7 +128,6 @@ export default function NavbarClient({
             gap-6
           "
         >
-
           <div
             className="
               flex
@@ -116,12 +136,9 @@ export default function NavbarClient({
               shrink-0
             "
           >
-
             <button
               onClick={() =>
-                setMobileOpen(
-                  !mobileOpen
-                )
+                setMobileOpen(!mobileOpen)
               }
               className="
                 relative
@@ -176,7 +193,6 @@ export default function NavbarClient({
                 Boundless
               </span>
             </Link>
-
           </div>
 
           <div
@@ -187,7 +203,6 @@ export default function NavbarClient({
               md:flex
             "
           >
-
             <nav
               className="
                 flex
@@ -196,9 +211,7 @@ export default function NavbarClient({
               "
             >
               {navItems
-                .filter(
-                  (item) => item.show
-                )
+                .filter((item) => item.show)
                 .map((item) => (
                   <Link
                     key={item.href}
@@ -230,9 +243,7 @@ export default function NavbarClient({
 
                     {item.label}
 
-                    {isActive(
-                      item.href
-                    ) && (
+                    {isActive(item.href) && (
                       <span
                         className="
                           absolute
@@ -250,83 +261,118 @@ export default function NavbarClient({
                     )}
                   </Link>
                 ))}
-                {user && (
-                  <Link
-                    href="/notifications"
-                    className={`
-                      relative
-                      rounded-xl
-                      px-4
-                      py-2
-                      font-medium
-                      transition-all
-                      duration-200
-                      ${
-                        isActive("/notifications")
-                          ? "font-semibold"
-                          : ""
-                      }
-                    `}
-                    style={{
-                      backgroundColor:
-                        isActive("/notifications")
-                          ? "var(--card)"
-                          : "transparent",
-                    }}
-                  >
-                    <span className="mr-2">
-                      🔔
+
+              {user && (
+                <Link
+                  href="/notifications"
+                  className={`
+                    relative
+                    rounded-xl
+                    px-4
+                    py-2
+                    font-medium
+                    transition-all
+                    duration-200
+                    ${
+                      isActive("/notifications")
+                        ? "font-semibold"
+                        : ""
+                    }
+                  `}
+                  style={{
+                    backgroundColor:
+                      isActive("/notifications")
+                        ? "var(--card)"
+                        : "transparent",
+                  }}
+                >
+                  <span className="mr-2">
+                    🔔
+                  </span>
+
+                  Notifications
+
+                  {unreadNotificationCount > 0 && (
+                    <span
+                      className="
+                        absolute
+                        -right-1
+                        -top-1
+                        flex
+                        h-5
+                        min-w-5
+                        items-center
+                        justify-center
+                        rounded-full
+                        px-1
+                        text-[10px]
+                        font-bold
+                      "
+                      style={{
+                        backgroundColor:
+                          "var(--button)",
+                        color:
+                          "var(--button-text)",
+                      }}
+                    >
+                      {unreadNotificationCount > 99
+                        ? "99+"
+                        : unreadNotificationCount}
                     </span>
+                  )}
 
-                    Notifications
-                
-                    {unreadNotificationCount > 0 && (
-                      <span
-                        className="
-                          absolute
-                          -right-1
-                          -top-1
-                          flex
-                          h-5
-                          min-w-5
-                          items-center
-                          justify-center
-                          rounded-full
-                          px-1
-                          text-[10px]
-                          font-bold
-                        "
-                        style={{
-                          backgroundColor: "var(--button)",
-                          color: "var(--button-text)",
-                        }}
-                      >
-                        {unreadNotificationCount > 99
-                          ? "99+"
-                          : unreadNotificationCount}
-                      </span>
-                    )}
+                  {isActive("/notifications") && (
+                    <span
+                      className="
+                        absolute
+                        left-3
+                        right-3
+                        -bottom-1
+                        h-0.5
+                        rounded-full
+                      "
+                      style={{
+                        background:
+                          "linear-gradient(90deg,#06b6d4,#3b82f6)",
+                      }}
+                    />
+                  )}
+                </Link>
+              )}
 
-                    {isActive("/notifications") && (
-                      <span
-                        className="
-                          absolute
-                          left-3
-                          right-3
-                          -bottom-1
-                          h-0.5
-                          rounded-full
-                        "
-                        style={{
-                          background:
-                            "linear-gradient(90deg,#06b6d4,#3b82f6)",
-                        }}
-                      />
-                    )}
-                  </Link>
-                )}
+              {user && canManage && (
+                <Link
+                  href={manageHref}
+                  className={`
+                    rounded-xl
+                    px-4
+                    py-2
+                    font-medium
+                    transition-all
+                    duration-200
+                    ${
+                      isActive(manageHref)
+                        ? "font-semibold"
+                        : ""
+                    }
+                  `}
+                  style={{
+                    backgroundColor:
+                      isActive(manageHref)
+                        ? "var(--card)"
+                        : "transparent",
+                  }}
+                >
+                  <span className="mr-2">
+                    {role === "editor"
+                      ? "📝"
+                      : "🛡️"}
+                  </span>
+
+                  {manageLabel}
+                </Link>
+              )}
             </nav>
-
           </div>
 
           <div
@@ -337,7 +383,6 @@ export default function NavbarClient({
               md:flex
             "
           >
-
             <form
               action="/search"
               method="GET"
@@ -348,9 +393,7 @@ export default function NavbarClient({
                 name="q"
                 value={search}
                 onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
+                  setSearch(e.target.value)
                 }
                 placeholder="Search stories..."
                 className="
@@ -484,11 +527,8 @@ export default function NavbarClient({
                 </Link>
               </>
             )}
-
           </div>
-
         </div>
-
       </div>
 
       {mobileOpen && (
@@ -503,7 +543,6 @@ export default function NavbarClient({
           }}
         >
           <div className="p-4">
-
             <form
               action="/search"
               method="GET"
@@ -550,17 +589,13 @@ export default function NavbarClient({
               "
             >
               {navItems
-                .filter(
-                  (item) => item.show
-                )
+                .filter((item) => item.show)
                 .map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
                     onClick={() =>
-                      setMobileOpen(
-                        false
-                      )
+                      setMobileOpen(false)
                     }
                     className={`
                       rounded-xl
@@ -592,72 +627,114 @@ export default function NavbarClient({
                     {item.label}
                   </Link>
                 ))}
-                {user && (
-                  <Link
-                    href="/notifications"
-                    onClick={() =>
-                      setMobileOpen(false)
-                    }
-                    className={`
-                      relative
-                      rounded-xl
-                      px-4
-                      py-3
-                      transition-all
-                      duration-200
-                      ${
-                        isActive("/notifications")
-                          ? "font-semibold"
-                          : ""
-                      }
-                    `}
-                    style={{
-                      backgroundColor:
-                        isActive("/notifications")
-                          ? "var(--card)"
-                          : "transparent",
-                      borderLeft:
-                        isActive("/notifications")
-                          ? "4px solid #06b6d4"
-                          : "4px solid transparent",
-                    }}
-                  >
-                    <span className="mr-3">
-                      🔔
-                    </span>
 
-                    Notifications
-                
-                    {unreadNotificationCount > 0 && (
-                      <span
-                        className="
-                          absolute
-                          right-4
-                          top-1/2
-                          -translate-y-1/2
-                          flex
-                          h-5
-                          min-w-5
-                          items-center
-                          justify-center
-                          rounded-full
-                          px-1
-                          text-[10px]
-                          font-bold
-                        "
-                        style={{
-                          backgroundColor: "var(--button)",
-                          color: "var(--button-text)",
-                        }}
-                      >
-                        {unreadNotificationCount > 99
-                          ? "99+"
-                          : unreadNotificationCount}
-                      </span>
-                    )}
-                  </Link>
-                )}
-                </nav>
+              {user && (
+                <Link
+                  href="/notifications"
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
+                  className={`
+                    relative
+                    rounded-xl
+                    px-4
+                    py-3
+                    transition-all
+                    duration-200
+                    ${
+                      isActive("/notifications")
+                        ? "font-semibold"
+                        : ""
+                    }
+                  `}
+                  style={{
+                    backgroundColor:
+                      isActive("/notifications")
+                        ? "var(--card)"
+                        : "transparent",
+                    borderLeft:
+                      isActive("/notifications")
+                        ? "4px solid #06b6d4"
+                        : "4px solid transparent",
+                  }}
+                >
+                  <span className="mr-3">
+                    🔔
+                  </span>
+
+                  Notifications
+
+                  {unreadNotificationCount > 0 && (
+                    <span
+                      className="
+                        absolute
+                        right-4
+                        top-1/2
+                        -translate-y-1/2
+                        flex
+                        h-5
+                        min-w-5
+                        items-center
+                        justify-center
+                        rounded-full
+                        px-1
+                        text-[10px]
+                        font-bold
+                      "
+                      style={{
+                        backgroundColor:
+                          "var(--button)",
+                        color:
+                          "var(--button-text)",
+                      }}
+                    >
+                      {unreadNotificationCount > 99
+                        ? "99+"
+                        : unreadNotificationCount}
+                    </span>
+                  )}
+                </Link>
+              )}
+
+              {user && canManage && (
+                <Link
+                  href={manageHref}
+                  onClick={() =>
+                    setMobileOpen(false)
+                  }
+                  className={`
+                    rounded-xl
+                    px-4
+                    py-3
+                    transition-all
+                    duration-200
+                    ${
+                      isActive(manageHref)
+                        ? "font-semibold"
+                        : ""
+                    }
+                  `}
+                  style={{
+                    backgroundColor:
+                      isActive(manageHref)
+                        ? "var(--card)"
+                        : "transparent",
+                    borderLeft:
+                      isActive(manageHref)
+                        ? "4px solid #06b6d4"
+                        : "4px solid transparent",
+                  }}
+                >
+                  <span className="mr-3">
+                    {role === "editor"
+                      ? "📝"
+                      : "🛡️"}
+                  </span>
+
+                  {manageLabel}
+                </Link>
+              )}
+            </nav>
 
             <div
               className="
@@ -670,7 +747,6 @@ export default function NavbarClient({
                   "var(--card-border)",
               }}
             >
-
               <div className="mb-5 flex items-center justify-between">
                 <span className="text-sm opacity-70">
                   Theme
@@ -681,7 +757,6 @@ export default function NavbarClient({
 
               {!user ? (
                 <div className="flex flex-col gap-2">
-
                   <Link
                     href="/auth/login"
                     onClick={() =>
@@ -725,11 +800,9 @@ export default function NavbarClient({
                   >
                     Sign Up
                   </Link>
-
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-
                   <Link
                     href="/profile"
                     onClick={() =>
@@ -743,14 +816,18 @@ export default function NavbarClient({
                       duration-200
                       active:scale-95
                       ${
-                        pathname.startsWith("/profile")
+                        pathname.startsWith(
+                          "/profile"
+                        )
                           ? "font-semibold"
                           : ""
                       }
                     `}
                     style={{
                       backgroundColor:
-                        pathname.startsWith("/profile")
+                        pathname.startsWith(
+                          "/profile"
+                        )
                           ? "var(--card)"
                           : "transparent",
                     }}
@@ -774,17 +851,12 @@ export default function NavbarClient({
                   >
                     Logout
                   </Link>
-
                 </div>
               )}
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </header>
   );
 }

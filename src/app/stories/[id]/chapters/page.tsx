@@ -34,7 +34,50 @@ export default async function ChaptersPage({
     notFound();
   }
 
-  if (story.author_id !== user.id) {
+  /*
+   * Get the current user's role.
+   */
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const role = profile?.role ?? null;
+
+  /*
+   * Permission rules:
+   *
+   * Author:
+   *   Can manage chapters for their own stories.
+   *
+   * Editor:
+   *   Can manage chapters for authors assigned to them.
+   *
+   * Admin / Superadmin:
+   *   Can manage chapters for every story.
+   */
+  let canAccess = false;
+
+  if (story.author_id === user.id) {
+    canAccess = true;
+  } else if (
+    role === "admin" ||
+    role === "superadmin"
+  ) {
+    canAccess = true;
+  } else if (role === "editor") {
+    const { data: assignment } = await supabase
+      .from("editor_author_assignments")
+      .select("id")
+      .eq("editor_id", user.id)
+      .eq("author_id", story.author_id)
+      .maybeSingle();
+
+    canAccess = !!assignment;
+  }
+
+  if (!canAccess) {
     redirect("/stories");
   }
 
@@ -45,141 +88,169 @@ export default async function ChaptersPage({
     .order("chapter_number");
 
   return (
+    <main className="max-w-6xl mx-auto p-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-5xl font-bold">
+            {story.title}
+          </h1>
 
-  <main className="max-w-6xl mx-auto p-8">
-
-<div className="flex items-center justify-between mb-8">
-
-  <div>
-    <h1 className="text-5xl font-bold">
-      {story.title}
-    </h1>
-
-    <p className="mt-2 opacity-70">
-      Manage Chapters
-    </p>
-  </div>
-
-  <Link
-    href={`/stories/${id}/chapters/new`}
-    className="
-      border
-      rounded-lg
-      px-5
-      py-3
-      font-medium
-    "
-    style={{
-      borderColor: "var(--card-border)",
-    }}
-  >
-    + Create Chapter
-  </Link>
-
-</div>
-
-<div className="mb-8 opacity-70">
-  📖 {chapters?.length ?? 0} chapter
-  {(chapters?.length ?? 0) === 1 ? "" : "s"}
-</div>
-
-{!chapters?.length && (
-  <div
-    className="rounded-2xl border p-12 text-center"
-    style={{
-      backgroundColor: "var(--card)",
-      borderColor: "var(--card-border)",
-    }}
-  >
-    <div className="text-6xl mb-4">
-      ✍️
-    </div>
-
-    <h2 className="text-3xl font-bold">
-      Your story begins here
-    </h2>
-
-    <p className="mt-4 opacity-70 max-w-md mx-auto">
-      Every great story starts with a first chapter.
-      Create Chapter 1 and begin building your world.
-    </p>
-
-    <Link
-      href={`/stories/${id}/chapters/new`}
-      className="
-        inline-block
-        mt-8
-        rounded-xl
-        px-6
-        py-3
-        font-medium
-        border
-      "
-      style={{
-        borderColor: "var(--card-border)",
-      }}
-    >
-      Create First Chapter
-    </Link>
-  </div>
-)}
-
-<div className="space-y-4">
-
-  {chapters?.map((chapter) => (
-    <div
-      key={chapter.id}
-      className="
-        rounded-xl
-        border
-        p-5
-        flex
-        items-center
-        justify-between
-      "
-      style={{
-        backgroundColor: "var(--card)",
-        borderColor: "var(--card-border)",
-      }}
-    >
-
-      <div>
-
-        <div className="flex items-center gap-3">
-
-          <div className="text-sm opacity-70">
-            Chapter {chapter.chapter_number}
-          </div>
-
-          <span
-            className="px-2 py-1 rounded-full text-xs font-medium"
-            style={{
-              backgroundColor:
-                chapter.status === "Published"
-                  ? "#16a34a"
-                  : "#ca8a04",
-              color: "white",
-            }}
-          >
-            {chapter.status}
-          </span>
-
+          <p className="mt-2 opacity-70">
+            Manage Chapters
+          </p>
         </div>
 
-        <h2 className="text-xl font-semibold mt-2">
-          {chapter.title}
-        </h2>
-
+        <Link
+          href={`/stories/${id}/chapters/new`}
+          className="
+            border
+            rounded-lg
+            px-5
+            py-3
+            font-medium
+          "
+          style={{
+            borderColor: "var(--card-border)",
+          }}
+        >
+          + Create Chapter
+        </Link>
       </div>
 
-      <div className="flex gap-3 items-center">
+      <div className="mb-8 opacity-70">
+        📖 {chapters?.length ?? 0} chapter
+        {(chapters?.length ?? 0) === 1 ? "" : "s"}
+      </div>
 
-        {chapter.status === "Draft" && (
-          <PublishChapterButton chapterId={chapter.id} />
-        )}
+      {!chapters?.length && (
+        <div
+          className="rounded-2xl border p-12 text-center"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <div className="text-6xl mb-4">
+            ✍️
+          </div>
 
+          <h2 className="text-3xl font-bold">
+            Your story begins here
+          </h2>
+
+          <p className="mt-4 opacity-70 max-w-md mx-auto">
+            Every great story starts with a first chapter.
+            Create Chapter 1 and begin building your world.
+          </p>
+
+          <Link
+            href={`/stories/${id}/chapters/new`}
+            className="
+              inline-block
+              mt-8
+              rounded-xl
+              px-6
+              py-3
+              font-medium
+              border
+            "
+            style={{
+              borderColor: "var(--card-border)",
+            }}
+          >
+            Create First Chapter
+          </Link>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {chapters?.map((chapter) => (
+          <div
+            key={chapter.id}
+            className="
+              rounded-xl
+              border
+              p-5
+              flex
+              items-center
+              justify-between
+            "
+            style={{
+              backgroundColor: "var(--card)",
+              borderColor: "var(--card-border)",
+            }}
+          >
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="text-sm opacity-70">
+                  Chapter {chapter.chapter_number}
+                </div>
+
+                <span
+                  className="px-2 py-1 rounded-full text-xs font-medium"
+                  style={{
+                    backgroundColor:
+                      chapter.status === "Published"
+                        ? "#16a34a"
+                        : "#ca8a04",
+                    color: "white",
+                  }}
+                >
+                  {chapter.status}
+                </span>
+              </div>
+
+              <h2 className="text-xl font-semibold mt-2">
+                {chapter.title}
+              </h2>
+            </div>
+
+            <div className="flex gap-3 items-center">
+              {chapter.status === "Draft" && (
+                <PublishChapterButton
+                  chapterId={chapter.id}
+                />
+              )}
+
+              <Link
+                href={`/chapter/${chapter.id}`}
+                className="
+                  border
+                  rounded-lg
+                  px-4
+                  py-2
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                }}
+              >
+                Preview
+              </Link>
+
+              <Link
+                href={`/stories/${id}/chapters/${chapter.id}/edit`}
+                className="
+                  border
+                  rounded-lg
+                  px-4
+                  py-2
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                }}
+              >
+                Edit
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-10">
         <Link
-          href={`/chapter/${chapter.id}`}
+          href={`/stories/${id}`}
           className="
             border
             rounded-lg
@@ -187,53 +258,13 @@ export default async function ChaptersPage({
             py-2
           "
           style={{
-            borderColor: "var(--card-border)",
+            borderColor:
+              "var(--card-border)",
           }}
         >
-          Preview
+          ← Back to Story Dashboard
         </Link>
-
-        <Link
-          href={`/stories/${id}/chapters/${chapter.id}/edit`}
-          className="
-            border
-            rounded-lg
-            px-4
-            py-2
-          "
-          style={{
-            borderColor: "var(--card-border)",
-          }}
-        >
-          Edit
-        </Link>
-
       </div>
-
-    </div>
-  ))}
-
-</div>
-
-<div className="mt-10">
-
-  <Link
-    href={`/stories/${id}`}
-    className="
-      border
-      rounded-lg
-      px-4
-      py-2
-    "
-    style={{
-      borderColor: "var(--card-border)",
-    }}
-  >
-    ← Back to Story Dashboard
-  </Link>
-
-</div>
-
-  </main>
-);
+    </main>
+  );
 }
