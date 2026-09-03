@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import TrendingStories from "@/components/home/TrendingStories";
 import PopularStories from "@/components/home/PopularStories";
+import AnnouncementBanner from "@/components/home/AnnouncementBanner";
 
 import { ContinueReading } from "@/types/database";
 
@@ -16,6 +17,14 @@ import SectionHeader from "@/components/layout/SectionHeader";
 import EmptyState from "@/components/layout/EmptyState";
 
 import { getPersonalizedRecommendations } from "@/app/recommendations/actions";
+
+type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  published_at: string | null;
+};
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -76,6 +85,33 @@ export default async function HomePage() {
     });
 
   /*
+   * LATEST ANNOUNCEMENTS
+   *
+   * Only published announcements are shown.
+   * The carousel itself limits the display to
+   * the three newest announcements.
+   */
+
+  const { data: announcementData } = await supabase
+    .from("announcements")
+    .select(`
+      id,
+      title,
+      content,
+      created_at,
+      published_at
+    `)
+    .eq("is_published", true)
+    .order("published_at", {
+      ascending: false,
+      nullsFirst: false,
+    })
+    .limit(3);
+
+  const announcements =
+    (announcementData ?? []) as Announcement[];
+
+  /*
    * FEATURED STORY
    */
 
@@ -93,6 +129,7 @@ export default async function HomePage() {
    * Only logged-in users receive personalized
    * recommendations.
    */
+
   const recommendations = user
     ? await getPersonalizedRecommendations(5)
     : [];
@@ -169,6 +206,12 @@ export default async function HomePage() {
         </div>
 
       </section>
+
+      {/* LATEST ANNOUNCEMENTS */}
+
+      <AnnouncementBanner
+        announcements={announcements}
+      />
 
       {/* CONTINUE READING */}
 
@@ -556,4 +599,3 @@ export default async function HomePage() {
     </main>
   );
 }
-

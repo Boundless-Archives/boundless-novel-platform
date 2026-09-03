@@ -85,6 +85,13 @@ export default function NavbarClient({
         icon: "✍️",
         show: isAuthor,
       },
+
+      {
+        href: "/announcements",
+        label: "Announcements",
+        icon: "📢",
+        show: true,
+      },
     ],
     [user, isAuthor]
   );
