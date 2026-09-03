@@ -2,6 +2,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
+import BadgeCollection from "@/components/badges/BadgeCollection";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -20,239 +21,300 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
+  const { data: badges } = await supabase
+    .from("user_badges")
+    .select(`
+      id,
+      award_number,
+      awarded_at,
+      badges (
+        id,
+        name,
+        description,
+        icon,
+        badge_type,
+        max_awards
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("awarded_at", { ascending: true });
+
+  const formattedBadges =
+    badges
+      ?.map((userBadge) => {
+        const badge = Array.isArray(userBadge.badges)
+          ? userBadge.badges[0]
+          : userBadge.badges;
+
+        if (!badge) return null;
+
+        return {
+          id: badge.id,
+          name: badge.name,
+          description: badge.description,
+          icon: badge.icon,
+          badge_type: badge.badge_type,
+          max_awards: badge.max_awards,
+          award_number: userBadge.award_number,
+        };
+      })
+      .filter(
+        (
+          badge
+        ): badge is {
+          id: string;
+          name: string;
+          description: string;
+          icon: string;
+          badge_type: "achievement" | "limited";
+          max_awards: number | null;
+          award_number: number | null;
+        } => badge !== null
+      ) ?? [];
+
   return (
+    <main className="max-w-4xl mx-auto p-6 md:p-8">
 
-  <main className="max-w-4xl mx-auto p-6 md:p-8">
+      <h1 className="text-4xl md:text-5xl font-bold mb-8">
+        My Profile
+      </h1>
 
-<h1 className="text-4xl md:text-5xl font-bold mb-8">
-  My Profile
-</h1>
+      <div
+        className="rounded-xl border p-8"
+        style={{
+          backgroundColor: "var(--card)",
+          borderColor: "var(--card-border)",
+        }}
+      >
 
-<div
-  className="rounded-xl border p-8"
-  style={{
-    backgroundColor: "var(--card)",
-    borderColor: "var(--card-border)",
-  }}
->
-
-  <div
-    className="
-      flex
-      flex-col
-      md:flex-row
-      gap-8
-      items-center
-      md:items-start
-      text-center
-      md:text-left
-    "
-  >
-
-    <div>
-
-      {profile?.avatar_url ? (
-        <Image
-          src={profile.avatar_url}
-          alt="Profile Avatar"
-          width={120}
-          height={120}
-          className="rounded-full"
-        />
-      ) : (
         <div
           className="
-            w-[120px]
-            h-[120px]
-            md:w-[140px]
-            md:h-[140px]
-            rounded-full
-            border
             flex
+            flex-col
+            md:flex-row
+            gap-8
             items-center
-            justify-center
-            text-4xl
-            font-bold
+            md:items-start
+            text-center
+            md:text-left
           "
-          style={{
-            borderColor:
-              "var(--card-border)",
-          }}
         >
-          {(profile?.display_name ??
-            profile?.username ??
-            "U")
-            .charAt(0)
-            .toUpperCase()}
+
+          <div>
+            {profile?.avatar_url ? (
+              <Image
+                src={profile.avatar_url}
+                alt="Profile Avatar"
+                width={120}
+                height={120}
+                className="rounded-full"
+              />
+            ) : (
+              <div
+                className="
+                  w-[120px]
+                  h-[120px]
+                  md:w-[140px]
+                  md:h-[140px]
+                  rounded-full
+                  border
+                  flex
+                  items-center
+                  justify-center
+                  text-4xl
+                  font-bold
+                "
+                style={{
+                  borderColor: "var(--card-border)",
+                }}
+              >
+                {(profile?.display_name ??
+                  profile?.username ??
+                  "U")
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1">
+
+            <h2 className="text-3xl font-bold">
+              {profile?.display_name ??
+                "Unnamed User"}
+            </h2>
+
+            <p className="mt-2 opacity-70">
+              @{profile?.username ?? "unknown"}
+            </p>
+
+            <p className="mt-1 text-sm opacity-60">
+              {user.email}
+            </p>
+
+            <div className="mt-4">
+              <span
+                className="
+                  inline-block
+                  px-3
+                  py-1
+                  rounded-full
+                  border
+                  text-sm
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                }}
+              >
+                {profile?.is_author
+                  ? "Author"
+                  : "Reader"}
+              </span>
+            </div>
+
+            <div className="mt-6">
+              <h3 className="font-semibold text-lg">
+                Bio
+              </h3>
+
+              <p className="mt-2 opacity-90">
+                {profile?.bio ||
+                  "No bio added yet."}
+              </p>
+            </div>
+
+          </div>
         </div>
-      )}
 
-    </div>
-
-    <div className="flex-1">
-
-      <h2 className="text-3xl font-bold">
-        {profile?.display_name ??
-          "Unnamed User"}
-      </h2>
-
-      <p className="mt-2 opacity-70">
-        @{profile?.username ?? "unknown"}
-      </p>
-
-      <p className="mt-1 text-sm opacity-60">
-        {user.email}
-      </p>
-
-      <div className="mt-4">
-        <span
+        <div
           className="
-            inline-block
-            px-3
-            py-1
-            rounded-full
-            border
-            text-sm
+            mt-8
+            flex
+            flex-col
+            sm:flex-row
+            flex-wrap
+            gap-4
           "
-          style={{
-            borderColor:
-              "var(--card-border)",
-          }}
         >
-          {profile?.is_author
-            ? "Author"
-            : "Reader"}
-        </span>
+
+          <Link
+            href="/profile/edit"
+            className="
+              border
+              rounded-lg
+              px-4
+              py-2
+              text-center
+              w-full
+              sm:w-auto
+              transition
+              hover:shadow-md
+            "
+            style={{
+              borderColor:
+                "var(--card-border)",
+            }}
+          >
+            Edit Profile
+          </Link>
+
+          <Link
+            href="/library"
+            className="
+              border
+              rounded-lg
+              px-4
+              py-2
+              transition
+              hover:shadow-md
+            "
+            style={{
+              borderColor:
+                "var(--card-border)",
+            }}
+          >
+            My Library
+          </Link>
+
+          {profile?.is_author && (
+            <Link
+              href="/stories"
+              className="
+                border
+                rounded-lg
+                px-4
+                py-2
+                transition
+                hover:shadow-md
+              "
+              style={{
+                borderColor:
+                  "var(--card-border)",
+              }}
+            >
+              Manage Stories
+            </Link>
+          )}
+
+          <Link
+            href="/auth/logout"
+            className="
+              border
+              rounded-lg
+              px-4
+              py-2
+              transition
+              hover:shadow-md
+            "
+            style={{
+              borderColor:
+                "var(--card-border)",
+            }}
+          >
+            Logout
+          </Link>
+
+          {!profile?.is_author && (
+            <Link
+              href="/profile/become-author"
+              className="
+                border
+                rounded-lg
+                px-4
+                py-2
+                transition
+                hover:shadow-md
+              "
+              style={{
+                borderColor:
+                  "var(--card-border)",
+              }}
+            >
+              Become an Author
+            </Link>
+          )}
+
+        </div>
+
       </div>
 
-      <div className="mt-6">
-        <h3 className="font-semibold text-lg">
-          Bio
-        </h3>
+      <section className="mt-10">
 
-        <p className="mt-2 opacity-90">
-          {profile?.bio ||
-            "No bio added yet."}
-        </p>
-      </div>
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold">
+            Badges
+          </h2>
 
-    </div>
+          <p className="mt-1 text-sm opacity-60">
+            Achievements you've earned on Boundless.
+          </p>
+        </div>
 
-  </div>
+        <BadgeCollection badges={formattedBadges} />
 
-  <div
-    className="
-      mt-8
-      flex
-      flex-col
-      sm:flex-row
-      flex-wrap
-      gap-4
-    "
->
+      </section>
 
-    <Link
-      href="/profile/edit"
-      className="
-        border
-        rounded-lg
-        px-4
-        py-2
-        text-center
-        w-full
-        sm:w-auto
-        transition
-        hover:shadow-md
-      "
-      style={{
-        borderColor:
-          "var(--card-border)",
-      }}
-    >
-      Edit Profile
-    </Link>
-
-    <Link
-      href="/library"
-      className="
-        border
-        rounded-lg
-        px-4
-        py-2
-        transition
-        hover:shadow-md
-      "
-      style={{
-        borderColor:
-          "var(--card-border)",
-      }}
-    >
-      My Library
-    </Link>
-
-    {profile?.is_author && (
-      <Link
-        href="/stories"
-        className="
-          border
-          rounded-lg
-          px-4
-          py-2
-          transition
-          hover:shadow-md
-        "
-        style={{
-          borderColor:
-            "var(--card-border)",
-        }}
-      >
-        Manage Stories
-      </Link>
-      )}
-      
-      <Link
-        href="/auth/logout"
-        className="
-          border
-          rounded-lg
-          px-4
-          py-2
-          transition
-          hover:shadow-md
-        "
-        style={{
-          borderColor:
-            "var(--card-border)",
-        }}
-      >
-        Logout
-    </Link>
-      
-
-    {!profile?.is_author && (
-      <Link
-        href="/profile/become-author"
-        className="
-          border
-          rounded-lg
-          px-4
-          py-2
-          transition
-          hover:shadow-md
-        "
-        style={{
-          borderColor:
-            "var(--card-border)",
-        }}
-      >
-        Become an Author
-      </Link>
-    )}
-
-  </div>
-
-</div>
-
-  </main>
-);
+    </main>
+  );
 }

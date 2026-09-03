@@ -183,7 +183,7 @@ export default function NewStoryPage() {
     }
 
     router.push(
-      `/author/stories/${data.id}`
+      `/stories/${data.id}`
     );
   }
 
