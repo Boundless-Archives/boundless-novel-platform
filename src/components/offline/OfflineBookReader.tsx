@@ -96,7 +96,11 @@ export default function OfflineBookReader({
         {book.chapters.map((chapter) => (
           <Link
             key={chapter.id}
-            href={`/downloads/${book.storyId}/${chapter.id}`}
+            href={`/downloads/read?storyId=${encodeURIComponent(
+              book.storyId
+            )}&chapterId=${encodeURIComponent(
+              chapter.id
+            )}`}
             className="block rounded-xl border p-5 transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             <p className="text-xs uppercase tracking-wide opacity-50">

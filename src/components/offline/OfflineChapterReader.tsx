@@ -8,15 +8,7 @@ import {
   type OfflineChapter,
 } from "@/lib/offline-books";
 
-type OfflineChapterReaderProps = {
-  storyId: string;
-  chapterId: string;
-};
-
-export default function OfflineChapterReader({
-  storyId,
-  chapterId,
-}: OfflineChapterReaderProps) {
+export default function OfflineChapterReader() {
   const [book, setBook] =
     useState<OfflineBook | null>(null);
 
@@ -28,6 +20,21 @@ export default function OfflineChapterReader({
   useEffect(() => {
     async function loadChapter() {
       try {
+        const params = new URLSearchParams(
+          window.location.search
+        );
+
+        const storyId =
+          params.get("storyId");
+
+        const chapterId =
+          params.get("chapterId");
+
+        if (!storyId || !chapterId) {
+          setLoading(false);
+          return;
+        }
+
         const offlineBook =
           await getOfflineBook(storyId);
 
@@ -54,7 +61,7 @@ export default function OfflineChapterReader({
     }
 
     loadChapter();
-  }, [storyId, chapterId]);
+  }, []);
 
   if (loading) {
     return (
@@ -73,11 +80,16 @@ export default function OfflineChapterReader({
           Chapter not found
         </h1>
 
+        <p className="mt-2 text-sm opacity-60">
+          This chapter could not be found in the
+          offline download on this device.
+        </p>
+
         <Link
-          href={`/downloads/${storyId}`}
+          href="/downloads"
           className="mt-5 inline-block rounded-lg border px-4 py-2 text-sm"
         >
-          Back to book
+          Back to downloads
         </Link>
       </main>
     );
@@ -94,15 +106,26 @@ export default function OfflineChapterReader({
       : null;
 
   const nextChapter =
-    currentIndex < book.chapters.length - 1
+    currentIndex <
+    book.chapters.length - 1
       ? book.chapters[currentIndex + 1]
       : null;
+
+  function readerUrl(
+    chapterId: string
+  ) {
+    return `/downloads/read?storyId=${encodeURIComponent(
+      book!.storyId
+    )}&chapterId=${encodeURIComponent(
+      chapterId
+    )}`;
+  }
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <div className="mb-8">
         <Link
-          href={`/downloads/${storyId}`}
+          href={`/downloads/${book.storyId}`}
           className="text-sm opacity-60 hover:opacity-100"
         >
           ← {book.title}
@@ -127,7 +150,9 @@ export default function OfflineChapterReader({
       <div className="mt-12 flex items-center justify-between gap-4 border-t pt-6">
         {previousChapter ? (
           <Link
-            href={`/downloads/${storyId}/${previousChapter.id}`}
+            href={readerUrl(
+              previousChapter.id
+            )}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             ← Previous
@@ -138,14 +163,16 @@ export default function OfflineChapterReader({
 
         {nextChapter ? (
           <Link
-            href={`/downloads/${storyId}/${nextChapter.id}`}
+            href={readerUrl(
+              nextChapter.id
+            )}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             Next →
           </Link>
         ) : (
           <Link
-            href={`/downloads/${storyId}`}
+            href={`/downloads/${book.storyId}`}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             Back to book
