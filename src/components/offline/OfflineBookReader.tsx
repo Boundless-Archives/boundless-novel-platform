@@ -7,13 +7,7 @@ import {
   type OfflineBook,
 } from "@/lib/offline-books";
 
-type OfflineBookReaderProps = {
-  storyId: string;
-};
-
-export default function OfflineBookReader({
-  storyId,
-}: OfflineBookReaderProps) {
+export default function OfflineBookReader() {
   const [book, setBook] =
     useState<OfflineBook | null>(null);
 
@@ -22,6 +16,18 @@ export default function OfflineBookReader({
   useEffect(() => {
     async function loadBook() {
       try {
+        const params = new URLSearchParams(
+          window.location.search
+        );
+
+        const storyId =
+          params.get("storyId");
+
+        if (!storyId) {
+          setLoading(false);
+          return;
+        }
+
         const offlineBook =
           await getOfflineBook(storyId);
 
@@ -37,7 +43,7 @@ export default function OfflineBookReader({
     }
 
     loadBook();
-  }, [storyId]);
+  }, []);
 
   if (loading) {
     return (
@@ -57,8 +63,7 @@ export default function OfflineBookReader({
         </h1>
 
         <p className="mt-2 text-sm opacity-60">
-          This book is not currently stored on this
-          device.
+          This book is not stored on this device.
         </p>
 
         <Link
@@ -73,26 +78,32 @@ export default function OfflineBookReader({
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
-      <div className="mb-8">
-        <Link
-          href="/downloads"
-          className="text-sm opacity-60 hover:opacity-100"
-        >
-          ← Offline Downloads
-        </Link>
+      <Link
+        href="/downloads"
+        className="text-sm opacity-60 hover:opacity-100"
+      >
+        ← Offline Downloads
+      </Link>
 
-        <h1 className="mt-4 text-3xl font-bold">
-          {book.title}
-        </h1>
+      <h1 className="mt-5 text-3xl font-bold">
+        {book.title}
+      </h1>
 
-        {book.description && (
-          <p className="mt-3 text-sm opacity-60">
-            {book.description}
-          </p>
-        )}
-      </div>
+      {book.description && (
+        <p className="mt-3 text-sm opacity-60">
+          {book.description}
+        </p>
+      )}
 
-      <div className="space-y-3">
+      <p className="mt-2 text-sm opacity-50">
+        {book.chapters.length}{" "}
+        {book.chapters.length === 1
+          ? "chapter"
+          : "chapters"}{" "}
+        available offline
+      </p>
+
+      <div className="mt-8 space-y-3">
         {book.chapters.map((chapter) => (
           <Link
             key={chapter.id}

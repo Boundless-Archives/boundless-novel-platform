@@ -112,7 +112,9 @@ export default function DownloadsLibrary() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               <Link
-                href={`/downloads/${book.storyId}`}
+                href={`/downloads/read?storyId=${encodeURIComponent(
+                  book.storyId
+                )}`}
                 className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
               >
                 Read offline

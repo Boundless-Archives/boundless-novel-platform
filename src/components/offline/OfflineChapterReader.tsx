@@ -18,7 +18,7 @@ export default function OfflineChapterReader() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadChapter() {
+    async function load() {
       try {
         const params = new URLSearchParams(
           window.location.search
@@ -30,7 +30,7 @@ export default function OfflineChapterReader() {
         const chapterId =
           params.get("chapterId");
 
-        if (!storyId || !chapterId) {
+        if (!storyId) {
           setLoading(false);
           return;
         }
@@ -43,16 +43,21 @@ export default function OfflineChapterReader() {
           return;
         }
 
-        const foundChapter =
-          offlineBook.chapters.find(
-            (item) => item.id === chapterId
-          );
-
         setBook(offlineBook);
-        setChapter(foundChapter ?? null);
+
+        if (chapterId) {
+          const foundChapter =
+            offlineBook.chapters.find(
+              (item) => item.id === chapterId
+            );
+
+          setChapter(
+            foundChapter ?? null
+          );
+        }
       } catch (error) {
         console.error(
-          "Failed to load offline chapter:",
+          "Failed to load offline content:",
           error
         );
       } finally {
@@ -60,30 +65,25 @@ export default function OfflineChapterReader() {
       }
     }
 
-    loadChapter();
+    load();
   }, []);
 
   if (loading) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
         <p className="opacity-60">
-          Loading chapter...
+          Loading offline content...
         </p>
       </main>
     );
   }
 
-  if (!book || !chapter) {
+  if (!book) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="text-2xl font-bold">
-          Chapter not found
+          Offline book not found
         </h1>
-
-        <p className="mt-2 text-sm opacity-60">
-          This chapter could not be found in the
-          offline download on this device.
-        </p>
 
         <Link
           href="/downloads"
@@ -95,6 +95,48 @@ export default function OfflineChapterReader() {
     );
   }
 
+  if (!chapter) {
+    return (
+      <main className="mx-auto max-w-3xl px-6 py-10">
+        <Link
+          href="/downloads"
+          className="text-sm opacity-60 hover:opacity-100"
+        >
+          ← Offline Downloads
+        </Link>
+
+        <h1 className="mt-5 text-3xl font-bold">
+          {book.title}
+        </h1>
+
+        <div className="mt-8 space-y-3">
+          {book.chapters.map(
+            (item) => (
+              <Link
+                key={item.id}
+                href={`/downloads/read?storyId=${encodeURIComponent(
+                  book.storyId
+                )}&chapterId=${encodeURIComponent(
+                  item.id
+                )}`}
+                className="block rounded-xl border p-5 transition hover:bg-black/5 dark:hover:bg-white/5"
+              >
+                <p className="text-xs uppercase tracking-wide opacity-50">
+                  Chapter{" "}
+                  {item.chapter_number}
+                </p>
+
+                <h2 className="mt-1 font-semibold">
+                  {item.title}
+                </h2>
+              </Link>
+            )
+          )}
+        </div>
+      </main>
+    );
+  }
+
   const currentIndex =
     book.chapters.findIndex(
       (item) => item.id === chapter.id
@@ -102,16 +144,20 @@ export default function OfflineChapterReader() {
 
   const previousChapter =
     currentIndex > 0
-      ? book.chapters[currentIndex - 1]
+      ? book.chapters[
+          currentIndex - 1
+        ]
       : null;
 
   const nextChapter =
     currentIndex <
     book.chapters.length - 1
-      ? book.chapters[currentIndex + 1]
+      ? book.chapters[
+          currentIndex + 1
+        ]
       : null;
 
-  function readerUrl(
+  function chapterUrl(
     chapterId: string
   ) {
     return `/downloads/read?storyId=${encodeURIComponent(
@@ -123,25 +169,25 @@ export default function OfflineChapterReader() {
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
-      <div className="mb-8">
-        <Link
-          href={`/downloads/${book.storyId}`}
-          className="text-sm opacity-60 hover:opacity-100"
-        >
-          ← {book.title}
-        </Link>
+      <Link
+        href={`/downloads/read?storyId=${encodeURIComponent(
+          book.storyId
+        )}`}
+        className="text-sm opacity-60 hover:opacity-100"
+      >
+        ← {book.title}
+      </Link>
 
-        <p className="mt-5 text-sm uppercase tracking-wide opacity-50">
-          Chapter {chapter.chapter_number}
-        </p>
+      <p className="mt-6 text-sm uppercase tracking-wide opacity-50">
+        Chapter {chapter.chapter_number}
+      </p>
 
-        <h1 className="mt-2 text-3xl font-bold">
-          {chapter.title}
-        </h1>
-      </div>
+      <h1 className="mt-2 text-3xl font-bold">
+        {chapter.title}
+      </h1>
 
       <article
-        className="prose max-w-none dark:prose-invert"
+        className="prose mt-8 max-w-none dark:prose-invert"
         dangerouslySetInnerHTML={{
           __html: chapter.content,
         }}
@@ -150,7 +196,7 @@ export default function OfflineChapterReader() {
       <div className="mt-12 flex items-center justify-between gap-4 border-t pt-6">
         {previousChapter ? (
           <Link
-            href={readerUrl(
+            href={chapterUrl(
               previousChapter.id
             )}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
@@ -163,7 +209,7 @@ export default function OfflineChapterReader() {
 
         {nextChapter ? (
           <Link
-            href={readerUrl(
+            href={chapterUrl(
               nextChapter.id
             )}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
@@ -172,10 +218,12 @@ export default function OfflineChapterReader() {
           </Link>
         ) : (
           <Link
-            href={`/downloads/${book.storyId}`}
+            href={`/downloads/read?storyId=${encodeURIComponent(
+              book.storyId
+            )}`}
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
-            Back to book
+            Back to chapters
           </Link>
         )}
       </div>
