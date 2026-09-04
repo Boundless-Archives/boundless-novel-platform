@@ -6,6 +6,7 @@ import SaveStoryButton from "@/components/SaveStoryButton";
 import LikeButton from "@/components/story/LikeButton";
 import ReviewForm from "@/components/story/ReviewForm";
 import Card from "@/components/ui/Card";
+import DownloadBookButton from "@/components/offline/DownloadBookButton";
 
 type Props = {
   params: Promise<{
@@ -472,6 +473,15 @@ relatedStories?.sort(
           storySlug={story.slug}
           liked={liked}
           likes={storyStats?.likes ?? 0}
+        />
+
+        <DownloadBookButton
+          storyId={story.id}
+          slug={story.slug}
+          title={story.title}
+          description={story.description}
+          coverUrl={story.cover_url}
+          chapters={chapters ?? []}
         />
 
         {chapters?.[0] && (
