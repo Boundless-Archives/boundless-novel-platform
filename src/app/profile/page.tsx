@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import BadgeCollection from "@/components/badges/BadgeCollection";
+import PushNotificationSettings from "@/components/notifications/PushNotificationSettings";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -298,6 +299,21 @@ export default async function ProfilePage() {
         </div>
 
       </div>
+
+
+      <section className="mt-10">
+        <div className="mb-5">
+          <h2 className="text-2xl font-bold">
+            Notifications
+          </h2>
+
+          <p className="mt-1 text-sm opacity-60">
+            Control notifications for this device.
+          </p>
+        </div>
+
+        <PushNotificationSettings />
+      </section>
 
       <section className="mt-10">
 

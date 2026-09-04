@@ -29,6 +29,18 @@ description:
 
 applicationName: "Boundless",
 
+manifest: "/manifest.webmanifest",
+
+appleWebApp: {
+  capable: true,
+  title: "Boundless",
+  statusBarStyle: "black-translucent",
+},
+
+formatDetection: {
+  telephone: false,
+},
+
 keywords: [
 "stories",
 "novels",
