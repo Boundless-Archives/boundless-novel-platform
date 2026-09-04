@@ -31,24 +31,32 @@ export default function DownloadBookButton({
   coverUrl,
   chapters,
 }: DownloadBookButtonProps) {
-  const [downloaded, setDownloaded] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [downloaded, setDownloaded] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [downloading, setDownloading] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
 
   useEffect(() => {
     let mounted = true;
 
     async function checkDownload() {
       try {
-        const exists = await isBookDownloaded(storyId);
+        const exists =
+          await isBookDownloaded(storyId);
 
         if (mounted) {
           setDownloaded(exists);
         }
       } catch (error) {
         console.error(
-          "Failed to check offline book:",
+          "Failed to check offline download:",
           error
         );
       } finally {
@@ -72,14 +80,14 @@ export default function DownloadBookButton({
 
     if (!navigator.onLine) {
       setMessage(
-        "You need an internet connection to download this book."
+        "Connect to the internet before downloading this book."
       );
       return;
     }
 
     if (chapters.length === 0) {
       setMessage(
-        "This book has no published chapters to download yet."
+        "There are no published chapters to download."
       );
       return;
     }
@@ -88,18 +96,42 @@ export default function DownloadBookButton({
       setDownloading(true);
       setMessage("");
 
+      /*
+       * The complete published chapter data is already
+       * available on the story page. We save all of it
+       * directly into IndexedDB.
+       *
+       * No chapter page needs to be opened.
+       * No chapter route needs to be cached.
+       */
       await saveOfflineBook({
         storyId,
         slug,
         title,
         description,
         coverUrl,
-        downloadedAt: new Date().toISOString(),
-        chapters,
+        downloadedAt:
+          new Date().toISOString(),
+        chapters: chapters.map(
+          (chapter) => ({
+            id: chapter.id,
+            chapter_number:
+              chapter.chapter_number,
+            title: chapter.title,
+            content: chapter.content,
+          })
+        ),
       });
 
       setDownloaded(true);
-      setMessage("Book downloaded for offline reading.");
+
+      setMessage(
+        `${chapters.length} ${
+          chapters.length === 1
+            ? "chapter"
+            : "chapters"
+        } downloaded for offline reading.`
+      );
     } catch (error) {
       console.error(
         "Failed to download book:",
@@ -107,7 +139,7 @@ export default function DownloadBookButton({
       );
 
       setMessage(
-        "Failed to download this book. Please try again."
+        "The download failed. Please try again."
       );
     } finally {
       setDownloading(false);
@@ -126,7 +158,10 @@ export default function DownloadBookButton({
       await deleteOfflineBook(storyId);
 
       setDownloaded(false);
-      setMessage("Offline download removed.");
+
+      setMessage(
+        "Offline download removed."
+      );
     } catch (error) {
       console.error(
         "Failed to remove offline book:",
@@ -148,7 +183,7 @@ export default function DownloadBookButton({
         disabled
         className="rounded-lg border px-4 py-2 text-sm opacity-50"
       >
-        Checking...
+        Checking download...
       </button>
     );
   }
@@ -174,7 +209,11 @@ export default function DownloadBookButton({
           className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/5"
         >
           {downloading
-            ? "Downloading..."
+            ? `Downloading ${chapters.length} ${
+                chapters.length === 1
+                  ? "chapter"
+                  : "chapters"
+              }...`
             : "Download for offline"}
         </button>
       )}

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   getOfflineBook,
@@ -15,14 +14,16 @@ export default function OfflineChapterReader() {
   const [chapter, setChapter] =
     useState<OfflineChapter | null>(null);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     async function load() {
       try {
-        const params = new URLSearchParams(
-          window.location.search
-        );
+        const params =
+          new URLSearchParams(
+            window.location.search
+          );
 
         const storyId =
           params.get("storyId");
@@ -48,7 +49,8 @@ export default function OfflineChapterReader() {
         if (chapterId) {
           const foundChapter =
             offlineBook.chapters.find(
-              (item) => item.id === chapterId
+              (item) =>
+                item.id === chapterId
             );
 
           setChapter(
@@ -68,6 +70,10 @@ export default function OfflineChapterReader() {
     load();
   }, []);
 
+  function goTo(url: string) {
+    window.location.href = url;
+  }
+
   if (loading) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
@@ -85,12 +91,19 @@ export default function OfflineChapterReader() {
           Offline book not found
         </h1>
 
-        <Link
-          href="/downloads"
-          className="mt-5 inline-block rounded-lg border px-4 py-2 text-sm"
+        <p className="mt-2 text-sm opacity-60">
+          This book is not stored on this device.
+        </p>
+
+        <button
+          type="button"
+          onClick={() =>
+            goTo("/downloads")
+          }
+          className="mt-5 rounded-lg border px-4 py-2 text-sm"
         >
           Back to downloads
-        </Link>
+        </button>
       </main>
     );
   }
@@ -98,28 +111,44 @@ export default function OfflineChapterReader() {
   if (!chapter) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
-        <Link
-          href="/downloads"
+        <button
+          type="button"
+          onClick={() =>
+            goTo("/downloads")
+          }
           className="text-sm opacity-60 hover:opacity-100"
         >
           ← Offline Downloads
-        </Link>
+        </button>
 
         <h1 className="mt-5 text-3xl font-bold">
           {book.title}
         </h1>
 
+        <p className="mt-2 text-sm opacity-50">
+          {book.chapters.length}{" "}
+          {book.chapters.length === 1
+            ? "chapter"
+            : "chapters"}{" "}
+          available offline
+        </p>
+
         <div className="mt-8 space-y-3">
           {book.chapters.map(
             (item) => (
-              <Link
+              <button
                 key={item.id}
-                href={`/downloads/read?storyId=${encodeURIComponent(
-                  book.storyId
-                )}&chapterId=${encodeURIComponent(
-                  item.id
-                )}`}
-                className="block rounded-xl border p-5 transition hover:bg-black/5 dark:hover:bg-white/5"
+                type="button"
+                onClick={() =>
+                  goTo(
+                    `/downloads/read?storyId=${encodeURIComponent(
+                      book.storyId
+                    )}&chapterId=${encodeURIComponent(
+                      item.id
+                    )}`
+                  )
+                }
+                className="block w-full rounded-xl border p-5 text-left transition hover:bg-black/5 dark:hover:bg-white/5"
               >
                 <p className="text-xs uppercase tracking-wide opacity-50">
                   Chapter{" "}
@@ -129,7 +158,7 @@ export default function OfflineChapterReader() {
                 <h2 className="mt-1 font-semibold">
                   {item.title}
                 </h2>
-              </Link>
+              </button>
             )
           )}
         </div>
@@ -157,26 +186,21 @@ export default function OfflineChapterReader() {
         ]
       : null;
 
-  function chapterUrl(
-    chapterId: string
-  ) {
-    return `/downloads/read?storyId=${encodeURIComponent(
-      book!.storyId
-    )}&chapterId=${encodeURIComponent(
-      chapterId
-    )}`;
-  }
-
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
-      <Link
-        href={`/downloads/read?storyId=${encodeURIComponent(
-          book.storyId
-        )}`}
+      <button
+        type="button"
+        onClick={() =>
+          goTo(
+            `/downloads/read?storyId=${encodeURIComponent(
+              book.storyId
+            )}`
+          )
+        }
         className="text-sm opacity-60 hover:opacity-100"
       >
         ← {book.title}
-      </Link>
+      </button>
 
       <p className="mt-6 text-sm uppercase tracking-wide opacity-50">
         Chapter {chapter.chapter_number}
@@ -195,36 +219,55 @@ export default function OfflineChapterReader() {
 
       <div className="mt-12 flex items-center justify-between gap-4 border-t pt-6">
         {previousChapter ? (
-          <Link
-            href={chapterUrl(
-              previousChapter.id
-            )}
+          <button
+            type="button"
+            onClick={() =>
+              goTo(
+                `/downloads/read?storyId=${encodeURIComponent(
+                  book.storyId
+                )}&chapterId=${encodeURIComponent(
+                  previousChapter.id
+                )}`
+              )
+            }
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             ← Previous
-          </Link>
+          </button>
         ) : (
           <span />
         )}
 
         {nextChapter ? (
-          <Link
-            href={chapterUrl(
-              nextChapter.id
-            )}
+          <button
+            type="button"
+            onClick={() =>
+              goTo(
+                `/downloads/read?storyId=${encodeURIComponent(
+                  book.storyId
+                )}&chapterId=${encodeURIComponent(
+                  nextChapter.id
+                )}`
+              )
+            }
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             Next →
-          </Link>
+          </button>
         ) : (
-          <Link
-            href={`/downloads/read?storyId=${encodeURIComponent(
-              book.storyId
-            )}`}
+          <button
+            type="button"
+            onClick={() =>
+              goTo(
+                `/downloads/read?storyId=${encodeURIComponent(
+                  book.storyId
+                )}`
+              )
+            }
             className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 dark:hover:bg-white/5"
           >
             Back to chapters
-          </Link>
+          </button>
         )}
       </div>
     </main>
