@@ -894,7 +894,7 @@ readingHistory.forEach((entry) => {
           grid
           gap-5
           sm:grid-cols-2
-          lg:grid-cols-3
+          lg:grid-cols-4
         ">
 
           {/* SAVED STORIES */}
@@ -1048,6 +1048,56 @@ readingHistory.forEach((entry) => {
               View Activity →
             </p>
 
+          </Link>
+
+          {/* OFFLINE DOWNLOADS */}
+
+          <Link
+            href="/downloads"
+            className="
+              group
+              rounded-2xl
+              border
+              p-6
+              transition
+              hover:-translate-y-1
+              hover:shadow-lg
+            "
+            style={{
+              backgroundColor: "var(--card)",
+              borderColor: "var(--card-border)",
+            }}
+          >
+            <div className="text-3xl">
+              📥
+            </div>
+
+            <h3 className="
+              mt-4
+              text-xl
+              font-bold
+              group-hover:underline
+            ">
+              Offline Downloads
+            </h3>
+
+            <p className="
+              mt-2
+              text-sm
+              opacity-65
+            ">
+              Read your downloaded stories without an
+              internet connection.
+            </p>
+
+            <p className="
+              mt-5
+              text-sm
+              font-medium
+              opacity-70
+            ">
+              Manage Downloads →
+            </p>
           </Link>
 
         </div>
