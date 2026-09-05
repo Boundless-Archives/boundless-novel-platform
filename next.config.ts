@@ -9,11 +9,7 @@ const withSerwist = withSerwistInit({
   additionalPrecacheEntries: [
     {
       url: "/downloads",
-      revision: "offline-downloads-v1",
-    },
-    {
-      url: "/downloads/read",
-      revision: "offline-reader-v1",
+      revision: "offline-downloads-v2",
     },
   ],
 });
