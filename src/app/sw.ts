@@ -22,6 +22,17 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: defaultCache,
+
+  fallbacks: {
+    entries: [
+      {
+        url: "/downloads",
+        matcher({ request }) {
+          return request.destination === "document";
+        },
+      },
+    ],
+  },
 });
 
 self.addEventListener(
@@ -42,10 +53,10 @@ self.addEventListener(
         "You have a new notification.",
       icon:
         data.icon ??
-        "/icons/icon-192.png",
+        "/icon/icon-192.png",
       badge:
         data.badge ??
-        "/icons/icon-192.png",
+        "/icon/icon-192.png",
       data: {
         url: data.url ?? "/notifications",
       },
