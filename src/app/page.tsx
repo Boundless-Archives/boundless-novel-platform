@@ -260,7 +260,7 @@ export default async function HomePage() {
               </p>
 
               <Button
-                href={`/chapters/${continueReading.chapter_id}`}
+                href={`/chapter/${continueReading.chapter_id}`}
               >
                 Continue Reading →
               </Button>

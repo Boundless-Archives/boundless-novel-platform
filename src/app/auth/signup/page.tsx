@@ -206,7 +206,7 @@ export default function SignupPage() {
         </div>
 
         <p className="mt-6 text-center text-xs opacity-45">
-          Welcome to Boundless — stories without limits.
+          Welcome to Boundless — Infinite stories - Infinte Worlds.
         </p>
       </div>
     </main>
