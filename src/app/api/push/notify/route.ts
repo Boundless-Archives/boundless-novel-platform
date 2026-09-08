@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import webpush from "web-push";
-
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 webpush.setVapidDetails(
   process.env.VAPID_SUBJECT!,
@@ -27,11 +26,15 @@ export async function POST(request: Request) {
 
     const payload = await request.json();
 
-    const notification = payload?.record;
+    const notification =
+      payload?.record;
 
     if (!notification) {
       return NextResponse.json(
-        { error: "Missing notification record." },
+        {
+          error:
+            "Missing notification record.",
+        },
         { status: 400 }
       );
     }
@@ -45,12 +48,16 @@ export async function POST(request: Request) {
 
     if (!user_id || !title) {
       return NextResponse.json(
-        { error: "Missing notification data." },
+        {
+          error:
+            "Missing notification data.",
+        },
         { status: 400 }
       );
     }
 
-    const supabase = await createClient();
+    const supabase =
+      createAdminClient();
 
     const {
       data: subscriptions,
@@ -79,10 +86,13 @@ export async function POST(request: Request) {
       try {
         await webpush.sendNotification(
           {
-            endpoint: subscription.endpoint,
+            endpoint:
+              subscription.endpoint,
             keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth,
+              p256dh:
+                subscription.p256dh,
+              auth:
+                subscription.auth,
             },
           },
           JSON.stringify({
@@ -90,8 +100,10 @@ export async function POST(request: Request) {
             body:
               message ||
               "You have a new notification.",
-            icon: "/icon/icon-192.png",
-            badge: "/icon/icon-192.png",
+            icon:
+              "/icon/icon-192.png",
+            badge:
+              "/icon/icon-192.png",
             url:
               link ||
               "/notifications",
@@ -107,7 +119,15 @@ export async function POST(request: Request) {
           await supabase
             .from("push_subscriptions")
             .delete()
-            .eq("id", subscription.id);
+            .eq(
+              "id",
+              subscription.id
+            );
+        } else {
+          console.error(
+            "Push delivery failed:",
+            pushError
+          );
         }
       }
     }
