@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+
 import { openNotification } from "./actions";
 
 type Props = {
@@ -16,6 +17,7 @@ export default function OpenNotification({
   children,
 }: Props) {
   const router = useRouter();
+
   const [isPending, startTransition] =
     useTransition();
 
@@ -26,13 +28,14 @@ export default function OpenNotification({
 
     startTransition(async () => {
       try {
-        const link =
-          await openNotification(
-            notificationId
-          );
+        const link = await openNotification(
+          notificationId
+        );
 
         router.push(
-          link || href || "/notifications"
+          link ||
+            href ||
+            "/notifications"
         );
       } catch {
         router.push(
@@ -46,11 +49,18 @@ export default function OpenNotification({
     <a
       href={href || "/notifications"}
       onClick={handleClick}
-      className={
-        isPending
-          ? "pointer-events-none opacity-60"
-          : ""
-      }
+      className={`
+        block
+        transition
+        hover:-translate-y-[1px]
+        hover:opacity-95
+        active:translate-y-0
+        ${
+          isPending
+            ? "pointer-events-none opacity-50"
+            : ""
+        }
+      `}
     >
       {children}
     </a>

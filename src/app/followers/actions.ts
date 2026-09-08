@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
-import { createFollowNotification } from "@/app/notifications/actions";
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -62,8 +61,6 @@ export async function followUser(
 
     throw new Error(error.message);
   }
-
-  await createFollowNotification(followingId);
 
   revalidatePath("/profile");
   revalidatePath("/author");

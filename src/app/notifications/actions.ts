@@ -18,41 +18,6 @@ async function getAuthenticatedUser() {
 }
 
 /*
- * Create a notification.
- * Internal server-side helper.
- */
-async function createNotification(
-  userId: string,
-  actorId: string | null,
-  type: string,
-  title: string,
-  message: string | null,
-  link: string | null
-) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase.rpc(
-    "create_notification",
-    {
-      p_user_id: userId,
-      p_actor_id: actorId,
-      p_type: type,
-      p_title: title,
-      p_message: message,
-      p_link: link,
-    }
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/notifications");
-
-  return data;
-}
-
-/*
  * Mark one notification as read.
  */
 export async function markNotificationAsRead(
@@ -160,42 +125,4 @@ export async function getUnreadNotificationCount() {
   }
 
   return count ?? 0;
-}
-
-/*
- * Create a follow notification.
- */
-export async function createFollowNotification(
-  followingId: string
-) {
-  const { user } =
-    await getAuthenticatedUser();
-
-  if (user.id === followingId) {
-    return;
-  }
-
-  const supabase = await createClient();
-
-  const { data: actor } = await supabase
-    .from("profiles")
-    .select("username, display_name")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const actorName =
-    actor?.display_name ||
-    actor?.username ||
-    "Someone";
-
-  return createNotification(
-    followingId,
-    user.id,
-    "follow",
-    `${actorName} followed you`,
-    null,
-    actor?.username
-      ? `/profile/${actor.username}`
-      : null
-  );
 }
