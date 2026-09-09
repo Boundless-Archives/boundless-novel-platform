@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import StoryStats from "./StoryStats";
 import Card from "@/components/ui/Card";
+import CanonTierBadge from "./CanonTierBadge";
 
 type StoryCardProps = {
   story: any;
@@ -189,22 +190,26 @@ export default function StoryCard({
             pt-6
           "
         >
-          <span
-            className="
-              rounded-full
-              border
-              px-3
-              py-1
-              text-sm
-              font-medium
-            "
-            style={{
-              borderColor:
-                "var(--card-border)",
-            }}
-          >
-            {story.status}
-          </span>
+          <div className="flex items-center gap-2">
+            <CanonTierBadge tier={story.canon_tier} size="sm" />
+
+            <span
+              className="
+                rounded-full
+                border
+                px-3
+                py-1
+                text-sm
+                font-medium
+              "
+              style={{
+                borderColor:
+                  "var(--card-border)",
+              }}
+            >
+              {story.status}
+            </span>
+          </div>
 
           <span
             className="

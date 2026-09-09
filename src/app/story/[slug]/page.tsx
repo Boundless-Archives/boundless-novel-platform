@@ -7,6 +7,8 @@ import LikeButton from "@/components/story/LikeButton";
 import ReviewForm from "@/components/story/ReviewForm";
 import Card from "@/components/ui/Card";
 import DownloadBookButton from "@/components/offline/DownloadBookButton";
+import CanonTierBadge from "@/components/story/CanonTierBadge";
+import RequestCrossoverButton from "@/components/story/RequestCrossoverButton";
 
 type Props = {
   params: Promise<{
@@ -354,7 +356,9 @@ relatedStories?.sort(
         </div>
       )}
 
-      <div className="mt-5 flex flex-wrap gap-3">
+      <div className="mt-5 flex flex-wrap gap-3 items-center">
+
+        <CanonTierBadge tier={story.canon_tier} />
 
         <span
           className="px-3 py-1 rounded-full border text-sm"
@@ -483,6 +487,12 @@ relatedStories?.sort(
           coverUrl={story.cover_url}
           chapters={chapters ?? []}
         />
+
+        {user && user.id !== story.author_id && (
+          <RequestCrossoverButton
+            targetStoryId={story.id}
+          />
+        )}
 
         {chapters?.[0] && (
           <Link
