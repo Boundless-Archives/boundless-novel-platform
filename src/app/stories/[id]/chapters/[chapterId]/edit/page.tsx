@@ -10,6 +10,12 @@ import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 
+
+type CrossoverOption = {
+  crossoverRequestId: string;
+  counterpartTitle: string;
+};
+
 export default function EditChapterPage() {
   const supabase = createClient();
 
@@ -39,6 +45,12 @@ export default function EditChapterPage() {
   const [message, setMessage] =
     useState("");
 
+  const [crossoverOptions, setCrossoverOptions] =
+    useState<CrossoverOption[]>([]);
+
+  const [selectedCrossover, setSelectedCrossover] =
+    useState("");
+
   useEffect(() => {
     async function loadChapter() {
       const { data } = await supabase
@@ -58,10 +70,53 @@ export default function EditChapterPage() {
       setContent(data.content);
 
       setStatus(data.status);
+
+      setSelectedCrossover(
+        data.crossover_request_id ?? ""
+      );
+    }
+
+    async function loadCrossoverOptions() {
+      const { data } = await supabase
+        .from("crossover_requests")
+        .select(
+          `
+          id,
+          requesting_story_id,
+          target_story_id,
+          requesting_story:requesting_story_id ( title ),
+          target_story:target_story_id ( title )
+        `
+        )
+        .eq("status", "accepted")
+        .or(
+          `requesting_story_id.eq.${storyId},target_story_id.eq.${storyId}`
+        );
+
+      const options = (data ?? []).map((request: any) => {
+        const isRequester =
+          request.requesting_story_id === storyId;
+
+        const counterpart = isRequester
+          ? request.target_story
+          : request.requesting_story;
+
+        const counterpartInfo = Array.isArray(counterpart)
+          ? counterpart[0]
+          : counterpart;
+
+        return {
+          crossoverRequestId: request.id as string,
+          counterpartTitle: counterpartInfo?.title as string,
+        };
+      });
+
+      setCrossoverOptions(options);
     }
 
     loadChapter();
-  }, [chapterId, supabase]);
+    loadCrossoverOptions();
+  }, [chapterId, storyId, supabase]);
 
   async function saveChapter(
     nextStatus: "Draft" | "Published"
@@ -73,6 +128,7 @@ export default function EditChapterPage() {
         title,
         content,
         status: nextStatus,
+        crossover_request_id: selectedCrossover || null,
       })
       .eq("id", chapterId);
 
@@ -176,6 +232,35 @@ export default function EditChapterPage() {
         <EditorToolbar />
       </LexicalEditor>
     </div>
+
+    {crossoverOptions.length > 0 && (
+      <div>
+        <label className="block mb-2 font-medium">
+          Part of a Crossover? (optional)
+        </label>
+
+        <select
+          value={selectedCrossover}
+          onChange={(e) =>
+            setSelectedCrossover(e.target.value)
+          }
+          className="w-full border rounded-lg p-3"
+        >
+          <option value="">
+            Not part of a crossover
+          </option>
+
+          {crossoverOptions.map((option) => (
+            <option
+              key={option.crossoverRequestId}
+              value={option.crossoverRequestId}
+            >
+              Crossover with {option.counterpartTitle}
+            </option>
+          ))}
+        </select>
+      </div>
+    )}
 
     <div className="flex gap-3">
 

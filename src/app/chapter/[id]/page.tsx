@@ -44,6 +44,46 @@ export default async function ChapterPage({
     notFound();
   }
 
+  let crossoverBanner: {
+    counterpartTitle: string;
+    counterpartSlug: string;
+  } | null = null;
+
+  if (chapter.crossover_request_id) {
+    const { data: crossoverRequest } = await supabase
+      .from("crossover_requests")
+      .select(
+        `
+        requesting_story_id,
+        target_story_id,
+        requesting_story:requesting_story_id ( title, slug ),
+        target_story:target_story_id ( title, slug )
+      `
+      )
+      .eq("id", chapter.crossover_request_id)
+      .maybeSingle();
+
+    if (crossoverRequest) {
+      const isRequester =
+        crossoverRequest.requesting_story_id === story.id;
+
+      const counterpart = isRequester
+        ? crossoverRequest.target_story
+        : crossoverRequest.requesting_story;
+
+      const counterpartInfo = Array.isArray(counterpart)
+        ? counterpart[0]
+        : counterpart;
+
+      if (counterpartInfo) {
+        crossoverBanner = {
+          counterpartTitle: counterpartInfo.title,
+          counterpartSlug: counterpartInfo.slug,
+        };
+      }
+    }
+  }
+
   if (story.status === "Draft") {
     notFound();
   }
@@ -159,6 +199,34 @@ export default async function ChapterPage({
         </p>
 
       </header>
+
+      {crossoverBanner && (
+        <div
+          className="
+            mx-auto
+            mt-8
+            max-w-3xl
+            rounded-xl
+            border
+            p-4
+            text-center
+          "
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p className="text-sm opacity-80">
+            🌐 This chapter is part of a crossover with{" "}
+            <Link
+              href={`/story/${crossoverBanner.counterpartSlug}`}
+              className="underline font-semibold"
+            >
+              {crossoverBanner.counterpartTitle}
+            </Link>
+          </p>
+        </div>
+      )}
 
       <article
         id="chapter-reading-content"

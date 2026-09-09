@@ -144,6 +144,20 @@ export default async function StoryPage({
               </span>
             </div>
 
+            <Link
+                
+                href={`/stories/${story.id}/tier-submission`}
+                className="
+                  inline-block
+                  mb-4
+                  text-sm
+                  underline
+                  opacity-80
+                "
+              >
+                Request a tier upgrade →
+              </Link>
+
             <div className="mt-6">
               <h2 className="text-xl font-semibold">
                 Description
@@ -203,6 +217,7 @@ export default async function StoryPage({
               >
                 + Add Chapter
               </Link>
+                         
 
               <Link
                 href={`/story/${story.slug}`}

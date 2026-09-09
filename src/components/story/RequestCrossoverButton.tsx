@@ -14,11 +14,16 @@ type MyStory = {
 
 type Props = {
   targetStoryId: string;
+  targetCanonTier: string;
 };
 
 export default function RequestCrossoverButton({
   targetStoryId,
+  targetCanonTier,
 }: Props) {
+  if (targetCanonTier === "B") {
+    return null;
+  }
   const [open, setOpen] = useState(false);
   const [myStories, setMyStories] = useState<MyStory[]>([]);
   const [selectedStoryId, setSelectedStoryId] = useState("");

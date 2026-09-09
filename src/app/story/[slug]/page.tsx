@@ -9,6 +9,7 @@ import Card from "@/components/ui/Card";
 import DownloadBookButton from "@/components/offline/DownloadBookButton";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
 import RequestCrossoverButton from "@/components/story/RequestCrossoverButton";
+import { getAcceptedCrossoversForStory } from "@/app/crossovers/actions";
 
 type Props = {
   params: Promise<{
@@ -76,6 +77,9 @@ export default async function PublicStoryPage({
     .eq("story_id", story.id)
     .eq("status", "Published")
     .order("chapter_number");
+
+  const acceptedCrossovers =
+    await getAcceptedCrossoversForStory(story.id);
 
     /*
    * Check whether this story belongs to a series.
@@ -491,6 +495,7 @@ relatedStories?.sort(
         {user && user.id !== story.author_id && (
           <RequestCrossoverButton
             targetStoryId={story.id}
+            targetCanonTier={story.canon_tier}
           />
         )}
 
@@ -703,6 +708,44 @@ Chapter {chapter.chapter_number} </div>
 </div>
 )}
 </div>
+
+{acceptedCrossovers.length > 0 && (
+  <section className="mt-12">
+    <h2 className="text-2xl font-bold mb-4">
+      🌐 Crossovers
+    </h2>
+
+    <div className="flex flex-wrap gap-3">
+      {acceptedCrossovers.map((crossover) => (
+        <Link
+          key={crossover.crossoverRequestId}
+          href={`/story/${crossover.counterpartSlug}`}
+          className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-xl
+            border
+            px-4
+            py-2
+            transition
+            hover:-translate-y-0.5
+            hover:shadow-md
+          "
+          style={{
+            borderColor: "var(--card-border)",
+            backgroundColor: "var(--background)",
+          }}
+        >
+          <span>🌐</span>
+          <span className="font-semibold">
+            {crossover.counterpartTitle}
+          </span>
+        </Link>
+      ))}
+    </div>
+  </section>
+)}
 
 {relatedStories && relatedStories.length > 0 && (
   <section className="mt-16">
