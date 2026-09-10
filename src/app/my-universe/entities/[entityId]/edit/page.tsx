@@ -8,6 +8,7 @@ import {
   updateEntity,
 } from "@/app/wiki/actions";
 import { ENTITY_TYPES, getEntityTypeLabel } from "@/lib/entityTypes";
+import RelationshipManager from "@/components/wiki/RelationshipManager";
 
 type MyStory = {
   id: string;
@@ -205,6 +206,20 @@ export default function EditEntityPage() {
             </div>
           </div>
         )}
+
+        <div
+          className="rounded-xl border p-5"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <h2 className="font-semibold mb-4">
+            Relationships
+          </h2>
+
+          <RelationshipManager entityId={entityId} />
+        </div>
 
         {errorMessage && (
           <p className="text-sm text-red-500">

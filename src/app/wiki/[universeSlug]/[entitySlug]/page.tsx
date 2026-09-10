@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { getEntityTypeIcon, getEntityTypeLabel } from "@/lib/entityTypes";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
+import { getRelationshipsForEntity } from "@/app/wiki/actions";
 
 type Props = {
   params: Promise<{
@@ -48,6 +49,9 @@ export default async function EntityPage({ params }: Props) {
   if (!entity) {
     notFound();
   }
+
+  const { outgoing, incoming } =
+    await getRelationshipsForEntity(entity.id);
 
   function first<T>(value: T | T[] | null): T | null {
     if (!value) return null;
@@ -178,6 +182,81 @@ export default async function EntityPage({ params }: Props) {
           </>
         )}
       </section>
+      {(outgoing.length > 0 || incoming.length > 0) && (
+        <section
+          className="mt-6 rounded-xl border p-5"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <h2 className="font-semibold mb-3">
+            Relationships
+          </h2>
+
+          {outgoing.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {outgoing.map((relationship: any) => {
+                const target = Array.isArray(
+                  relationship.to_entity
+                )
+                  ? relationship.to_entity[0]
+                  : relationship.to_entity;
+
+                if (!target) return null;
+
+                return (
+                  <div
+                    key={relationship.id}
+                    className="text-sm"
+                  >
+                    <strong>
+                      {relationship.relationship_type}
+                    </strong>{" "}
+                    <Link
+                      href={`/wiki/${universe.slug}/${target.slug}`}
+                      className="underline"
+                    >
+                      {getEntityTypeIcon(target.entity_type)}{" "}
+                      {target.name}
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {incoming.length > 0 && (
+            <div className="space-y-2">
+              {incoming.map((relationship: any) => {
+                const source = Array.isArray(
+                  relationship.from_entity
+                )
+                  ? relationship.from_entity[0]
+                  : relationship.from_entity;
+
+                if (!source) return null;
+
+                return (
+                  <div
+                    key={relationship.id}
+                    className="text-sm opacity-80"
+                  >
+                    <Link
+                      href={`/wiki/${universe.slug}/${source.slug}`}
+                      className="underline"
+                    >
+                      {getEntityTypeIcon(source.entity_type)}{" "}
+                      {source.name}
+                    </Link>{" "}
+                    — <strong>{relationship.relationship_type}</strong> this
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
     </main>
   );
 }

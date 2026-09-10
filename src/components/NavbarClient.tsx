@@ -99,6 +99,7 @@ show: true,
     icon: "🗺️",
     show: isAuthor,
   },
+  
 ],
 [user, isAuthor]
 
@@ -222,8 +223,11 @@ borderColor:
             flex
             items-center
             justify-center
-            gap-1
+            gap-0.5
             whitespace-nowrap
+            overflow-x-auto
+            [scrollbar-width:none]
+            [&::-webkit-scrollbar]:hidden
           "
         >
           {navItems
@@ -234,9 +238,11 @@ borderColor:
                 href={item.href}
                 className={`
                   relative
+                  shrink-0
                   rounded-xl
-                  px-3
+                  px-2.5
                   py-2
+                  text-sm
                   font-medium
                   transition-all
                   duration-200
@@ -283,9 +289,11 @@ borderColor:
             <Link
               href={manageHref}
               className={`
+                shrink-0
                 rounded-xl
-                px-3
+                px-2.5
                 py-2
+                text-sm
                 font-medium
                 transition-all
                 duration-200
