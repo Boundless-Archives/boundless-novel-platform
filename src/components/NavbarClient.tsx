@@ -85,6 +85,20 @@ show: true,
     icon: "✍️",
     show: isAuthor,
   },
+
+  {
+    href: "/wiki",
+    label: "Wiki",
+    icon: "🌌",
+    show: true,
+  },
+
+  {
+    href: "/my-universe",
+    label: "My Universe",
+    icon: "🗺️",
+    show: isAuthor,
+  },
 ],
 [user, isAuthor]
 

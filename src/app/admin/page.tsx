@@ -97,6 +97,13 @@ export default async function AdminPage() {
           />
 
           <AdminCard
+            icon="🏆"
+            title="Tier Submissions"
+            description="Review B→A and A→S canon tier upgrade requests from authors."
+            href="/admin/tier-submissions"
+          />
+
+          <AdminCard
             icon="📢"
             title="Announcements"
             description="Create and manage announcements for the Boundless community."
