@@ -4,6 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getEntityTypeIcon, getEntityTypeLabel } from "@/lib/entityTypes";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
 import { getRelationshipsForEntity } from "@/app/wiki/actions";
+import { renderMarkdown } from "@/lib/renderMarkdown";
 
 type Props = {
   params: Promise<{
@@ -36,6 +37,7 @@ export default async function EntityPage({ params }: Props) {
       entity_type,
       summary,
       content,
+      image_url,
       origin_story:origin_story_id ( id, title, slug, canon_tier ),
       entity_appearances (
         stories ( id, title, slug, canon_tier )
@@ -107,6 +109,15 @@ export default async function EntityPage({ params }: Props) {
         {getEntityTypeLabel(entity.entity_type)}
       </p>
 
+      {entity.image_url && (
+        <img
+          src={entity.image_url}
+          alt={entity.name}
+          className="mt-6 w-full max-w-sm rounded-xl border object-cover"
+          style={{ borderColor: "var(--card-border)" }}
+        />
+      )}
+
       {entity.summary && (
         <p className="mt-5 text-lg opacity-90">
           {entity.summary}
@@ -114,9 +125,12 @@ export default async function EntityPage({ params }: Props) {
       )}
 
       {entity.content && (
-        <div className="mt-6 whitespace-pre-wrap leading-7 opacity-90">
-          {entity.content}
-        </div>
+        <div
+          className="mt-6 prose-content leading-7 opacity-90"
+          dangerouslySetInnerHTML={{
+            __html: renderMarkdown(entity.content),
+          }}
+        />
       )}
 
       <section

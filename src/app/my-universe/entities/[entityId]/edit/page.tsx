@@ -9,6 +9,7 @@ import {
 } from "@/app/wiki/actions";
 import { ENTITY_TYPES, getEntityTypeLabel } from "@/lib/entityTypes";
 import RelationshipManager from "@/components/wiki/RelationshipManager";
+import { createClient } from "@/utils/supabase/client";
 
 type MyStory = {
   id: string;
@@ -32,6 +33,8 @@ export default function EditEntityPage() {
   const [universeSlug, setUniverseSlug] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -44,6 +47,7 @@ export default function EditEntityPage() {
       setEntityType(entity.entityType);
       setSummary(entity.summary);
       setContent(entity.content);
+      setImagePreview(entity.imageUrl);
       setOriginStoryId(entity.originStoryId);
       setAppearanceIds(
         entity.appearanceStoryIds.filter(
@@ -78,11 +82,35 @@ export default function EditEntityPage() {
 
     startTransition(async () => {
       try {
+        let imageUrl: string | null = imagePreview;
+
+        if (imageFile) {
+          const supabase = createClient();
+          const fileExt = imageFile.name.split(".").pop();
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("entity-images")
+            .upload(fileName, imageFile);
+
+          if (uploadError) {
+            setErrorMessage("Image upload failed.");
+            return;
+          }
+
+          const { data } = supabase.storage
+            .from("entity-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = data.publicUrl;
+        }
+
         await updateEntity(entityId, {
           entityType,
           name,
           summary,
           content,
+          imageUrl,
           appearanceStoryIds: appearanceIds,
         });
 
@@ -137,6 +165,33 @@ export default function EditEntityPage() {
               </option>
             ))}
           </select>
+        </div>
+
+                <div>
+          <label className="block mb-2 font-medium">
+            Image (optional)
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setImageFile(file);
+              setImagePreview(
+                file ? URL.createObjectURL(file) : null
+              );
+            }}
+            className="w-full border rounded-lg p-2 text-sm"
+          />
+
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="mt-3 h-32 w-32 rounded-lg object-cover"
+            />
+          )}
         </div>
 
         <div>

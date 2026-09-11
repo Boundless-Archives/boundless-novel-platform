@@ -7,6 +7,7 @@ import {
   createEntity,
 } from "@/app/wiki/actions";
 import { ENTITY_TYPES, getEntityTypeLabel } from "@/lib/entityTypes";
+import { createClient } from "@/utils/supabase/client";
 
 type MyStory = {
   id: string;
@@ -27,6 +28,8 @@ export default function NewEntityPage() {
   const [appearanceIds, setAppearanceIds] = useState<string[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     getMyStoriesForWiki()
@@ -47,11 +50,35 @@ export default function NewEntityPage() {
 
     startTransition(async () => {
       try {
-        const result = await createEntity({
+        let imageUrl: string | null = null;
+
+        if (imageFile) {
+          const supabase = createClient();
+          const fileExt = imageFile.name.split(".").pop();
+          const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+          const { error: uploadError } = await supabase.storage
+            .from("entity-images")
+            .upload(fileName, imageFile);
+
+          if (uploadError) {
+            setErrorMessage("Image upload failed.");
+            return;
+          }
+
+          const { data } = supabase.storage
+            .from("entity-images")
+            .getPublicUrl(fileName);
+
+          imageUrl = data.publicUrl;
+        }
+
+        await createEntity({
           entityType,
           name,
           summary,
           content,
+          imageUrl,
           originStoryId,
           appearanceStoryIds: appearanceIds,
         });
@@ -90,6 +117,33 @@ export default function NewEntityPage() {
               </option>
             ))}
           </select>
+        </div>
+
+                <div>
+          <label className="block mb-2 font-medium">
+            Image (optional)
+          </label>
+
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0] ?? null;
+              setImageFile(file);
+              setImagePreview(
+                file ? URL.createObjectURL(file) : null
+              );
+            }}
+            className="w-full border rounded-lg p-2 text-sm"
+          />
+
+          {imagePreview && (
+            <img
+              src={imagePreview}
+              alt="Preview"
+              className="mt-3 h-32 w-32 rounded-lg object-cover"
+            />
+          )}
         </div>
 
         <div>

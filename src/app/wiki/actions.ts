@@ -138,6 +138,7 @@ export async function createEntity(input: {
   name: string;
   summary: string;
   content: string;
+  imageUrl: string | null;
   originStoryId: string;
   appearanceStoryIds: string[];
 }) {
@@ -187,6 +188,7 @@ export async function createEntity(input: {
       slug,
       summary: input.summary || null,
       content: input.content || null,
+      image_url: input.imageUrl,
       created_by: user.id,
     })
     .select("id")
@@ -236,6 +238,7 @@ export async function updateEntity(
     name: string;
     summary: string;
     content: string;
+    imageUrl: string | null;
     appearanceStoryIds: string[];
   }
 ) {
@@ -267,6 +270,7 @@ export async function updateEntity(
       name: input.name,
       summary: input.summary || null,
       content: input.content || null,
+      image_url: input.imageUrl,
       updated_at: new Date().toISOString(),
     })
     .eq("id", entityId);
@@ -321,6 +325,7 @@ export async function getEntityForEdit(entityId: string) {
       entity_type,
       summary,
       content,
+      image_url,
       origin_story_id,
       universes!inner ( owner_id, slug ),
       entity_appearances ( story_id )
@@ -349,6 +354,7 @@ export async function getEntityForEdit(entityId: string) {
     entityType: entity.entity_type,
     summary: entity.summary ?? "",
     content: entity.content ?? "",
+    imageUrl: entity.image_url as string | null,
     originStoryId: entity.origin_story_id,
     universeSlug: universeInfo?.slug as string,
     appearanceStoryIds: (entity.entity_appearances ?? []).map(

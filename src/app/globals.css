@@ -136,3 +136,38 @@ html:not(.dark) .atmosphere {
     animation: none !important;
   }
 }
+
+.prose-content h1, .prose-content h2, .prose-content h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: .4em;
+}
+
+.prose-content p {
+  margin-bottom: 1em;
+}
+
+.prose-content strong {
+  color: var(--foreground);
+}
+
+.prose-content a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.prose-content ul, .prose-content ol {
+  margin: .8em 0 .8em 1.4em;
+}
+
+.prose-content li {
+  margin-bottom: .3em;
+}
+
+.prose-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 1em;
+  opacity: .85;
+  margin: 1em 0;
+}
