@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 
@@ -12,6 +12,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const spectral = Spectral({
+  variable: "--font-spectral",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -98,7 +104,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${spectral.variable} h-full antialiased`}
     >
       <body
         className="
@@ -109,7 +115,11 @@ export default function RootLayout({
           text-foreground
         "
       >
+        <div className="cosmic-backdrop" aria-hidden="true" />
+
         <ThemeProvider>
+          <div className="atmosphere" aria-hidden="true" />
+
           <Navbar />
 
           <div className="flex-1">

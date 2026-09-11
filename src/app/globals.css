@@ -1,37 +1,41 @@
 @import "tailwindcss";
 
 /* ===========================
-   LIGHT THEME
+   LIGHT THEME — white & violet
 =========================== */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8fd;
+  --foreground: #211c2e;
 
-  --card: #f8fafc;
-  --card-border: #e2e8f0;
+  --card: #f2edfa;
+  --card-border: #e1d5f5;
 
-  --button: #171717;
+  --button: #6d3fa8;
   --button-text: #ffffff;
 
-  --accent: #2563eb;
+  --accent: #6d3fa8;
+  --accent-deep: #4e2c7a;
+  --accent-soft: rgba(109, 63, 168, 0.12);
 }
 
 /* ===========================
-   DARK THEME
+   DARK THEME — black & gold
 =========================== */
 
 .dark {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --background: #07070b;
+  --foreground: #ede8dc;
 
-  --card: #161616;
-  --card-border: #2a2a2a;
+  --card: #111018;
+  --card-border: #2a2620;
 
-  --button: #ededed;
-  --button-text: #0a0a0a;
+  --button: #c9a44c;
+  --button-text: #14120a;
 
-  --accent: #60a5fa;
+  --accent: #c9a44c;
+  --accent-deep: #8c6d1f;
+  --accent-soft: rgba(201, 164, 76, 0.14);
 }
 
 /* ===========================
@@ -44,6 +48,7 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-spectral);
 }
 
 /* ===========================
@@ -62,7 +67,7 @@ body {
   background: var(--background);
   color: var(--foreground);
 
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 
   transition:
     background-color .25s ease,
@@ -74,4 +79,60 @@ body {
     background-color .25s ease,
     border-color .25s ease,
     color .25s ease;
+}
+
+/* ===========================
+   Atmosphere — starfield (dark)
+   and ethereal glow (light)
+=========================== */
+
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Dark: infinite expanse — layered stars + vignette */
+
+html.dark .atmosphere {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(237,232,220,.9), transparent),
+    radial-gradient(1px 1px at 32% 68%, rgba(237,232,220,.7), transparent),
+    radial-gradient(1.5px 1.5px at 54% 12%, rgba(201,164,76,.8), transparent),
+    radial-gradient(1px 1px at 71% 45%, rgba(237,232,220,.6), transparent),
+    radial-gradient(1px 1px at 85% 78%, rgba(237,232,220,.8), transparent),
+    radial-gradient(1.5px 1.5px at 18% 88%, rgba(201,164,76,.6), transparent),
+    radial-gradient(1px 1px at 45% 34%, rgba(237,232,220,.5), transparent),
+    radial-gradient(1px 1px at 92% 15%, rgba(237,232,220,.7), transparent),
+    radial-gradient(1px 1px at 6% 55%, rgba(201,164,76,.5), transparent),
+    radial-gradient(1px 1px at 62% 92%, rgba(237,232,220,.6), transparent),
+    radial-gradient(ellipse at 50% 0%, rgba(201,164,76,.06), transparent 60%);
+  background-repeat: repeat;
+  background-size:
+    340px 340px, 340px 340px, 340px 340px, 340px 340px,
+    340px 340px, 340px 340px, 340px 340px, 340px 340px,
+    340px 340px, 340px 340px, 100% 100%;
+  animation: twinkle 7s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .82; }
+}
+
+/* Light: quiet ethereal bloom */
+
+html:not(.dark) .atmosphere {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% -10%, rgba(109,63,168,.10), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 90% 20%, rgba(109,63,168,.06), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atmosphere {
+    animation: none !important;
+  }
 }
