@@ -219,6 +219,9 @@ export async function createEntity(input: {
   revalidatePath("/my-universe");
   revalidatePath(`/wiki/${universe.slug}`);
 
+  const { checkAndAwardBadges } = await import("@/app/badges/actions");
+  await checkAndAwardBadges(user.id);
+
   return { entityId: entity.id, universeSlug: universe.slug };
 }
 

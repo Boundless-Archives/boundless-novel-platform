@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   Home,
@@ -57,6 +57,37 @@ export default function NavbarClient({
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (searchOpen) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchWrapperRef.current &&
+        !searchWrapperRef.current.contains(
+          event.target as Node
+        ) &&
+        !search
+      ) {
+        setSearchOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () =>
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside
+      );
+  }, [search]);
 
   const canManage =
     role === "editor" ||
@@ -311,25 +342,32 @@ export default function NavbarClient({
                 </Link>
               )}
 
-              {/* Announcements — icon only */}
+              {/* Announcements */}
               <Link
                 href="/announcements"
                 aria-label="Announcements"
                 title="Announcements"
-                className="
+                className={`
                   relative
                   flex
-                  h-10
-                  w-10
                   shrink-0
                   items-center
-                  justify-center
+                  gap-1.5
                   rounded-xl
+                  px-2.5
+                  py-2
+                  text-sm
+                  font-medium
                   transition-all
                   duration-200
                   hover:bg-[var(--card)]
                   active:scale-95
-                "
+                  ${
+                    isActive("/announcements")
+                      ? "font-semibold"
+                      : ""
+                  }
+                `}
                 style={{
                   backgroundColor: isActive("/announcements")
                     ? "var(--card)"
@@ -339,14 +377,15 @@ export default function NavbarClient({
                     : "inherit",
                 }}
               >
-                <Megaphone size={18} />
+                <Megaphone size={16} />
+                Announcements
 
                 {isActive("/announcements") && (
                   <span
                     className="
                       absolute
-                      left-2
-                      right-2
+                      left-3
+                      right-3
                       -bottom-1
                       h-0.5
                       rounded-full
@@ -356,26 +395,33 @@ export default function NavbarClient({
                 )}
               </Link>
 
-              {/* Notifications — icon only */}
+              {/* Notifications */}
               {user && (
                 <Link
                   href="/notifications"
                   aria-label="Notifications"
                   title="Notifications"
-                  className="
+                  className={`
                     relative
                     flex
-                    h-10
-                    w-10
                     shrink-0
                     items-center
-                    justify-center
+                    gap-1.5
                     rounded-xl
+                    px-2.5
+                    py-2
+                    text-sm
+                    font-medium
                     transition-all
                     duration-200
                     hover:bg-[var(--card)]
                     active:scale-95
-                  "
+                    ${
+                      isActive("/notifications")
+                        ? "font-semibold"
+                        : ""
+                    }
+                  `}
                   style={{
                     backgroundColor: isActive("/notifications")
                       ? "var(--card)"
@@ -385,41 +431,45 @@ export default function NavbarClient({
                       : "inherit",
                   }}
                 >
-                  <Bell size={18} />
+                  <span className="relative inline-flex">
+                    <Bell size={16} />
 
-                  {unreadNotificationCount > 0 && (
-                    <span
-                      className="
-                        absolute
-                        -right-1
-                        -top-1
-                        flex
-                        h-5
-                        min-w-5
-                        items-center
-                        justify-center
-                        rounded-full
-                        px-1
-                        text-[10px]
-                        font-bold
-                      "
-                      style={{
-                        backgroundColor: "var(--button)",
-                        color: "var(--button-text)",
-                      }}
-                    >
-                      {unreadNotificationCount > 99
-                        ? "99+"
-                        : unreadNotificationCount}
-                    </span>
-                  )}
+                    {unreadNotificationCount > 0 && (
+                      <span
+                        className="
+                          absolute
+                          -right-2
+                          -top-2
+                          flex
+                          h-4
+                          min-w-4
+                          items-center
+                          justify-center
+                          rounded-full
+                          px-1
+                          text-[9px]
+                          font-bold
+                        "
+                        style={{
+                          backgroundColor: "var(--button)",
+                          color: "var(--button-text)",
+                        }}
+                      >
+                        {unreadNotificationCount > 99
+                          ? "99+"
+                          : unreadNotificationCount}
+                      </span>
+                    )}
+                  </span>
+
+                  Notifications
 
                   {isActive("/notifications") && (
                     <span
                       className="
                         absolute
-                        left-2
-                        right-2
+                        left-3
+                        right-3
                         -bottom-1
                         h-0.5
                         rounded-full
@@ -442,45 +492,73 @@ export default function NavbarClient({
               2xl:flex
             "
           >
-            <form
-              action="/search"
-              method="GET"
-              className="relative"
-            >
-              <input
-                type="search"
-                name="q"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search stories..."
-                className="
-                  w-64
+            <div ref={searchWrapperRef} className="relative">
+              <form
+                action="/search"
+                method="GET"
+                className={`
+                  flex
+                  items-center
+                  overflow-hidden
                   rounded-xl
                   border
-                  py-2
-                  pl-10
-                  pr-4
-                  outline-none
-                  transition
-                  focus:w-72
-                "
+                  transition-all
+                  duration-300
+                  ease-out
+                  ${searchOpen ? "w-64" : "w-10"}
+                `}
                 style={{
                   backgroundColor: "var(--card)",
-                  borderColor: "var(--card-border)",
+                  borderColor: searchOpen
+                    ? "var(--card-border)"
+                    : "transparent",
                 }}
-              />
+              >
+                <button
+                  type={searchOpen ? "submit" : "button"}
+                  onClick={() => {
+                    if (!searchOpen) setSearchOpen(true);
+                  }}
+                  aria-label="Search"
+                  className="
+                    flex
+                    h-10
+                    w-10
+                    shrink-0
+                    items-center
+                    justify-center
+                    opacity-70
+                    transition
+                    hover:opacity-100
+                  "
+                >
+                  <Search size={16} />
+                </button>
 
-              <Search
-                size={16}
-                className="
-                  absolute
-                  left-3
-                  top-1/2
-                  -translate-y-1/2
-                  opacity-60
-                "
-              />
-            </form>
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  name="q"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search stories..."
+                  className={`
+                    h-10
+                    bg-transparent
+                    pr-3
+                    text-sm
+                    outline-none
+                    transition-all
+                    duration-300
+                    ${
+                      searchOpen
+                        ? "w-full opacity-100"
+                        : "w-0 opacity-0"
+                    }
+                  `}
+                />
+              </form>
+            </div>
 
             <ThemeToggle />
 

@@ -1,3 +1,4 @@
+import { Award } from "lucide-react";
 import BadgeCard from "./BadgeCard";
 
 type Badge = {
@@ -19,14 +20,24 @@ export default function BadgeCollection({
 }: BadgeCollectionProps) {
   if (badges.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
-        <div className="text-4xl">🏅</div>
+      <div
+        className="rounded-2xl border p-8 text-center"
+        style={{
+          borderColor: "var(--card-border)",
+          backgroundColor: "var(--card)",
+        }}
+      >
+        <Award
+          size={36}
+          className="mx-auto"
+          style={{ color: "var(--accent)" }}
+        />
 
-        <h3 className="mt-3 text-lg font-semibold text-white">
+        <h3 className="mt-3 text-lg font-semibold">
           No badges yet
         </h3>
 
-        <p className="mt-1 text-sm text-white/50">
+        <p className="mt-1 text-sm opacity-60">
           Keep using Boundless and your achievements will appear here.
         </p>
       </div>

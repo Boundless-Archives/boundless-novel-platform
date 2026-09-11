@@ -203,7 +203,7 @@ export async function respondToCrossoverRequest(
     ? request.target_story[0]
     : request.target_story;
 
-  await supabase.from("notifications").insert({
+    await supabase.from("notifications").insert({
     user_id: request.requested_by,
     actor_id: user.id,
     type: "crossover_response",
@@ -215,6 +215,12 @@ export async function respondToCrossoverRequest(
       : `Your crossover request for "${requestingStory?.title}" x "${targetStory?.title}" was declined.`,
     link: "/crossovers",
   });
+
+  if (accept) {
+    const { checkAndAwardBadges } = await import("@/app/badges/actions");
+    await checkAndAwardBadges(request.requested_by);
+    await checkAndAwardBadges(user.id);
+  }
 
   revalidatePath("/crossovers");
 }

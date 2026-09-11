@@ -207,7 +207,7 @@ export async function reviewTierSubmission(
     throw new Error(updateError.message);
   }
 
-  if (approve) {
+    if (approve) {
     const { error: tierError } = await supabase
       .from("stories")
       .update({ canon_tier: submission.requested_tier })
@@ -216,6 +216,9 @@ export async function reviewTierSubmission(
     if (tierError) {
       throw new Error(tierError.message);
     }
+
+    const { checkAndAwardBadges } = await import("@/app/badges/actions");
+    await checkAndAwardBadges(submission.submitted_by);
   }
 
   await supabase.from("notifications").insert({

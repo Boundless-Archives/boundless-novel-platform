@@ -9,7 +9,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
-
+import { checkAndAwardBadges } from "@/app/badges/actions";
 
 type CrossoverOption = {
   crossoverRequestId: string;
@@ -135,6 +135,16 @@ export default function EditChapterPage() {
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (nextStatus === "Published") {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await checkAndAwardBadges(user.id);
+      }
     }
 
     setStatus(nextStatus);
