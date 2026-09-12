@@ -3,13 +3,11 @@
 import { useState, useTransition } from "react";
 import { revokeBadge } from "@/app/badges/actions";
 
-type Props = {
-  userBadgeId: string;
-};
-
 export default function RevokeBadgeButton({
   userBadgeId,
-}: Props) {
+}: {
+  userBadgeId: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const [revoked, setRevoked] = useState(false);
 
@@ -25,9 +23,7 @@ export default function RevokeBadgeButton({
   }
 
   if (revoked) {
-    return (
-      <span className="text-xs opacity-50">Revoked</span>
-    );
+    return <span className="text-xs opacity-50">Revoked</span>;
   }
 
   return (

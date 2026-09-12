@@ -104,6 +104,13 @@ export default async function AdminPage() {
           />
 
           <AdminCard
+            icon="🎖️"
+            title="Badge Management"
+            description="View badge stats, manually award or revoke badges."
+            href="/admin/badges"
+          />
+
+          <AdminCard
             icon="📢"
             title="Announcements"
             description="Create and manage announcements for the Boundless community."

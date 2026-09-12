@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 /*
  * Checks the given user's stats against every
@@ -188,7 +189,9 @@ export async function checkAndAwardBadges(userId: string) {
     return [];
   }
 
-  const { error } = await supabase
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
     .from("user_badges")
     .insert(rowsToInsert);
 
@@ -308,7 +311,9 @@ export async function manuallyAwardBadge(
 ) {
   const { supabase } = await requireAdmin();
 
-  const { error } = await supabase.from("user_badges").insert({
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient.from("user_badges").insert({
     user_id: userId,
     badge_id: badgeId,
     awarded_at: new Date().toISOString(),
@@ -372,7 +377,9 @@ export async function getRecentBadgeAwards() {
 export async function revokeBadge(userBadgeId: string) {
   const { supabase } = await requireAdmin();
 
-  const { error } = await supabase
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient
     .from("user_badges")
     .delete()
     .eq("id", userBadgeId);

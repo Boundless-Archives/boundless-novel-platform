@@ -6,45 +6,45 @@ import {
   manuallyAwardBadge,
 } from "@/app/badges/actions";
 
-type BadgeOption = {
-  id: string;
-  name: string;
-};
-
 type UserResult = {
   id: string;
   username: string;
   display_name: string | null;
 };
 
+type BadgeOption = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   badges: BadgeOption[];
 };
 
-export default function BadgeAwardManager({ badges }: Props) {
+export default function BadgeAwardPanel({ badges }: Props) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserResult[]>([]);
   const [selectedUser, setSelectedUser] =
     useState<UserResult | null>(null);
   const [selectedBadgeId, setSelectedBadgeId] = useState("");
-  const [status, setStatus] = useState
-    "idle" | "success" | "error"
-  >("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSearch() {
     startTransition(async () => {
-      const users = await searchUsersForBadgeAward(query);
-      setResults(users);
+      try {
+        const users = await searchUsersForBadgeAward(query);
+        setResults(users);
+      } catch (error) {
+        setResults([]);
+      }
     });
   }
 
   function handleAward() {
     if (!selectedUser || !selectedBadgeId) return;
 
-    setStatus("idle");
-    setErrorMessage("");
+    setMessage("");
 
     startTransition(async () => {
       try {
@@ -52,18 +52,21 @@ export default function BadgeAwardManager({ badges }: Props) {
           selectedUser.id,
           selectedBadgeId
         );
-        setStatus("success");
+        setMessage(
+          `Awarded to ${
+            selectedUser.display_name ?? selectedUser.username
+          }.`
+        );
         setSelectedUser(null);
         setSelectedBadgeId("");
-        setResults([]);
         setQuery("");
+        setResults([]);
       } catch (error) {
-        setErrorMessage(
+        setMessage(
           error instanceof Error
             ? error.message
             : "Something went wrong."
         );
-        setStatus("error");
       }
     });
   }
@@ -72,8 +75,8 @@ export default function BadgeAwardManager({ badges }: Props) {
     <div
       className="rounded-xl border p-5"
       style={{
-        backgroundColor: "var(--card)",
         borderColor: "var(--card-border)",
+        backgroundColor: "var(--card)",
       }}
     >
       <h2 className="font-semibold mb-4">
@@ -84,7 +87,7 @@ export default function BadgeAwardManager({ badges }: Props) {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by username..."
+          placeholder="Search by username or display name"
           className="flex-1 border rounded-lg p-2 text-sm"
         />
 
@@ -102,47 +105,39 @@ export default function BadgeAwardManager({ badges }: Props) {
         </button>
       </div>
 
-      {results.length > 0 && !selectedUser && (
+      {results.length > 0 && (
         <div className="mt-3 space-y-1">
           {results.map((result) => (
             <button
               key={result.id}
               type="button"
-              onClick={() => setSelectedUser(result)}
-              className="w-full text-left rounded-lg border p-2 text-sm hover:bg-[var(--background)]"
+              onClick={() => {
+                setSelectedUser(result);
+                setResults([]);
+                setQuery(
+                  result.display_name ?? result.username
+                );
+              }}
+              className="block w-full text-left rounded-lg border p-2 text-sm hover:bg-[var(--background)]"
               style={{ borderColor: "var(--card-border)" }}
             >
-              {result.display_name ?? result.username} (@
-              {result.username})
+              {result.display_name ?? result.username}{" "}
+              <span className="opacity-50">
+                @{result.username}
+              </span>
             </button>
           ))}
         </div>
       )}
 
       {selectedUser && (
-        <div className="mt-4 space-y-3">
-          <p className="text-sm">
-            Awarding to:{" "}
-            <strong>
-              {selectedUser.display_name ??
-                selectedUser.username}
-            </strong>{" "}
-            <button
-              type="button"
-              onClick={() => setSelectedUser(null)}
-              className="text-xs opacity-60 underline"
-            >
-              change
-            </button>
-          </p>
-
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <select
             value={selectedBadgeId}
             onChange={(e) => setSelectedBadgeId(e.target.value)}
-            className="w-full border rounded-lg p-2 text-sm"
+            className="flex-1 border rounded-lg p-2 text-sm"
           >
-            <option value="">Select a badge...</option>
-
+            <option value="">Select badge...</option>
             {badges.map((badge) => (
               <option key={badge.id} value={badge.id}>
                 {badge.name}
@@ -160,21 +155,14 @@ export default function BadgeAwardManager({ badges }: Props) {
               color: "var(--button-text)",
             }}
           >
-            Award Badge
+            Award to{" "}
+            {selectedUser.display_name ?? selectedUser.username}
           </button>
         </div>
       )}
 
-      {status === "success" && (
-        <p className="mt-3 text-sm" style={{ color: "var(--accent)" }}>
-          ✓ Badge awarded
-        </p>
-      )}
-
-      {status === "error" && (
-        <p className="mt-3 text-sm text-red-500">
-          {errorMessage}
-        </p>
+      {message && (
+        <p className="mt-3 text-sm opacity-80">{message}</p>
       )}
     </div>
   );
