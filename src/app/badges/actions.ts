@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
 /*
@@ -219,4 +220,166 @@ export async function checkAndAwardBadges(userId: string) {
   }
 
   return uniqueEarnedSlugs;
+}
+
+async function requireAdmin() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("You must be logged in.");
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (
+    !profile ||
+    !["admin", "superadmin"].includes(profile.role)
+  ) {
+    throw new Error("Admin access required.");
+  }
+
+  return { supabase, user };
+}
+
+/*
+ * All badges with how many users currently hold each.
+ */
+export async function getAllBadgesWithCounts() {
+  const { supabase } = await requireAdmin();
+
+  const { data: badges } = await supabase
+    .from("badges")
+    .select("id, name, description, icon, badge_type, max_awards, slug")
+    .order("name");
+
+  const { data: awards } = await supabase
+    .from("user_badges")
+    .select("badge_id");
+
+  const counts = new Map<string, number>();
+  (awards ?? []).forEach((row) => {
+    counts.set(row.badge_id, (counts.get(row.badge_id) ?? 0) + 1);
+  });
+
+  return (badges ?? []).map((badge) => ({
+    ...badge,
+    awardCount: counts.get(badge.id) ?? 0,
+  }));
+}
+
+/*
+ * Search users by username/display name, for the
+ * manual-award picker.
+ */
+export async function searchUsersForBadgeAward(query: string) {
+  await requireAdmin();
+
+  const supabase = await createClient();
+
+  if (!query.trim()) return [];
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, display_name")
+    .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+    .limit(10);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ?? [];
+}
+
+/*
+ * Manually award a badge to a user (admin only).
+ */
+export async function manuallyAwardBadge(
+  userId: string,
+  badgeId: string
+) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase.from("user_badges").insert({
+    user_id: userId,
+    badge_id: badgeId,
+    awarded_at: new Date().toISOString(),
+  });
+
+  if (error) {
+    if (error.code === "23505") {
+      throw new Error("This user already has that badge.");
+    }
+    throw new Error(error.message);
+  }
+
+  const { data: badge } = await supabase
+    .from("badges")
+    .select("name")
+    .eq("id", badgeId)
+    .single();
+
+  await supabase.from("notifications").insert({
+    user_id: userId,
+    type: "badge_earned",
+    title: "New badge earned!",
+    message: `You've earned the "${badge?.name}" badge.`,
+    link: "/profile",
+  });
+
+  revalidatePath("/admin/badges");
+}
+
+/*
+ * Get recent manual + automatic awards, for the
+ * admin list with revoke buttons.
+ */
+export async function getRecentBadgeAwards() {
+  const { supabase } = await requireAdmin();
+
+  const { data, error } = await supabase
+    .from("user_badges")
+    .select(
+      `
+      id,
+      awarded_at,
+      award_number,
+      badges ( name ),
+      profiles:user_id ( username, display_name )
+    `
+    )
+    .order("awarded_at", { ascending: false })
+    .limit(50);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ?? [];
+}
+
+/*
+ * Revoke a badge from a user (admin only).
+ */
+export async function revokeBadge(userBadgeId: string) {
+  const { supabase } = await requireAdmin();
+
+  const { error } = await supabase
+    .from("user_badges")
+    .delete()
+    .eq("id", userBadgeId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin/badges");
 }

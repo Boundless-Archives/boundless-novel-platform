@@ -83,7 +83,8 @@ export async function getOrCreateMyUniverse() {
 export async function updateMyUniverse(
   universeId: string,
   name: string,
-  description: string
+  description: string,
+  bannerUrl?: string
 ) {
   const { supabase, user } =
     await getAuthenticatedUser();
@@ -92,13 +93,19 @@ export async function updateMyUniverse(
     throw new Error("Universe name is required.");
   }
 
+  const updatePayload: Record<string, unknown> = {
+    name,
+    description: description || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (bannerUrl !== undefined) {
+    updatePayload.banner_url = bannerUrl;
+  }
+
   const { error } = await supabase
     .from("universes")
-    .update({
-      name,
-      description: description || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updatePayload)
     .eq("id", universeId)
     .eq("owner_id", user.id);
 
@@ -107,6 +114,7 @@ export async function updateMyUniverse(
   }
 
   revalidatePath("/my-universe");
+  revalidatePath(`/wiki/${user.id}`); // harmless no-op if slug differs
 }
 
 /*

@@ -53,7 +53,34 @@ export default async function MyUniversePage({
       formData.get("description") ?? ""
     );
 
-    await updateMyUniverse(universe.id, name, description);
+    const bannerFile = formData.get("banner") as File | null;
+
+    let bannerUrl: string | undefined = undefined;
+
+    if (bannerFile && bannerFile.size > 0) {
+      const supabaseServer = await createClient();
+      const fileExt = bannerFile.name.split(".").pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabaseServer.storage
+        .from("universe-banners")
+        .upload(fileName, bannerFile);
+
+      if (!uploadError) {
+        const { data } = supabaseServer.storage
+          .from("universe-banners")
+          .getPublicUrl(fileName);
+
+        bannerUrl = data.publicUrl;
+      }
+    }
+
+    await updateMyUniverse(
+      universe.id,
+      name,
+      description,
+      bannerUrl
+    );
 
     redirect("/my-universe?saved=1");
   }
@@ -84,12 +111,33 @@ export default async function MyUniversePage({
 
       <form
         action={saveUniverse}
+        encType="multipart/form-data"
         className="mt-6 rounded-xl border p-5 space-y-4"
         style={{
           backgroundColor: "var(--card)",
           borderColor: "var(--card-border)",
         }}
       >
+        <div>
+          <label className="block mb-2 font-medium">
+            Banner Image (optional)
+          </label>
+
+          {universe.banner_url && (
+            <img
+              src={universe.banner_url}
+              alt="Current banner"
+              className="mb-3 h-32 w-full rounded-lg object-cover"
+            />
+          )}
+
+          <input
+            type="file"
+            name="banner"
+            accept="image/*"
+            className="w-full border rounded-lg p-2 text-sm"
+          />
+        </div>
         <div>
           <label className="block mb-2 font-medium">
             Universe Name

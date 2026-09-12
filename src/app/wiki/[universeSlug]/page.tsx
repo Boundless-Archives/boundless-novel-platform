@@ -25,6 +25,7 @@ export default async function UniversePage({
       name,
       slug,
       description,
+      banner_url,
       multiverse,
       owner:owner_id ( username, display_name )
     `
@@ -90,7 +91,16 @@ export default async function UniversePage({
         ← The Telos Wiki
       </Link>
 
-      <h1 className="text-4xl font-bold mt-3">
+      {universe.banner_url && (
+        <img
+          src={universe.banner_url}
+          alt={universe.name}
+          className="mt-4 h-48 w-full rounded-2xl border object-cover"
+          style={{ borderColor: "var(--card-border)" }}
+        />
+      )}
+
+      <h1 className="font-serif text-4xl font-bold mt-3"> 
         {universe.name}
       </h1>
 
