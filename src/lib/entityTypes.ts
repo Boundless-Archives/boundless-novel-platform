@@ -6,6 +6,8 @@ export const ENTITY_TYPES = [
   "event",
   "concept",
   "species",
+  "alternate_universe",
+  "alternate_timeline",
 ] as const;
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
@@ -18,6 +20,8 @@ export const ENTITY_TYPE_LABELS: Record<EntityType, string> = {
   event: "Event",
   concept: "Concept",
   species: "Species",
+  alternate_universe: "Alternate Universe",
+  alternate_timeline: "Alternate Timeline",
 };
 
 export const ENTITY_TYPE_ICONS: Record<EntityType, string> = {
@@ -28,6 +32,8 @@ export const ENTITY_TYPE_ICONS: Record<EntityType, string> = {
   event: "📜",
   concept: "💭",
   species: "🧬",
+  alternate_universe: "🌀",
+  alternate_timeline: "⏳",
 };
 
 export function getEntityTypeLabel(type: string): string {

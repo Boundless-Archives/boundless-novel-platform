@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   getMyStoriesForWiki,
@@ -30,6 +30,7 @@ export default function NewEntityPage() {
   const [isPending, startTransition] = useTransition();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     getMyStoriesForWiki()
@@ -43,6 +44,32 @@ export default function NewEntityPage() {
         ? current.filter((id) => id !== storyId)
         : [...current, storyId]
     );
+  }
+
+  function wrapSelection(before: string, after: string = before) {
+    const textarea = contentRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = content.slice(start, end);
+
+    const newContent =
+      content.slice(0, start) +
+      before +
+      selected +
+      after +
+      content.slice(end);
+
+    setContent(newContent);
+
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + before.length,
+        end + before.length
+      );
+    });
   }
 
   function handleSubmit() {
@@ -178,11 +205,19 @@ export default function NewEntityPage() {
             Full Entry
           </label>
 
+          <div className="flex gap-1 mb-2">
+            <button type="button" onClick={() => wrapSelection("**")} className="px-2 py-1 rounded border text-sm font-bold" style={{ borderColor: "var(--card-border)" }}>B</button>
+            <button type="button" onClick={() => wrapSelection("*")} className="px-2 py-1 rounded border text-sm italic" style={{ borderColor: "var(--card-border)" }}>I</button>
+            <button type="button" onClick={() => wrapSelection("## ", "")} className="px-2 py-1 rounded border text-sm" style={{ borderColor: "var(--card-border)" }}>H2</button>
+            <button type="button" onClick={() => wrapSelection("[", "](url)")} className="px-2 py-1 rounded border text-sm" style={{ borderColor: "var(--card-border)" }}>Link</button>
+          </div>
+
           <textarea
+            ref={contentRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={8}
-            placeholder="The full wiki entry — history, traits, rules, anything readers should know."
+            placeholder="The full wiki entry — history, traits, rules, anything readers should know. Supports **bold**, *italic*, ## headings, and [links](url)."
             className="w-full border rounded-lg p-3"
           />
         </div>

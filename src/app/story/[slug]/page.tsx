@@ -105,6 +105,13 @@ export default async function PublicStoryPage({
       : seriesMembership.series
     : null;
 
+  const { data: storyUniverse } = await supabase
+    .from("universes")
+    .select("id, name, slug")
+    .eq("owner_id", story.author_id)
+    .eq("multiverse", "telos")
+    .maybeSingle();
+
   const { data: storyGenres } = await supabase
   .from("story_genres")
   .select(`
@@ -236,8 +243,6 @@ relatedStories?.sort(
     `)
     .eq("story_id", story.id);
 
-    console.log(storyTags);
-
   const { data: reviews } = await supabase
     .from("story_reviews")
     .select("*")
@@ -356,6 +361,42 @@ relatedStories?.sort(
             <span className="opacity-60">
               →
             </span>
+          </Link>
+        </div>
+      )}
+
+      {storyUniverse && (
+        <div className="mt-4">
+          <Link
+            href={`/wiki/${storyUniverse.slug}`}
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              px-4
+              py-2
+              transition
+              hover:-translate-y-0.5
+              hover:shadow-md
+            "
+            style={{
+              borderColor: "var(--card-border)",
+              backgroundColor: "var(--background)",
+            }}
+          >
+            <span>🌌</span>
+
+            <span>
+              <span className="opacity-60">Part of the</span>{" "}
+              <span className="font-semibold">
+                {storyUniverse.name}
+              </span>{" "}
+              <span className="opacity-60">universe</span>
+            </span>
+
+            <span className="opacity-60">→</span>
           </Link>
         </div>
       )}
