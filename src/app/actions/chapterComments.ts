@@ -26,11 +26,15 @@ export async function createComment(
       comment: comment.trim(),
     });
 
-  const { data: chapter } = await supabase
+  const { data: chapter, error: chapterError } = await supabase
     .from("chapters")
     .select("title, story_id, stories ( author_id, title )")
     .eq("id", chapterId)
     .maybeSingle();
+
+  if (chapterError) {
+    console.error("Chapter lookup failed:", chapterError.message);
+  }
 
   const story = Array.isArray(chapter?.stories)
     ? chapter?.stories[0]

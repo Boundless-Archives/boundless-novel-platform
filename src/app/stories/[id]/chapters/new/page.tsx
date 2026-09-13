@@ -9,6 +9,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
+import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
 
 export default function NewChapterPage() {
   const supabase = createClient();
@@ -59,7 +60,7 @@ export default function NewChapterPage() {
   ) {
     e.preventDefault();
 
-    const { error } = await supabase
+    const { data: newChapter, error } = await supabase
       .from("chapters")
       .insert({
         story_id: storyId,
@@ -68,11 +69,20 @@ export default function NewChapterPage() {
         title,
         content,
         status,
-      });
+      })
+      .select("id")
+      .single();
 
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (status === "Published" && newChapter) {
+      await notifyFollowersOfNewChapter(
+        storyId,
+        newChapter.id
+      );
     }
 
     router.push(
