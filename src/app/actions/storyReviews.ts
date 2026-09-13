@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function submitStoryReview(
   storyId: string,
@@ -41,6 +42,38 @@ export async function submitStoryReview(
         rating,
         review,
       });
+
+    const { data: story } = await supabase
+      .from("stories")
+      .select("author_id, title")
+      .eq("id", storyId)
+      .maybeSingle();
+
+    if (story && story.author_id !== user.id) {
+      const { data: reviewer } = await supabase
+        .from("profiles")
+        .select("username, display_name")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      const reviewerName =
+        reviewer?.display_name ?? reviewer?.username ?? "Someone";
+
+      const { error: notifyError } = await createAdminClient()
+        .from("notifications")
+        .insert({
+          user_id: story.author_id,
+          actor_id: user.id,
+          type: "story_review",
+          title: "New review",
+          message: `${reviewerName} left a ${rating}-star review on "${story.title}".`,
+          link: `/story/${storySlug}`,
+        });
+
+      if (notifyError) {
+        console.error("Notification failed:", notifyError.message);
+      }
+    }
   }
 
   await supabase.rpc("sync_story_reviews", {

@@ -10,6 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 import { checkAndAwardBadges } from "@/app/badges/actions";
+import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
 
 type CrossoverOption = {
   crossoverRequestId: string;
@@ -51,6 +52,9 @@ export default function EditChapterPage() {
   const [selectedCrossover, setSelectedCrossover] =
     useState("");
 
+  const [wasPublished, setWasPublished] = 
+    useState(false);
+
   useEffect(() => {
     async function loadChapter() {
       const { data } = await supabase
@@ -70,6 +74,8 @@ export default function EditChapterPage() {
       setContent(data.content);
 
       setStatus(data.status);
+
+      setWasPublished(data.status === "Published");
 
       setSelectedCrossover(
         data.crossover_request_id ?? ""
@@ -135,6 +141,10 @@ export default function EditChapterPage() {
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (nextStatus === "Published" && !wasPublished) {
+      await notifyFollowersOfNewChapter(storyId, chapterId);
     }
 
     if (nextStatus === "Published") {

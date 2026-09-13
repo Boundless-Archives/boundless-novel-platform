@@ -58,6 +58,12 @@ function getNotificationIcon(type: string) {
     case "badge_earned":
       return "🎖️";
 
+    case "story_review":
+      return "⭐";
+
+    case "chapter_comment":
+      return "💬";
+
     default:
       return "🔔";
   }
@@ -103,6 +109,12 @@ function getNotificationLabel(type: string) {
 
     case "badge_earned":
       return "Badge earned";
+
+    case "story_review":
+      return "Review";
+
+    case "chapter_comment":
+      return "Comment";
 
     default:
       return "Notification";

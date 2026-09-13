@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function createComment(
   chapterId: string,
@@ -24,6 +25,44 @@ export async function createComment(
       user_id: user.id,
       comment: comment.trim(),
     });
+
+  const { data: chapter } = await supabase
+    .from("chapters")
+    .select("title, story_id, stories ( author_id, title )")
+    .eq("id", chapterId)
+    .maybeSingle();
+
+  const story = Array.isArray(chapter?.stories)
+    ? chapter?.stories[0]
+    : chapter?.stories;
+
+  if (story && story.author_id !== user.id) {
+    const { data: commenter } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const commenterName =
+      commenter?.display_name ?? commenter?.username ?? "Someone";
+
+    const { error: notifyError } = await createAdminClient()
+      .from("notifications")
+      .insert({
+        user_id: story.author_id,
+        actor_id: user.id,
+        type: "chapter_comment",
+        title: "New comment",
+        message: `${commenterName} commented on "${
+          chapter?.title ?? story.title
+        }".`,
+        link: `/chapter/${chapterId}`,
+      });
+
+    if (notifyError) {
+      console.error("Notification failed:", notifyError.message);
+    }
+  }
 
   revalidatePath(`/chapter/${chapterId}`);
 }
