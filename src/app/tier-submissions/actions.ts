@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -122,16 +123,22 @@ export async function submitTierUpgrade(
     .in("role", ["admin", "superadmin"]);
 
   if (admins && admins.length > 0) {
-    await supabase.from("notifications").insert(
-      admins.map((admin) => ({
-        user_id: admin.id,
-        actor_id: user.id,
-        type: "tier_submission",
-        title: "New tier upgrade submission",
-        message: `"${story.title}" was submitted for ${requestedTier}-Tier review.`,
-        link: "/admin/tier-submissions",
-      }))
-    );
+    const { error: notifyError } = await createAdminClient()
+      .from("notifications")
+      .insert(
+        admins.map((admin) => ({
+          user_id: admin.id,
+          actor_id: user.id,
+          type: "tier_submission",
+          title: "New tier upgrade submission",
+          message: `"${story.title}" was submitted for ${requestedTier}-Tier review.`,
+          link: "/admin/tier-submissions",
+        }))
+      );
+
+    if (notifyError) {
+      console.error("Notification failed:", notifyError.message);
+    }
   }
 
   revalidatePath(`/stories/${storyId}`);
@@ -221,19 +228,25 @@ export async function reviewTierSubmission(
     await checkAndAwardBadges(submission.submitted_by);
   }
 
-  await supabase.from("notifications").insert({
-    user_id: submission.submitted_by,
-    actor_id: user.id,
-    type: "tier_submission_response",
-    title: approve
-      ? `Upgraded to ${submission.requested_tier}-Tier!`
-      : "Tier submission was not approved",
-    message: approve
-      ? `Your story was approved for ${submission.requested_tier}-Tier.`
-      : reviewerNotes ||
-        "Your tier submission was not approved this time.",
-    link: `/stories/${submission.story_id}`,
-  });
+  const { error: notifyError } = await createAdminClient()
+    .from("notifications")
+    .insert({
+      user_id: submission.submitted_by,
+      actor_id: user.id,
+      type: "tier_submission_response",
+      title: approve
+        ? `Upgraded to ${submission.requested_tier}-Tier!`
+        : "Tier submission was not approved",
+      message: approve
+        ? `Your story was approved for ${submission.requested_tier}-Tier.`
+        : reviewerNotes ||
+          "Your tier submission was not approved this time.",
+      link: `/stories/${submission.story_id}`,
+    });
+
+  if (notifyError) {
+    console.error("Notification failed:", notifyError.message);
+  }
 
   revalidatePath("/admin/tier-submissions");
   revalidatePath(`/stories/${submission.story_id}`);

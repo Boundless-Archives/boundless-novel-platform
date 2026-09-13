@@ -47,6 +47,17 @@ function getNotificationIcon(type: string) {
     case "system":
       return "⚙️";
 
+    case "crossover_request":
+    case "crossover_response":
+      return "🌐";
+
+    case "tier_submission":
+    case "tier_submission_response":
+      return "🏆";
+
+    case "badge_earned":
+      return "🎖️";
+
     default:
       return "🔔";
   }
@@ -77,6 +88,21 @@ function getNotificationLabel(type: string) {
 
     case "system":
       return "System";
+
+    case "crossover_request":
+      return "Crossover request";
+
+    case "crossover_response":
+      return "Crossover update";
+
+    case "tier_submission":
+      return "Tier submission";
+
+    case "tier_submission_response":
+      return "Tier decision";
+
+    case "badge_earned":
+      return "Badge earned";
 
     default:
       return "Notification";

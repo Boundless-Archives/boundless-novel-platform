@@ -211,15 +211,21 @@ export async function checkAndAwardBadges(userId: string) {
     );
 
   if (newBadgeDetails && newBadgeDetails.length > 0) {
-    await supabase.from("notifications").insert(
-      newBadgeDetails.map((badge) => ({
-        user_id: userId,
-        type: "badge_earned",
-        title: "New badge earned!",
-        message: `You've earned the "${badge.name}" badge.`,
-        link: "/profile",
-      }))
-    );
+    const { error: notifyError } = await createAdminClient()
+      .from("notifications")
+      .insert(
+        newBadgeDetails.map((badge) => ({
+          user_id: userId,
+          type: "badge_earned",
+          title: "New badge earned!",
+          message: `You've earned the "${badge.name}" badge.`,
+          link: "/profile",
+        }))
+      );
+
+    if (notifyError) {
+      console.error("Notification failed:", notifyError.message);
+    }
   }
 
   return uniqueEarnedSlugs;
@@ -332,13 +338,19 @@ export async function manuallyAwardBadge(
     .eq("id", badgeId)
     .single();
 
-  await supabase.from("notifications").insert({
-    user_id: userId,
-    type: "badge_earned",
-    title: "New badge earned!",
-    message: `You've earned the "${badge?.name}" badge.`,
-    link: "/profile",
-  });
+  const { error: notifyError } = await createAdminClient()
+    .from("notifications")
+    .insert({
+      user_id: userId,
+      type: "badge_earned",
+      title: "New badge earned!",
+      message: `You've earned the "${badge?.name}" badge.`,
+      link: "/profile",
+    });
+
+  if (notifyError) {
+    console.error("Notification failed:", notifyError.message);
+  }
 
   revalidatePath("/admin/badges");
 }

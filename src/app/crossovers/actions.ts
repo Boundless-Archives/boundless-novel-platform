@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -129,14 +130,20 @@ export async function requestCrossover(
     throw new Error(insertError.message);
   }
 
-  await supabase.from("notifications").insert({
-    user_id: targetStory.author_id,
-    actor_id: user.id,
-    type: "crossover_request",
-    title: "New crossover request",
-    message: `Someone wants to crossover "${requestingStory.title}" with your story "${targetStory.title}".`,
-    link: "/crossovers",
-  });
+  const { error: notifyError } = await createAdminClient()
+    .from("notifications")
+    .insert({
+      user_id: targetStory.author_id,
+      actor_id: user.id,
+      type: "crossover_request",
+      title: "New crossover request",
+      message: `Someone wants to crossover "${requestingStory.title}" with your story "${targetStory.title}".`,
+      link: "/crossovers",
+    });
+
+  if (notifyError) {
+    console.error("Notification failed:", notifyError.message);
+  }
 
   revalidatePath("/crossovers");
   revalidatePath(`/story/${targetStory.slug}`);
@@ -203,18 +210,24 @@ export async function respondToCrossoverRequest(
     ? request.target_story[0]
     : request.target_story;
 
-    await supabase.from("notifications").insert({
-    user_id: request.requested_by,
-    actor_id: user.id,
-    type: "crossover_response",
-    title: accept
-      ? "Crossover request accepted"
-      : "Crossover request declined",
-    message: accept
-      ? `Your crossover request for "${requestingStory?.title}" x "${targetStory?.title}" was accepted!`
-      : `Your crossover request for "${requestingStory?.title}" x "${targetStory?.title}" was declined.`,
-    link: "/crossovers",
-  });
+  const { error: notifyError } = await createAdminClient()
+    .from("notifications")
+    .insert({
+      user_id: request.requested_by,
+      actor_id: user.id,
+      type: "crossover_response",
+      title: accept
+        ? "Crossover request accepted"
+        : "Crossover request declined",
+      message: accept
+        ? `Your crossover request for "${requestingStory?.title}" x "${targetStory?.title}" was accepted!`
+        : `Your crossover request for "${requestingStory?.title}" x "${targetStory?.title}" was declined.`,
+      link: "/crossovers",
+    });
+
+  if (notifyError) {
+    console.error("Notification failed:", notifyError.message);
+  }
 
   if (accept) {
     const { checkAndAwardBadges } = await import("@/app/badges/actions");
