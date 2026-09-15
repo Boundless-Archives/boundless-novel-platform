@@ -667,18 +667,61 @@ export default function NavbarClient({
         </div>
       </div>
 
-      {/* Mobile / tablet menu */}
+            {/* Mobile / tablet menu — full-screen overlay with its own scroll */}
       {mobileOpen && (
         <div
-          className="
-            border-t
-            2xl:hidden
-          "
-          style={{
-            borderColor: "var(--card-border)",
-          }}
+          className="fixed inset-0 z-[9999] flex flex-col 2xl:hidden"
+          style={{ backgroundColor: "var(--background)" }}
         >
-          <div className="p-4">
+          <div
+            className="flex shrink-0 items-center justify-between border-b p-4"
+            style={{ borderColor: "var(--card-border)" }}
+          >
+            <Link
+              href="/"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-2"
+            >
+              <Image
+                src="/branding/icon.png"
+                alt="Boundless"
+                width={40}
+                height={40}
+              />
+
+              <span
+                className="font-serif text-xl font-semibold"
+                style={{ color: "var(--accent)" }}
+              >
+                Boundless
+              </span>
+            </Link>
+
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-xl
+                border
+                transition
+                hover:bg-[var(--card)]
+                active:scale-95
+              "
+              style={{ borderColor: "var(--card-border)" }}
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <div
+            className="flex-1 overflow-y-auto p-4"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
             <form
               action="/search"
               method="GET"
@@ -955,7 +998,7 @@ export default function NavbarClient({
                   </Link>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 pb-8">
                   <Link
                     href="/profile"
                     onClick={() => setMobileOpen(false)}
