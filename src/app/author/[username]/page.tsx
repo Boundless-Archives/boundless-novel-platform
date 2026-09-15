@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FollowButton from "@/components/profile/FollowButton";
+import BadgeCollection from "@/components/badges/BadgeCollection";
 import { createClient } from "@/utils/supabase/server";
 
 
@@ -77,6 +78,60 @@ export default async function AuthorPage({
       head: true,
     })
     .eq("follower_id", profile.id);
+
+  /*
+   * Load this author's badges.
+   */
+  const { data: badges } = await supabase
+    .from("user_badges")
+    .select(`
+      id,
+      award_number,
+      awarded_at,
+      badges (
+        id,
+        name,
+        description,
+        icon,
+        badge_type,
+        max_awards
+      )
+    `)
+    .eq("user_id", profile.id)
+    .order("awarded_at", { ascending: true });
+
+  const formattedBadges =
+    badges
+      ?.map((userBadge) => {
+        const badge = Array.isArray(userBadge.badges)
+          ? userBadge.badges[0]
+          : userBadge.badges;
+
+        if (!badge) return null;
+
+        return {
+          id: badge.id,
+          name: badge.name,
+          description: badge.description,
+          icon: badge.icon,
+          badge_type: badge.badge_type,
+          max_awards: badge.max_awards,
+          award_number: userBadge.award_number,
+        };
+      })
+      .filter(
+        (
+          badge
+        ): badge is {
+          id: string;
+          name: string;
+          description: string;
+          icon: string;
+          badge_type: "achievement" | "limited";
+          max_awards: number | null;
+          award_number: number | null;
+        } => badge !== null
+      ) ?? [];
 
   /*
    * Load the author's published stories.
@@ -340,9 +395,21 @@ export default async function AuthorPage({
               </span>
             </div>
 
-          </div>
+            </div>
         </div>
       </section>
+
+      {formattedBadges.length > 0 && (
+        <section className="mt-12">
+          <div className="mb-5">
+            <h2 className="text-2xl font-bold">
+              Badges
+            </h2>
+          </div>
+
+          <BadgeCollection badges={formattedBadges} />
+        </section>
+      )}
 
       {/* =====================================================
           STORIES
