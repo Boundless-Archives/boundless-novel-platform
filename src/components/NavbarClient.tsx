@@ -131,7 +131,8 @@ export default function NavbarClient({
     return pathname.startsWith(href);
   };
 
-  return (
+    return (
+    <>
     <header
       className="
         sticky
@@ -663,11 +664,12 @@ export default function NavbarClient({
                 </Link>
               </>
             )}
-          </div>
+            </div>
         </div>
       </div>
+    </header>
 
-            {/* Mobile / tablet menu — full-screen overlay with its own scroll */}
+      {/* Mobile / tablet menu — full-screen overlay with its own scroll */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-[9999] flex flex-col 2xl:hidden"
@@ -1057,6 +1059,6 @@ export default function NavbarClient({
           </div>
         </div>
       )}
-    </header>
+    </>
   );
 }
