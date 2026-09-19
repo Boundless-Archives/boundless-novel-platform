@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { MessageCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function StoriesPage() {
@@ -123,28 +124,58 @@ export default async function StoriesPage() {
             </p>
           </div>
 
-          <Link
-            href="/stories/new"
-            className="
-              inline-flex
-              items-center
-              justify-center
-              rounded-xl
-              px-5
-              py-3
-              font-semibold
-              border
-              transition
-              hover:-translate-y-0.5
-              hover:shadow-lg
-            "
-            style={{
-              borderColor: "var(--card-border)",
-              backgroundColor: "var(--card)",
-            }}
-          >
-            + Create New Story
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            
+            <a 
+              href="https://chat.whatsapp.com/H0ET1JZ1ITL5cVzC0V7UiC"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="
+                inline-flex
+                items-center
+                justify-center
+                gap-2
+                rounded-xl
+                px-5
+                py-3
+                font-semibold
+                transition
+                hover:-translate-y-0.5
+                hover:shadow-lg
+              "
+              style={{
+                backgroundColor: "var(--accent-soft)",
+                color: "var(--accent)",
+                border: "1px solid var(--accent)",
+              }}
+            >
+              <MessageCircle size={18} />
+              Join Writer Community
+            </a>
+
+            <Link
+              href="/stories/new"
+              className="
+                inline-flex
+                items-center
+                justify-center
+                rounded-xl
+                px-5
+                py-3
+                font-semibold
+                border
+                transition
+                hover:-translate-y-0.5
+                hover:shadow-lg
+              "
+              style={{
+                borderColor: "var(--card-border)",
+                backgroundColor: "var(--card)",
+              }}
+            >
+              + Create New Story
+            </Link>
+          </div>
 
         </div>
 
