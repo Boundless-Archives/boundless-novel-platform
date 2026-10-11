@@ -170,6 +170,43 @@ export async function checkAndAwardBadges(userId: string) {
     }
   }
 
+  // streak milestones
+  if (
+    badgesBySlug.has("reader_streak_7") ||
+    badgesBySlug.has("reader_streak_30") ||
+    badgesBySlug.has("writer_streak_7") ||
+    badgesBySlug.has("writer_streak_30")
+  ) {
+    const { data: userStreaks } = await supabase
+      .from("streaks")
+      .select("streak_type, current_streak")
+      .eq("user_id", userId);
+
+    const readerStreak =
+      userStreaks?.find((s) => s.streak_type === "reader")
+        ?.current_streak ?? 0;
+
+    const writerStreak =
+      userStreaks?.find((s) => s.streak_type === "writer")
+        ?.current_streak ?? 0;
+
+    if (badgesBySlug.has("reader_streak_7") && readerStreak >= 7) {
+      earnedSlugs.push("reader_streak_7");
+    }
+
+    if (badgesBySlug.has("reader_streak_30") && readerStreak >= 30) {
+      earnedSlugs.push("reader_streak_30");
+    }
+
+    if (badgesBySlug.has("writer_streak_7") && writerStreak >= 7) {
+      earnedSlugs.push("writer_streak_7");
+    }
+
+    if (badgesBySlug.has("writer_streak_30") && writerStreak >= 30) {
+      earnedSlugs.push("writer_streak_30");
+    }
+  }
+
   const uniqueEarnedSlugs = Array.from(new Set(earnedSlugs));
 
   if (uniqueEarnedSlugs.length === 0) {

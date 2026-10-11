@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
+import BreakthroughFanfare from "@/components/cultivation/BreakthroughFanfare";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -119,6 +120,8 @@ export default function RootLayout({
 
         <ThemeProvider>
           <div className="atmosphere" aria-hidden="true" />
+
+          <BreakthroughFanfare />
 
           <Navbar />
 

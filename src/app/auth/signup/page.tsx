@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/utils/supabase/client";
+import GoogleButton from "@/components/google-button/google-button";
 
 export default function SignupPage() {
   const supabase = createClient();
@@ -104,6 +105,14 @@ export default function SignupPage() {
             borderColor: "var(--card-border)",
           }}
         >
+        <GoogleButton next="/" />
+
+        <div className="flex items-center gap-3 my-5 text-xs text-[var(--color-ink-50)]">
+          <span className="flex-1 border-t border-[var(--color-line)]" />
+          or sign up with email
+          <span className="flex-1 border-t border-[var(--color-line)]" />
+        </div>
+
           <form
             onSubmit={handleSignup}
             className="flex flex-col gap-5"

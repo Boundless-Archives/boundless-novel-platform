@@ -8,7 +8,6 @@ import ThemeToggle from "@/components/ui/ThemeToggle";
 import {
   Home,
   Compass,
-  Flame,
   Library as LibraryIcon,
   PenLine,
   Sparkles,
@@ -22,6 +21,8 @@ import {
   LogOut,
   Shield,
   FileEdit,
+  Flame,
+  Gem,
   type LucideIcon,
 } from "lucide-react";
 
@@ -38,6 +39,8 @@ type NavbarClientProps = {
   isAuthor: boolean;
   role: UserRole;
   unreadNotificationCount: number;
+  readerStreak: number;
+  writerStreak: number;
 };
 
 type NavItem = {
@@ -52,6 +55,8 @@ export default function NavbarClient({
   isAuthor,
   role,
   unreadNotificationCount,
+  readerStreak,
+  writerStreak,
 }: NavbarClientProps) {
   const pathname = usePathname();
 
@@ -118,6 +123,13 @@ export default function NavbarClient({
         label: "My Universe",
         Icon: MapIcon,
         show: isAuthor,
+      },
+
+      {
+        href: "/wallet",
+        label: "Embers",
+        Icon: Gem,
+        show: user,
       },
     ],
     [user, isAuthor]
@@ -563,6 +575,34 @@ export default function NavbarClient({
 
             <ThemeToggle />
 
+            {user && (readerStreak > 0 || writerStreak > 0) && (
+              <div
+                className="flex items-center gap-3 rounded-xl border px-3 py-2 text-sm font-semibold"
+                style={{ borderColor: "var(--card-border)" }}
+                title={`Reader streak: ${readerStreak} day${
+                  readerStreak === 1 ? "" : "s"
+                } · Writer streak: ${writerStreak} day${
+                  writerStreak === 1 ? "" : "s"
+                }`}
+              >
+                <span className="flex items-center gap-1">
+                  <Flame
+                    size={16}
+                    style={{ color: "var(--accent)" }}
+                  />
+                  {readerStreak}
+                </span>
+
+                <span className="flex items-center gap-1">
+                  <Flame
+                    size={16}
+                    style={{ color: "var(--accent)" }}
+                  />
+                  {writerStreak}
+                </span>
+              </div>
+            )}
+
             {!user ? (
               <>
                 <Link
@@ -724,6 +764,46 @@ export default function NavbarClient({
             className="flex-1 overflow-y-auto p-4"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
+            {user && (readerStreak > 0 || writerStreak > 0) && (
+              <div className="mb-5 grid grid-cols-2 gap-3">
+                <div
+                  className="rounded-xl border p-4 text-center"
+                  style={{ borderColor: "var(--card-border)" }}
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Flame
+                      size={20}
+                      style={{ color: "var(--accent)" }}
+                    />
+                    <span className="font-serif text-2xl font-bold">
+                      {readerStreak}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs opacity-60">
+                    Reader Streak
+                  </p>
+                </div>
+
+                <div
+                  className="rounded-xl border p-4 text-center"
+                  style={{ borderColor: "var(--card-border)" }}
+                >
+                  <div className="flex items-center justify-center gap-1.5">
+                    <Flame
+                      size={20}
+                      style={{ color: "var(--accent)" }}
+                    />
+                    <span className="font-serif text-2xl font-bold">
+                      {writerStreak}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs opacity-60">
+                    Writer Streak
+                  </p>
+                </div>
+              </div>
+            )}
+
             <form
               action="/search"
               method="GET"

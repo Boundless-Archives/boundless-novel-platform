@@ -9,8 +9,10 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
-import { checkAndAwardBadges } from "@/app/badges/actions";
 import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
+import { registerStreakDay } from "@/app/streaks/actions";
+import { checkAndAwardBadges } from "@/app/badges/actions";
+import { awardWritingXP } from "@/app/cultivation/actions";
 
 type CrossoverOption = {
   crossoverRequestId: string;
@@ -42,6 +44,8 @@ export default function EditChapterPage() {
   const [status, setStatus] = useState<
     "Draft" | "Published"
   >("Draft");
+
+  const [scheduledAt, setScheduledAt] = useState("");
 
   const [message, setMessage] =
     useState("");
@@ -76,6 +80,13 @@ export default function EditChapterPage() {
       setStatus(data.status);
 
       setWasPublished(data.status === "Published");
+      if (data.scheduled_at) {
+        setScheduledAt(
+          new Date(data.scheduled_at)
+            .toISOString()
+            .slice(0, 16)
+        );
+      }
 
       setSelectedCrossover(
         data.crossover_request_id ?? ""
@@ -124,9 +135,12 @@ export default function EditChapterPage() {
     loadCrossoverOptions();
   }, [chapterId, storyId, supabase]);
 
-  async function saveChapter(
+    async function saveChapter(
     nextStatus: "Draft" | "Published"
   ) {
+    const isScheduling =
+      nextStatus === "Draft" && scheduledAt && !wasPublished;
+
     const { error } = await supabase
       .from("chapters")
       .update({
@@ -135,6 +149,12 @@ export default function EditChapterPage() {
         content,
         status: nextStatus,
         crossover_request_id: selectedCrossover || null,
+        scheduled_at: isScheduling
+          ? new Date(scheduledAt).toISOString()
+          : null,
+        ...(nextStatus === "Published" && !wasPublished
+          ? { published_at: new Date().toISOString() }
+          : {}),
       })
       .eq("id", chapterId);
 
@@ -145,15 +165,15 @@ export default function EditChapterPage() {
 
     if (nextStatus === "Published" && !wasPublished) {
       await notifyFollowersOfNewChapter(storyId, chapterId);
-    }
 
-    if (nextStatus === "Published") {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (user) {
+        await registerStreakDay(user.id, "writer");
         await checkAndAwardBadges(user.id);
+        await awardWritingXP(user.id, content);
       }
     }
 
@@ -253,7 +273,7 @@ export default function EditChapterPage() {
       </LexicalEditor>
     </div>
 
-    {crossoverOptions.length > 0 && (
+        {crossoverOptions.length > 0 && (
       <div>
         <label className="block mb-2 font-medium">
           Part of a Crossover? (optional)
@@ -279,6 +299,27 @@ export default function EditChapterPage() {
             </option>
           ))}
         </select>
+      </div>
+    )}
+
+    {!wasPublished && (
+      <div>
+        <label className="block mb-2 font-medium">
+          Schedule for later (optional)
+        </label>
+
+        <input
+          type="datetime-local"
+          value={scheduledAt}
+          onChange={(e) => setScheduledAt(e.target.value)}
+          className="w-full border rounded-lg p-3"
+        />
+
+        <p className="mt-2 text-xs opacity-60">
+          Leave blank to save as a draft with no scheduled
+          date, or pick a future time to auto-publish then.
+          Checked every few minutes.
+        </p>
       </div>
     )}
 

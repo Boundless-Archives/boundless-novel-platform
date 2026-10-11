@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import CommentForm from "@/components/chapter/CommentForm";
 import CommentList from "@/components/chapter/CommentList";
 import ReadingProgress from "@/components/chapter/ReadingProgress";
+import ReadingTracker from "@/components/chapter/ReadingTracker";
 
 type Props = {
   params: Promise<{
@@ -175,6 +176,8 @@ export default async function ChapterPage({
         storyId={story.id}
         chapterId={chapter.id}
       />
+
+      <ReadingTracker />
 
       <header className="text-center">
 

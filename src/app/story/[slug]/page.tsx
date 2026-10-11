@@ -10,6 +10,12 @@ import DownloadBookButton from "@/components/offline/DownloadBookButton";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
 import RequestCrossoverButton from "@/components/story/RequestCrossoverButton";
 import { getAcceptedCrossoversForStory } from "@/app/crossovers/actions";
+import GiftSection from "@/components/gifts/GiftSection";
+import {
+  getGiftCatalog,
+  getMyBalance,
+  getStorySupporters,
+} from "@/app/gifts/actions";
 
 type Props = {
   params: Promise<{
@@ -80,6 +86,11 @@ export default async function PublicStoryPage({
 
   const acceptedCrossovers =
     await getAcceptedCrossoversForStory(story.id);
+
+  const giftCatalog = await getGiftCatalog();
+  const supporterSummary = await getStorySupporters(story.id);
+  const canGift = !!user && user.id !== story.author_id;
+  const myBalance = canGift ? await getMyBalance() : null;
 
     /*
    * Check whether this story belongs to a series.
@@ -787,6 +798,17 @@ Chapter {chapter.chapter_number} </div>
     </div>
   </section>
 )}
+
+      <GiftSection
+        storyId={story.id}
+        catalog={giftCatalog}
+        isLoggedIn={!!user}
+        canGift={canGift}
+        initialBalance={myBalance}
+        supporters={supporterSummary.top}
+        totalGifts={supporterSummary.totalGifts}
+        totalEmbers={supporterSummary.totalEmbers}
+      />
 
 {relatedStories && relatedStories.length > 0 && (
   <section className="mt-16">

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import GoogleButton from "@/components/google-button/google-button";
 
 export default function LoginPage() {
   const supabase = createClient();
@@ -73,6 +74,15 @@ export default function LoginPage() {
             borderColor: "var(--card-border)",
           }}
         >
+
+        <GoogleButton next="/" />
+
+      <div className="flex items-center gap-3 my-5 text-xs text-[var(--color-ink-50)]">
+        <span className="flex-1 border-t border-[var(--color-line)]" />
+        or sign up with email
+        <span className="flex-1 border-t border-[var(--color-line)]" />
+      </div>
+
           <form
             onSubmit={handleLogin}
             className="flex flex-col gap-5"
@@ -109,6 +119,13 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
+
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-xs font-medium opacity-70 underline underline-offset-4"
+                >
+                  Forgot password?
+                </Link>
               </div>
 
               <input

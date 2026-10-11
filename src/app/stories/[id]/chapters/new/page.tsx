@@ -10,6 +10,9 @@ import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
+import { registerStreakDay } from "@/app/streaks/actions";
+import { checkAndAwardBadges } from "@/app/badges/actions";
+import { awardWritingXP } from "@/app/cultivation/actions";
 
 export default function NewChapterPage() {
   const supabase = createClient();
@@ -28,9 +31,7 @@ export default function NewChapterPage() {
 
   const [message, setMessage] = useState("");
 
-  const [status, setStatus] = useState<
-    "Draft" | "Published"
-  >("Draft");
+  const [scheduledAt, setScheduledAt] = useState("");
 
   useEffect(() => {
     async function loadNextChapterNumber() {
@@ -55,10 +56,11 @@ export default function NewChapterPage() {
     loadNextChapterNumber();
   }, [storyId]);
 
-  async function handleSubmit(
-    e: React.FormEvent<HTMLFormElement>
+    async function saveChapter(
+    nextStatus: "Draft" | "Published"
   ) {
-    e.preventDefault();
+    const isScheduling =
+      nextStatus === "Draft" && scheduledAt;
 
     const { data: newChapter, error } = await supabase
       .from("chapters")
@@ -68,7 +70,14 @@ export default function NewChapterPage() {
           Number(chapterNumber),
         title,
         content,
-        status,
+        status: nextStatus,
+        scheduled_at: isScheduling
+          ? new Date(scheduledAt).toISOString()
+          : null,
+        published_at:
+          nextStatus === "Published"
+            ? new Date().toISOString()
+            : null,
       })
       .select("id")
       .single();
@@ -78,11 +87,21 @@ export default function NewChapterPage() {
       return;
     }
 
-    if (status === "Published" && newChapter) {
+    if (nextStatus === "Published" && newChapter) {
       await notifyFollowersOfNewChapter(
         storyId,
         newChapter.id
       );
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        await registerStreakDay(user.id, "writer");
+        await checkAndAwardBadges(user.id);
+        await awardWritingXP(user.id, content);
+      }
     }
 
     router.push(
@@ -115,7 +134,7 @@ export default function NewChapterPage() {
   </p>
 
   <form
-    onSubmit={handleSubmit}
+    onSubmit={(e) => e.preventDefault()}
     className="mt-8 flex flex-col gap-6"
   >
 
@@ -154,18 +173,37 @@ export default function NewChapterPage() {
       </LexicalEditor>
     </div>
 
+        <div>
+      <label className="block mb-2 font-medium">
+        Schedule for later (optional)
+      </label>
+
+      <input
+        type="datetime-local"
+        value={scheduledAt}
+        onChange={(e) => setScheduledAt(e.target.value)}
+        className="w-full border rounded-lg p-3"
+      />
+
+      <p className="mt-2 text-xs opacity-60">
+        Leave blank to save as a draft with no scheduled
+        date, or pick a future time to auto-publish then.
+        Checked every few minutes.
+      </p>
+    </div>
+
     <div className="flex gap-3">
 
       <Button
-        type="submit"
-        onClick={() => setStatus("Draft")}
+        type="button"
+        onClick={() => saveChapter("Draft")}
       >
         Save Draft
       </Button>
 
       <Button
-        type="submit"
-        onClick={() => setStatus("Published")}
+        type="button"
+        onClick={() => saveChapter("Published")}
       >
         Publish
       </Button>
@@ -192,7 +230,6 @@ export default function NewChapterPage() {
       </button>
 
     </div>
-
   </form>
 
   {message && (

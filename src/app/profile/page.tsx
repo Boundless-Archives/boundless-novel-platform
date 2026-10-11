@@ -4,6 +4,10 @@ import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
 import BadgeCollection from "@/components/badges/BadgeCollection";
 import PushNotificationSettings from "@/components/notifications/PushNotificationSettings";
+import StreakDisplay from "@/components/streaks/StreakDisplay";
+import { getMyStreaks } from "@/app/streaks/actions";
+import CultivationWidget from "@/components/cultivation/CultivationWidget";
+import { getMyCultivationProfile } from "@/app/cultivation/actions";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -39,6 +43,10 @@ export default async function ProfilePage() {
     `)
     .eq("user_id", user.id)
     .order("awarded_at", { ascending: true });
+
+  const { reader, writer } = await getMyStreaks();
+
+  const cultivation = await getMyCultivationProfile();
 
   const formattedBadges =
     badges
@@ -317,6 +325,10 @@ export default async function ProfilePage() {
 
       <section className="mt-10">
 
+        <section className="mt-6">
+          <CultivationWidget profile={cultivation} />
+        </section>
+
         <div className="mb-5">
           <h2 className="text-2xl font-bold">
             Badges
@@ -328,6 +340,14 @@ export default async function ProfilePage() {
         </div>
 
         <BadgeCollection badges={formattedBadges} />
+        
+        <section className="mt-10">
+        <h2 className="text-xl font-semibold mb-4">
+          Streaks
+        </h2>
+
+        <StreakDisplay reader={reader} writer={writer} />
+      </section>
 
       </section>
 

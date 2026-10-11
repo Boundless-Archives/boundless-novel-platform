@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import NavbarClient from "./NavbarClient";
+import { getMyStreaks } from "@/app/streaks/actions";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -18,6 +19,8 @@ export default async function Navbar() {
     | null = null;
 
   let unreadNotificationCount = 0;
+
+  const { reader, writer } = await getMyStreaks();
 
   if (user) {
     const { data: profile } = await supabase
@@ -39,14 +42,17 @@ export default async function Navbar() {
       .eq("is_read", false);
 
     unreadNotificationCount = count ?? 0;
+
   }
 
   return (
-    <NavbarClient
-      user={!!user}
-      isAuthor={isAuthor}
-      role={role}
-      unreadNotificationCount={unreadNotificationCount}
-    />
+  <NavbarClient
+    user={!!user}
+    isAuthor={isAuthor}
+    role={role}
+    unreadNotificationCount={unreadNotificationCount}
+    readerStreak={reader?.current_streak ?? 0}
+    writerStreak={writer?.current_streak ?? 0}
+  />
   );
 }

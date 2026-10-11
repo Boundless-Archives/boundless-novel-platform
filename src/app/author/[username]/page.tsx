@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import FollowButton from "@/components/profile/FollowButton";
 import BadgeCollection from "@/components/badges/BadgeCollection";
 import { createClient } from "@/utils/supabase/server";
-
+import { getCultivationProfileFor } from "@/app/cultivation/actions";
 
 type Props = {
   params: Promise<{
@@ -99,6 +99,8 @@ export default async function AuthorPage({
     `)
     .eq("user_id", profile.id)
     .order("awarded_at", { ascending: true });
+  
+  const cultivation = await getCultivationProfileFor(profile.id);
 
   const formattedBadges =
     badges
@@ -316,6 +318,19 @@ export default async function AuthorPage({
             <p className="mt-1 text-sm opacity-60">
               @{profile.username}
             </p>
+            
+            {cultivation && (
+              <span
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium mt-2"
+                style={{
+                  borderColor: "var(--card-border)",
+                  color:
+                    cultivation.path === "qi" ? "#2DD4BF" : "#818CF8",
+                }}
+              >
+                {cultivation.majorName}
+              </span>
+            )}
 
             {user && user.id !== profile.id && (
               <div className="mt-5">

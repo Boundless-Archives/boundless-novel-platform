@@ -64,6 +64,12 @@ function getNotificationIcon(type: string) {
     case "chapter_comment":
       return "💬";
 
+    case "cultivation_breakthrough":
+      return "🧘";
+
+    case "gift_received":
+      return "🎁";
+
     default:
       return "🔔";
   }
@@ -115,6 +121,12 @@ function getNotificationLabel(type: string) {
 
     case "chapter_comment":
       return "Comment";
+
+    case "cultivation_breakthrough":
+      return "Cultivation";
+
+    case "gift_received":
+      return "Gift";
 
     default:
       return "Notification";
