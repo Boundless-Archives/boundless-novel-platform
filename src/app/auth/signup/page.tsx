@@ -105,14 +105,21 @@ export default function SignupPage() {
             borderColor: "var(--card-border)",
           }}
         >
-        <GoogleButton next="/" />
 
-        <div className="flex items-center gap-3 my-5 text-xs text-[var(--color-ink-50)]">
-          <span className="flex-1 border-t border-[var(--color-line)]" />
-          or sign up with email
-          <span className="flex-1 border-t border-[var(--color-line)]" />
-        </div>
+          <GoogleButton label="Sign up with Google" />
 
+          <div className="my-6 flex items-center gap-3 text-xs opacity-50">
+            <div
+              className="h-px flex-1"
+              style={{ backgroundColor: "var(--card-border)" }}
+            />
+            or
+            <div
+              className="h-px flex-1"
+              style={{ backgroundColor: "var(--card-border)" }}
+            />
+          </div>
+        
           <form
             onSubmit={handleSignup}
             className="flex flex-col gap-5"

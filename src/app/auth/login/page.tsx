@@ -2,7 +2,7 @@
 
 import Button from "@/components/ui/Button";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import GoogleButton from "@/components/google-button/google-button";
@@ -15,6 +15,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    if (
+      new URLSearchParams(window.location.search).get("error") ===
+      "oauth"
+    ) {
+      setMessage(
+        "Google sign-in didn't complete. Please try again."
+      );
+    }
+  }, []);
 
   async function handleLogin(
     e: React.FormEvent<HTMLFormElement>
@@ -37,7 +47,25 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/profile");
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    let destination = "/profile";
+
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile && !profile.onboarding_completed) {
+        destination = "/auth/onboarding";
+      }
+    }
+
+    router.push(destination);
     router.refresh();
   }
 
@@ -75,11 +103,23 @@ export default function LoginPage() {
           }}
         >
 
-        <GoogleButton next="/" />
+          <GoogleButton label="Sign in with Google" />
 
+          <div className="my-6 flex items-center gap-3 text-xs opacity-50">
+            <div
+              className="h-px flex-1"
+              style={{ backgroundColor: "var(--card-border)" }}
+            />
+            or
+            <div
+              className="h-px flex-1"
+              style={{ backgroundColor: "var(--card-border)" }}
+            />
+          </div>
+        
       <div className="flex items-center gap-3 my-5 text-xs text-[var(--color-ink-50)]">
         <span className="flex-1 border-t border-[var(--color-line)]" />
-        or sign up with email
+          sign up with email
         <span className="flex-1 border-t border-[var(--color-line)]" />
       </div>
 

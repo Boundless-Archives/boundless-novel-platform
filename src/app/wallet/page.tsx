@@ -7,6 +7,7 @@ import {
 import AdEarnButton from "@/components/wallet/AdEarnButton";
 import { Flame } from "lucide-react";
 import { CURRENCY_NAME, formatCoins } from "@/lib/currency";
+import OfferwallSection from "@/components/wallet/OfferwallSection";
 
 const TRANSACTION_LABELS: Record<string, string> = {
   ad_reward: "Watched an ad",
@@ -16,6 +17,7 @@ const TRANSACTION_LABELS: Record<string, string> = {
   purchase: "Purchased",
   admin_adjust: "Adjustment",
   cultivation_spend: "Cultivation",
+  offerwall_reward: "Offer completed",
   other: "Other",
 };
 
@@ -68,6 +70,8 @@ export default async function WalletPage() {
       <div className="mt-6">
         <AdEarnButton initialStatus={adStatus} />
       </div>
+
+      <OfferwallSection userId={user.id} />
 
       <section className="mt-10">
         <h2 className="text-xl font-semibold mb-4">
