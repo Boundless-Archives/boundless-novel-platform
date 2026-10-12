@@ -18,6 +18,7 @@ import {
 
 import {
   EditorState,
+  HISTORY_MERGE_TAG,
   $getRoot,
   $insertNodes,
 } from "lexical";
@@ -43,12 +44,31 @@ type Props = {
 };
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
+/*
+ * How many of the editor's own recent HTML outputs we remember.
+ * A few (not just one) so a fast typist can never slip a stale echo
+ * past the check below.
+ */
+const RECENT_EMITTED_LIMIT = 5;
+
+/*
+ * Loads `value` into the editor ONLY when it comes from outside
+ * (e.g. an existing chapter finishing loading from the database).
+ *
+ * `recentlyEmittedRef` holds the HTML the editor itself recently sent
+ * up through onChange. When the parent hands one of those back as
+ * `value`, it is just an echo of what the user typed, so we must NOT
+ * rebuild the editor from it. Rebuilding on every keystroke is what
+ * made the cursor jump to the end of the text.
+ */
 function InitialContentPlugin({
   value,
+  recentlyEmittedRef,
 }: {
   value: string;
+  recentlyEmittedRef: React.MutableRefObject<string[]>;
 }) {
   const [editor] =
     useLexicalComposerContext();
@@ -56,29 +76,37 @@ function InitialContentPlugin({
   useEffect(() => {
     if (!value) return;
 
-    editor.update(() => {
-      const parser = new DOMParser();
+    // Echo of our own onChange output: ignore it.
+    if (recentlyEmittedRef.current.includes(value)) return;
 
-      const dom = parser.parseFromString(
-        value,
-        "text/html"
-      );
+    editor.update(
+      () => {
+        const parser = new DOMParser();
 
-      const nodes =
-        $generateNodesFromDOM(
-          editor,
-          dom
+        const dom = parser.parseFromString(
+          value,
+          "text/html"
         );
 
-      const root = $getRoot();
+        const nodes =
+          $generateNodesFromDOM(
+            editor,
+            dom
+          );
 
-      root.clear();
+        const root = $getRoot();
 
-      root.select();
+        root.clear();
 
-      $insertNodes(nodes);
-    });
-  }, [editor, value]);
+        root.select();
+
+        $insertNodes(nodes);
+      },
+      // Keeps the initial load out of the undo history, so
+      // Ctrl+Z can never wipe the whole chapter.
+      { tag: HISTORY_MERGE_TAG }
+    );
+  }, [editor, value, recentlyEmittedRef]);
 
   return null;
 }
@@ -88,6 +116,8 @@ export default function LexicalEditor({
   onChange,
   children,
 }: Props) {
+  const recentlyEmittedRef = useRef<string[]>([]);
+
   const initialConfig = {
     namespace: "BoundlessEditor",
 
@@ -106,6 +136,14 @@ export default function LexicalEditor({
     ) {
     editorState.read(() => {
         const html = $generateHtmlFromNodes(editor);
+
+        // Remember what we sent up so the parent's echo of it
+        // is not mistaken for new content from outside.
+        const recent = recentlyEmittedRef.current;
+        recent.push(html);
+        if (recent.length > RECENT_EMITTED_LIMIT) {
+          recent.shift();
+        }
 
         onChange(html);
     });
@@ -150,6 +188,7 @@ export default function LexicalEditor({
         
         <InitialContentPlugin
           value={value}
+          recentlyEmittedRef={recentlyEmittedRef}
         />
 
         <HistoryPlugin />
@@ -159,6 +198,7 @@ export default function LexicalEditor({
         <AutoFocusPlugin />
 
         <OnChangePlugin
+            ignoreSelectionChange
             onChange={(editorState, editor) =>
               handleChange(editorState, editor)
             }

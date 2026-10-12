@@ -66,105 +66,105 @@ export default function AdEarnButton({
   function handleWatch() {
     setMessage("");
 
-    startTransition(async () => {
-      try {
-        // Placeholder: simulates a completed ad view.
-        // Swap this for a real ad SDK's completion callback
-        // once a provider is wired up.
-        await new Promise((resolve) => setTimeout(resolve, 1200));
+    // startTransition(async () => {
+    //   try {
+    //     // Placeholder: simulates a completed ad view.
+    //     // Swap this for a real ad SDK's completion callback
+    //     // once a provider is wired up.
+    //     await new Promise((resolve) => setTimeout(resolve, 1200));
 
-        const result = await claimAdReward();
+    //     const result = await claimAdReward();
 
-        setMessage(
-          `+${formatCoins(result.awarded)} added to your wallet!`
-        );
+    //     setMessage(
+    //       `+${formatCoins(result.awarded)} added to your wallet!`
+    //     );
 
-        setStatus((current) => ({
-          ...current,
-          watchedCount: current.watchedCount + 1,
-          eligible:
-            current.watchedCount + 1 < current.maxPerWindow,
-        }));
+    //     setStatus((current) => ({
+    //       ...current,
+    //       watchedCount: current.watchedCount + 1,
+    //       eligible:
+    //         current.watchedCount + 1 < current.maxPerWindow,
+    //     }));
 
-        onEarned?.(result.newBalance);
-      } catch (error) {
-        setMessage(
-          error instanceof Error
-            ? error.message
-            : "Something went wrong."
-        );
-      }
-    });
+    //     onEarned?.(result.newBalance);
+    //   } catch (error) {
+    //     setMessage(
+    //       error instanceof Error
+    //         ? error.message
+    //         : "Something went wrong."
+    //     );
+    //   }
+    // });
   }
 
-  return (
-    <div
-      className="rounded-xl border p-5"
-      style={{
-        borderColor: "var(--card-border)",
-        backgroundColor: "var(--card)",
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Watch an Ad</h3>
+  // return (
+    // <div
+    //   className="rounded-xl border p-5"
+    //   style={{
+    //     borderColor: "var(--card-border)",
+    //     backgroundColor: "var(--card)",
+    //   }}
+    // >
+    //   <div className="flex items-center justify-between">
+    //     <h3 className="font-semibold">Watch an Ad</h3>
 
-        <span className="text-sm opacity-60">
-          {status.watchedCount} / {status.maxPerWindow} today
-        </span>
-      </div>
+    //     <span className="text-sm opacity-60">
+    //       {status.watchedCount} / {status.maxPerWindow} today
+    //     </span>
+    //   </div>
 
-      <p className="mt-2 flex items-center gap-1.5 text-sm opacity-70">
-        Earn
-        <Flame size={14} style={{ color: "var(--accent)" }} />
-        {formatCoins(status.rewardAmount)} per ad watched.
-      </p>
+    //   <p className="mt-2 flex items-center gap-1.5 text-sm opacity-70">
+    //     Earn
+    //     <Flame size={14} style={{ color: "var(--accent)" }} />
+    //     {formatCoins(status.rewardAmount)} per ad watched.
+    //   </p>
 
-      {status.eligible ? (
-        <button
-          type="button"
-          onClick={handleWatch}
-          disabled={isPending}
-          className="
-            mt-4
-            flex
-            w-full
-            items-center
-            justify-center
-            gap-2
-            rounded-lg
-            px-4
-            py-3
-            font-semibold
-            disabled:opacity-50
-          "
-          style={{
-            backgroundColor: "var(--button)",
-            color: "var(--button-text)",
-          }}
-        >
-          <Play size={18} />
-          {isPending ? "Watching..." : "Watch Ad"}
-        </button>
-      ) : (
-        <div
-          className="mt-4 rounded-lg border p-3 text-center text-sm"
-          style={{ borderColor: "var(--card-border)" }}
-        >
-          <p className="opacity-70">
-            Come back in
-          </p>
-          <p
-            className="mt-1 font-mono text-lg font-semibold"
-            style={{ color: "var(--accent)" }}
-          >
-            {countdown || "..."}
-          </p>
-        </div>
-      )}
+    //   {status.eligible ? (
+    //     <button
+    //       type="button"
+    //       onClick={handleWatch}
+    //       disabled={isPending}
+    //       className="
+    //         mt-4
+    //         flex
+    //         w-full
+    //         items-center
+    //         justify-center
+    //         gap-2
+    //         rounded-lg
+    //         px-4
+    //         py-3
+    //         font-semibold
+    //         disabled:opacity-50
+    //       "
+    //       style={{
+    //         backgroundColor: "var(--button)",
+    //         color: "var(--button-text)",
+    //       }}
+    //     >
+    //       <Play size={18} />
+    //       {isPending ? "Watching..." : "Watch Ad"}
+    //     </button>
+    //   ) : (
+    //     <div
+    //       className="mt-4 rounded-lg border p-3 text-center text-sm"
+    //       style={{ borderColor: "var(--card-border)" }}
+    //     >
+    //       <p className="opacity-70">
+    //         Come back in
+    //       </p>
+    //       <p
+    //         className="mt-1 font-mono text-lg font-semibold"
+    //         style={{ color: "var(--accent)" }}
+    //       >
+    //         {countdown || "..."}
+    //       </p>
+    //     </div>
+    //   )}
 
-      {message && (
-        <p className="mt-3 text-sm opacity-80">{message}</p>
-      )}
-    </div>
-  );
+  //     {message && (
+  //       <p className="mt-3 text-sm opacity-80">{message}</p>
+  //     )}
+  //   </div>
+  // );
 }
