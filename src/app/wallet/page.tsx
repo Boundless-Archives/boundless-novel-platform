@@ -4,7 +4,7 @@ import {
   getWalletSummary,
   getAdEarningStatus,
 } from "@/app/wallet/actions";
-import AdEarnButton from "@/components/wallet/AdEarnButton";
+// import AdEarnButton from "@/components/wallet/AdEarnButton";
 import { Flame } from "lucide-react";
 import { CURRENCY_NAME, formatCoins } from "@/lib/currency";
 import OfferwallSection from "@/components/wallet/OfferwallSection";
@@ -67,9 +67,9 @@ export default async function WalletPage() {
         </p>
       </div>
 
-      <div className="mt-6">
+      {/* <div className="mt-6">
         <AdEarnButton initialStatus={adStatus} />
-      </div>
+      </div> */}
 
       <OfferwallSection userId={user.id} />
 

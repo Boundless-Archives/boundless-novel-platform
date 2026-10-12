@@ -31,40 +31,40 @@ function formatCountdown(ms: number): string {
   ).padStart(2, "0")}`;
 }
 
-export default function AdEarnButton({
-  initialStatus,
-  onEarned,
-}: Props) {
-  const [status, setStatus] = useState(initialStatus);
-  const [countdown, setCountdown] = useState("");
-  const [message, setMessage] = useState("");
-  const [isPending, startTransition] = useTransition();
+// export default function AdEarnButton({
+//   initialStatus,
+//   onEarned,
+// }: Props) {
+//   const [status, setStatus] = useState(initialStatus);
+//   const [countdown, setCountdown] = useState("");
+//   const [message, setMessage] = useState("");
+//   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    if (status.eligible || !status.nextEligibleAt) return;
+//   useEffect(() => {
+//     if (status.eligible || !status.nextEligibleAt) return;
 
-    const interval = setInterval(() => {
-      const remaining =
-        new Date(status.nextEligibleAt!).getTime() - Date.now();
+//     const interval = setInterval(() => {
+//       const remaining =
+//         new Date(status.nextEligibleAt!).getTime() - Date.now();
 
-      if (remaining <= 0) {
-        setStatus((current) => ({
-          ...current,
-          eligible: true,
-          watchedCount: 0,
-        }));
-        clearInterval(interval);
-        return;
-      }
+//       if (remaining <= 0) {
+//         setStatus((current) => ({
+//           ...current,
+//           eligible: true,
+//           watchedCount: 0,
+//         }));
+//         clearInterval(interval);
+//         return;
+//       }
 
-      setCountdown(formatCountdown(remaining));
-    }, 1000);
+//       setCountdown(formatCountdown(remaining));
+//     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [status.eligible, status.nextEligibleAt]);
+//     return () => clearInterval(interval);
+//   }, [status.eligible, status.nextEligibleAt]);
 
-  function handleWatch() {
-    setMessage("");
+//   function handleWatch() {
+//     setMessage("");
 
     // startTransition(async () => {
     //   try {
@@ -95,7 +95,7 @@ export default function AdEarnButton({
     //     );
     //   }
     // });
-  }
+  // }
 
   // return (
     // <div
@@ -167,4 +167,4 @@ export default function AdEarnButton({
   //     )}
   //   </div>
   // );
-}
+// }
