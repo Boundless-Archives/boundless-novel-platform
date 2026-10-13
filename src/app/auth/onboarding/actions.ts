@@ -3,25 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
-
-const USERNAME_PATTERN = /^[a-z0-9_]{3,20}$/;
-
-const RESERVED_USERNAMES = new Set([
-  "admin",
-  "administrator",
-  "staff",
-  "support",
-  "help",
-  "moderator",
-  "mod",
-  "editor",
-  "system",
-  "boundless",
-  "official",
-  "root",
-  "null",
-  "undefined",
-]);
+import { validateUsername } from "@/lib/username";
 
 export async function completeOnboarding(
   rawUsername: string,
@@ -40,14 +22,10 @@ export async function completeOnboarding(
   const username = rawUsername.trim().toLowerCase();
   const displayName = rawDisplayName.trim();
 
-  if (!USERNAME_PATTERN.test(username)) {
-    throw new Error(
-      "Usernames must be 3–20 characters: lowercase letters, numbers, and underscores only."
-    );
-  }
+  const usernameError = validateUsername(username);
 
-  if (RESERVED_USERNAMES.has(username)) {
-    throw new Error("That username isn't available.");
+  if (usernameError) {
+    throw new Error(usernameError);
   }
 
   if (displayName.length > 40) {
@@ -58,18 +36,27 @@ export async function completeOnboarding(
 
   const adminClient = createAdminClient();
 
-  // Case-insensitive uniqueness check. Escape LIKE wildcards so
-  // "_" is matched literally instead of meaning "any character".
-  const escaped = username.replace(/[\\%_]/g, "\\$&");
-
-  const { data: taken } = await adminClient
+  // Usernames are set once. If onboarding is already done, stop.
+  const { data: current } = await adminClient
     .from("profiles")
-    .select("id")
-    .ilike("username", escaped)
-    .neq("id", user.id)
-    .limit(1);
+    .select("onboarding_completed")
+    .eq("id", user.id)
+    .maybeSingle();
 
-  if (taken && taken.length > 0) {
+  if (current?.onboarding_completed) {
+    throw new Error(
+      "Your username has already been set and cannot be changed."
+    );
+  }
+
+  // Case-insensitive availability check, done in the database so
+  // "_" is treated as a plain character, not a wildcard.
+  const { data: available } = await supabase.rpc(
+    "is_username_available",
+    { candidate: username }
+  );
+
+  if (!available) {
     throw new Error("That username is already taken.");
   }
 
@@ -83,6 +70,7 @@ export async function completeOnboarding(
     .eq("id", user.id);
 
   if (error) {
+    // Two people grabbing the same name at the same moment.
     if (error.code === "23505") {
       throw new Error("That username is already taken.");
     }

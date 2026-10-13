@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
 import { registerStreakDay } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { awardWritingXP } from "@/app/cultivation/actions";
@@ -54,15 +53,6 @@ export async function GET(request: NextRequest) {
     if (updateError) {
       results.push(`${chapter.id}: failed — ${updateError.message}`);
       continue;
-    }
-
-    try {
-      await notifyFollowersOfNewChapter(
-        chapter.story_id,
-        chapter.id
-      );
-    } catch (e) {
-      console.error("Follower notification failed:", e);
     }
 
     try {

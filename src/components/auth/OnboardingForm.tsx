@@ -4,6 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { completeOnboarding } from "@/app/auth/onboarding/actions";
+import {
+  cleanUsernameInput,
+  USERNAME_RULES_TEXT,
+} from "@/lib/username";
 
 export default function OnboardingForm({
   initialUsername,
@@ -56,7 +60,7 @@ export default function OnboardingForm({
           value={username}
           disabled={isPending}
           onChange={(e) =>
-            setUsername(e.target.value.toLowerCase())
+            setUsername(cleanUsernameInput(e.target.value))
           }
           placeholder="your_username"
           autoComplete="off"
@@ -67,9 +71,9 @@ export default function OnboardingForm({
         />
 
         <p className="mt-2 text-xs opacity-50">
-          3–20 characters: lowercase letters, numbers, and
-          underscores. Your profile will live at
-          /author/{username || "your_username"}
+          {USERNAME_RULES_TEXT} Your profile will live at
+          /author/{username || "your_username"}. You can only
+          choose this once, so pick carefully.
         </p>
       </div>
 

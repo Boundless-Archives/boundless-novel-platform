@@ -1,4 +1,8 @@
 import { Flame, BookOpen, PenLine } from "lucide-react";
+import {
+  getNextStreakMilestone,
+  type StreakType,
+} from "@/lib/streaks";
 
 type Streak = {
   current_streak: number;
@@ -15,13 +19,16 @@ function StreakCard({
   label,
   Icon,
   streak,
+  kind,
 }: {
   label: string;
   Icon: typeof BookOpen;
   streak: Streak;
+  kind: StreakType;
 }) {
   const current = streak?.current_streak ?? 0;
   const longest = streak?.longest_streak ?? 0;
+  const next = getNextStreakMilestone(kind, current);
 
   return (
     <div
@@ -58,6 +65,10 @@ function StreakCard({
       <p className="mt-2 text-xs opacity-50">
         Best: {longest} day{longest === 1 ? "" : "s"}
       </p>
+
+      <p className="mt-1 text-xs opacity-50">
+        Next reward: {next.reward} embers at day {next.day}
+      </p>
     </div>
   );
 }
@@ -72,12 +83,14 @@ export default function StreakDisplay({
         label="Reader Streak"
         Icon={BookOpen}
         streak={reader}
+        kind="reader"
       />
 
       <StreakCard
         label="Writer Streak"
         Icon={PenLine}
         streak={writer}
+        kind="writer"
       />
     </div>
   );

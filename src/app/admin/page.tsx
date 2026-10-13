@@ -118,6 +118,13 @@ export default async function AdminPage() {
           />
 
           <AdminCard
+            icon="🐞"
+            title="Bug Reports"
+            description="Review problems reported by users and track their status."
+            href="/admin/bug-reports"
+          />
+
+          <AdminCard
             icon="📊"
             title="Platform Analytics"
             description="Monitor activity, growth, readership, and platform health."

@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Spectral } from "next/font/google";
 import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import BreakthroughFanfare from "@/components/cultivation/BreakthroughFanfare";
+import BugReportButton from "@/components/feedback/BugReportButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -128,6 +129,8 @@ export default function RootLayout({
           <div className="flex-1">
             {children}
           </div>
+          
+          <BugReportButton />
         </ThemeProvider>
       </body>
     </html>

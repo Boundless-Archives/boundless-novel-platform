@@ -75,11 +75,7 @@ export async function submitStoryReview(
       }
     }
   }
-
-  await supabase.rpc("sync_story_reviews", {
-    story_uuid: storyId,
-  });
-
+  
   revalidatePath("/");
   revalidatePath(`/story/${storySlug}`);
 }
@@ -101,10 +97,6 @@ export async function deleteStoryReview(
     .delete()
     .eq("story_id", storyId)
     .eq("user_id", user.id);
-
-  await supabase.rpc("sync_story_reviews", {
-    story_uuid: storyId,
-  });
 
   revalidatePath("/");
   revalidatePath(`/story/${storySlug}`);

@@ -9,7 +9,6 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
-import { notifyFollowersOfNewChapter } from "@/app/actions/notifyFollowers";
 import { registerStreakDay } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { awardWritingXP } from "@/app/cultivation/actions";
@@ -88,10 +87,6 @@ export default function NewChapterPage() {
     }
 
     if (nextStatus === "Published" && newChapter) {
-      await notifyFollowersOfNewChapter(
-        storyId,
-        newChapter.id
-      );
 
       const {
         data: { user },

@@ -22,15 +22,16 @@ export async function toggleStoryLike(
     .eq("user_id", user.id)
     .maybeSingle();
 
+  /*
+   * The like count on story_stats is kept up to date by database
+   * triggers on story_likes, so this only needs to add or remove
+   * the like row itself.
+   */
   if (existingLike) {
     await supabase
       .from("story_likes")
       .delete()
       .eq("id", existingLike.id);
-
-    await supabase.rpc("decrement_story_likes", {
-      story_uuid: storyId,
-    });
   } else {
     await supabase
       .from("story_likes")
@@ -38,10 +39,6 @@ export async function toggleStoryLike(
         story_id: storyId,
         user_id: user.id,
       });
-
-    await supabase.rpc("increment_story_likes", {
-      story_uuid: storyId,
-    });
   }
 
   revalidatePath("/");

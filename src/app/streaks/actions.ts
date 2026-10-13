@@ -4,10 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { awardCoins } from "@/app/wallet/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
-import {
-  READER_STREAK_REWARD,
-  WRITER_STREAK_REWARD,
-} from "@/lib/streaks";
+import { getStreakReward } from "@/lib/streaks";
 
 /*
  * Core streak engine. Call this any time a user does the
@@ -39,19 +36,18 @@ export async function registerStreakDay(
   };
 
   if (result.is_new_day) {
-    const reward =
-      streakType === "reader"
-        ? READER_STREAK_REWARD
-        : WRITER_STREAK_REWARD;
+    const reward = getStreakReward(streakType, result.new_streak);
 
-    await awardCoins(
-      userId,
-      reward,
-      "streak_reward",
-      `${
-        streakType === "reader" ? "Reader" : "Writer"
-      } streak — day ${result.new_streak}`
-    );
+    if (reward > 0) {
+      await awardCoins(
+        userId,
+        reward,
+        "streak_reward",
+        `${
+          streakType === "reader" ? "Reader" : "Writer"
+        } streak milestone — ${result.new_streak} days`
+      );
+    }
 
     await checkAndAwardBadges(userId);
   }
