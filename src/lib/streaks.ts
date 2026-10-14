@@ -30,12 +30,12 @@ export const STREAK_REPEAT_EVERY = 50;
 
 export const STREAK_REWARDS: Record<StreakType, RewardTable> = {
   reader: {
-    milestones: { 10: 50, 25: 150, 50: 400, 100: 1000 },
-    repeatReward: 500,
+    milestones: { 10: 10, 25: 20, 50: 40, 100: 100 },
+    repeatReward: 50,
   },
   writer: {
-    milestones: { 10: 150, 25: 450, 50: 1200, 100: 3000 },
-    repeatReward: 1500,
+    milestones: { 10: 20, 25: 40, 50: 80, 100: 200 },
+    repeatReward: 100,
   },
 };
 
