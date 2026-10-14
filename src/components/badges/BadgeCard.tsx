@@ -12,6 +12,7 @@ import {
   Flame,
   PenLine,
   Award,
+  Bug,
   type LucideIcon,
 } from "lucide-react";
 
@@ -28,6 +29,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Flag,
   Flame,
   PenLine,
+  Bug,
 };
 
 type BadgeCardProps = {

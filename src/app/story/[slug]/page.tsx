@@ -614,7 +614,7 @@ relatedStories?.sort(
         borderColor: "var(--card-border)",
       }}
     >
-      ⭐ {storyStats?.average_rating ?? "0.0"} · {storyStats?.reviews ?? 0} reviews
+      ⭐ {Number(storyStats?.average_rating ?? 0).toFixed(1)} · {storyStats?.reviews ?? 0} reviews
     </span>
 
   </div>
