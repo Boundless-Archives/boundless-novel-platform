@@ -5,6 +5,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 import { awardCoins } from "@/app/wallet/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { getStreakReward } from "@/lib/streaks";
+import { awardBadgeBySlug } from "@/lib/badgeAward";
 
 /*
  * Core streak engine. Call this any time a user does the
@@ -58,8 +59,12 @@ export async function registerStreakDay(
 /*
  * Called from the chapter reading page once a reader has
  * spent enough active time and reached the end of a chapter.
+ *
+ * `localHour` is the reader's own clock hour (0-23), sent by the
+ * browser, so "Night Owl" (finished a chapter between midnight and
+ * 4 AM) follows the reader's time zone, not the server's.
  */
-export async function recordChapterCompletion() {
+export async function recordChapterCompletion(localHour?: number) {
   const supabase = await createClient();
 
   const {
@@ -67,6 +72,19 @@ export async function recordChapterCompletion() {
   } = await supabase.auth.getUser();
 
   if (!user) return null;
+
+  if (
+    typeof localHour === "number" &&
+    Number.isInteger(localHour) &&
+    localHour >= 0 &&
+    localHour < 4
+  ) {
+    try {
+      await awardBadgeBySlug(user.id, "night_owl");
+    } catch (e) {
+      console.error("Night Owl badge failed:", e);
+    }
+  }
 
   return registerStreakDay(user.id, "reader");
 }

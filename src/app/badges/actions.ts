@@ -207,6 +207,16 @@ export async function checkAndAwardBadges(userId: string) {
     }
   }
 
+  // critic — wrote at least 10 reviews
+  if (badgesBySlug.has("critic")) {
+    const { count } = await supabase
+      .from("story_reviews")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if ((count ?? 0) >= 10) earnedSlugs.push("critic");
+  }
+
   const uniqueEarnedSlugs = Array.from(new Set(earnedSlugs));
 
   if (uniqueEarnedSlugs.length === 0) {

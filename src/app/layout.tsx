@@ -5,6 +5,7 @@ import "./globals.css";
 import ThemeProvider from "@/components/providers/ThemeProvider";
 import BreakthroughFanfare from "@/components/cultivation/BreakthroughFanfare";
 import BugReportButton from "@/components/feedback/BugReportButton";
+import SecretCode from "@/components/easter/SecretCode";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -131,6 +132,7 @@ export default function RootLayout({
           </div>
           
           <BugReportButton />
+          <SecretCode />
         </ThemeProvider>
       </body>
     </html>

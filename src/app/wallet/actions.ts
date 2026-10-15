@@ -140,43 +140,9 @@ export async function getAdEarningStatus() {
   };
 }
 
-/*
- * Claim the reward for a completed ad view. This is the
- * function a real ad SDK's completion callback will call
- * once a provider is wired up — right now it's triggered by
- * a placeholder "Watch Ad" button that simulates completion,
- * since no ad provider is integrated yet.
- */
-export async function claimAdReward() {
-  const { user } = await getAuthenticatedUser();
-
-  const status = await getAdEarningStatus();
-
-  if (!status.eligible) {
-    throw new Error(
-      "You've hit today's ad limit. Check back later."
-    );
-  }
-
-  const adminClient = createAdminClient();
-
-  const { error: viewError } = await adminClient
-    .from("ad_views")
-    .insert({
-      user_id: user.id,
-      coins_awarded: AD_REWARD_AMOUNT,
-    });
-
-  if (viewError) {
-    throw new Error(viewError.message);
-  }
-
-  const newBalance = await awardCoins(
-    user.id,
-    AD_REWARD_AMOUNT,
-    "ad_reward",
-    "Watched a rewarded ad"
-  );
-
-  return { newBalance, awarded: AD_REWARD_AMOUNT };
+export async function claimAdReward(): Promise<{
+  newBalance: number;
+  awarded: number;
+}> {
+  throw new Error("Ad rewards are not available yet.");
 }

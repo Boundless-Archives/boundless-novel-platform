@@ -75,7 +75,7 @@ export default function ReadingTracker() {
         hasRegisteredRef.current = true;
 
         try {
-          await recordChapterCompletion();
+          await recordChapterCompletion(new Date().getHours());
         } catch {
           // Silent — reading streaks are a bonus, not
           // something that should ever interrupt reading.

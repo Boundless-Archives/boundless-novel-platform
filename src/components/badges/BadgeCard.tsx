@@ -13,6 +13,8 @@ import {
   PenLine,
   Award,
   Bug,
+  Moon,
+  Ghost,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,6 +32,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Flame,
   PenLine,
   Bug,
+  Moon,
+  Ghost,
 };
 
 type BadgeCardProps = {

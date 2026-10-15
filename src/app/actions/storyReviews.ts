@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { checkAndAwardBadges } from "@/app/badges/actions";
 
 export async function submitStoryReview(
   storyId: string,
@@ -73,6 +74,14 @@ export async function submitStoryReview(
       if (notifyError) {
         console.error("Notification failed:", notifyError.message);
       }
+
+    // A new review may complete the "Critic" badge.
+    try {
+      await checkAndAwardBadges(user.id);
+    } catch (e) {
+      console.error("Badge check failed:", e);
+    }
+
     }
   }
   
