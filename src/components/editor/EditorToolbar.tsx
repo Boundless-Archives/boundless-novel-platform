@@ -17,9 +17,9 @@ import {
 import {
   $createParagraphNode,
 } from "lexical";
-import {
-  $setBlocksType,
-} from "@lexical/selection";
+import { 
+  $setBlockTypeForSelection 
+} from "./blockFormat";
 import {
   INSERT_UNORDERED_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
@@ -137,48 +137,37 @@ setFormats({
   });
 }, [editor]);
 
-function applyQuote() {
-  editor.update(() => {
-    const selection = $getSelection();
+   function applyQuote() {
+     editor.update(() => {
+       $setBlockTypeForSelection(() =>
+         formats.quote ? $createParagraphNode() : $createQuoteNode()
+       );
+     });
+   }
 
-    if (!$isRangeSelection(selection)) return;
+   function applyCodeBlock() {
+     editor.update(() => {
+       $setBlockTypeForSelection(() =>
+         formats.code ? $createParagraphNode() : $createCodeNode()
+       );
+     });
+   }
 
-    $setBlocksType(selection, () => $createQuoteNode());
-  });
-}
+   function applyHeading(level: 1 | 2 | 3 | "paragraph") {
+     editor.update(() => {
+       if (level === "paragraph") {
+         $setBlockTypeForSelection(() => $createParagraphNode());
+         setBlockType("Normal");
+         return;
+       }
 
-function applyCodeBlock() {
-  editor.update(() => {
-    const selection = $getSelection();
+       $setBlockTypeForSelection(() =>
+         $createHeadingNode(`h${level}`)
+       );
 
-    if (!$isRangeSelection(selection)) return;
-
-    $setBlocksType(
-      selection,
-      () => $createCodeNode()
-    );
-  });
-}
-
-function applyHeading(level: 1 | 2 | 3 | "paragraph") {
-  editor.update(() => {
-    const selection = $getSelection();
-
-    if (!$isRangeSelection(selection)) return;
-
-    if (level === "paragraph") {
-      $setBlocksType(selection, () => $createParagraphNode());
-      setBlockType("Normal");
-      return;
-    }
-
-    $setBlocksType(selection, () =>
-      $createHeadingNode(`h${level}`)
-    );
-
-    setBlockType(`Heading ${level}`);
-  });
-}
+       setBlockType(`Heading ${level}`);
+     });
+   }
 
   return (
     <div
@@ -197,6 +186,10 @@ function applyHeading(level: 1 | 2 | 3 | "paragraph") {
           "var(--card-border)",
         background:
           "var(--card)",
+      }}
+      onMouseDown={(e) => {
+        if ((e.target as HTMLElement).closest("select")) return;
+        e.preventDefault();
       }}
     >
       <button

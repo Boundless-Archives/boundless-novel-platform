@@ -23,39 +23,6 @@ async function getAuthenticatedUser() {
 }
 
 /*
- * Reusable, provider-agnostic function to credit or debit a
- * user's wallet. Positive amount = credit, negative = debit.
- * Always routes through the atomic award_wallet_coins() DB
- * function via the service-role client, so it's tamper-proof
- * and race-condition-safe no matter what calls it — streaks,
- * gifting, cultivation spend, etc. can all call this directly.
- */
-export async function awardCoins(
-  userId: string,
-  amount: number,
-  type: string,
-  description?: string
-) {
-  const adminClient = createAdminClient();
-
-  const { data, error } = await adminClient.rpc(
-    "award_wallet_coins",
-    {
-      p_user_id: userId,
-      p_amount: amount,
-      p_type: type,
-      p_description: description ?? null,
-    }
-  );
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data as number;
-}
-
-/*
  * Get the current user's wallet + recent transaction history.
  * Creates the wallet on first access.
  */
@@ -91,12 +58,18 @@ export async function getWalletSummary() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-  return {
-    balance: wallet?.balance ?? 0,
-    lifetimeEarned: wallet?.lifetime_earned ?? 0,
-    lifetimePurchased: wallet?.lifetime_purchased ?? 0,
-    transactions: transactions ?? [],
-  };
+    const balance: number = wallet?.balance ?? 0;
+   const bonusBalance: number = wallet?.bonus_balance ?? 0;
+
+   return {
+     balance,
+     // Bonus Embers (streaks etc.) can be gifted and spent, but not cashed out.
+     bonusBalance,
+     cashableBalance: Math.max(0, balance - bonusBalance),
+     lifetimeEarned: wallet?.lifetime_earned ?? 0,
+     lifetimePurchased: wallet?.lifetime_purchased ?? 0,
+     transactions: transactions ?? [],
+   };
 }
 
 /*

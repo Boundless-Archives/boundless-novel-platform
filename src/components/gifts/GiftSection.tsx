@@ -12,6 +12,9 @@ import {
   Star,
   Gift,
   Flame,
+  Gem,
+  Crown,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import { sendGift } from "@/app/gifts/actions";
@@ -24,6 +27,10 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Egg,
   Sword,
   Star,
+  Flame,
+  Gem,
+  Crown,
+  Globe,
 };
 
 type CatalogGift = {

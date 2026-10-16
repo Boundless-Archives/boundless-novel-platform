@@ -9,7 +9,7 @@ import {
 import { createClient } from "@/utils/supabase/client";
 import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
-import { registerStreakDay } from "@/app/streaks/actions";
+import { registerMyWriterStreak } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { awardWritingXP } from "@/app/cultivation/actions";
 
@@ -58,6 +58,15 @@ export default function NewChapterPage() {
     async function saveChapter(
     nextStatus: "Draft" | "Published"
   ) {
+    if (
+     nextStatus === "Draft" &&
+     scheduledAt &&
+     new Date(scheduledAt).getTime() <= Date.now()
+    ) {
+     setMessage("You're unworthy of travelling to the past, pick a time in the future instead.");
+     return;
+    }
+
     const isScheduling =
       nextStatus === "Draft" && scheduledAt;
 
@@ -93,7 +102,9 @@ export default function NewChapterPage() {
       } = await supabase.auth.getUser();
 
       if (user) {
-        await registerStreakDay(user.id, "writer");
+        await registerMyWriterStreak(
+          Intl.DateTimeFormat().resolvedOptions().timeZone
+        );
         await checkAndAwardBadges(user.id);
         await awardWritingXP(user.id, content);
       }
@@ -168,7 +179,7 @@ export default function NewChapterPage() {
       </LexicalEditor>
     </div>
 
-        <div>
+      <div>
       <label className="block mb-2 font-medium">
         Schedule for later (optional)
       </label>
@@ -181,9 +192,11 @@ export default function NewChapterPage() {
       />
 
       <p className="mt-2 text-xs opacity-60">
-        Leave blank to save as a draft with no scheduled
-        date, or pick a future time to auto-publish then.
-        Checked every few minutes.
+        Pick a date and time, then press Schedule. 
+        The chapter stays a draft until then and auto
+        publishes within about 5 minutes of that time 
+        (in your local time). Leave this blank to just 
+        save a plain draft.
       </p>
     </div>
 
@@ -193,7 +206,7 @@ export default function NewChapterPage() {
         type="button"
         onClick={() => saveChapter("Draft")}
       >
-        Save Draft
+        {scheduledAt ? "Schedule" : "Save Draft"}
       </Button>
 
       <Button

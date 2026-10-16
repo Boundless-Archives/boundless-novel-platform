@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import PublishChapterButton from "@/components/story/PublishChapterButton";
+import ChapterAuthorActions, {
+  ScheduledPill,
+} from "@/components/story/ChapterAuthorActions";
 
 type Props = {
   params: Promise<{
@@ -174,6 +177,7 @@ export default async function ChaptersPage({
               flex
               items-center
               justify-between
+              flex-wrap gap-4
             "
             style={{
               backgroundColor: "var(--card)",
@@ -198,6 +202,10 @@ export default async function ChaptersPage({
                 >
                   {chapter.status}
                 </span>
+
+                {chapter.status === "Draft" && chapter.scheduled_at && (
+                  <ScheduledPill scheduledAt={chapter.scheduled_at} />
+                )}
               </div>
 
               <h2 className="text-xl font-semibold mt-2">
@@ -205,7 +213,7 @@ export default async function ChaptersPage({
               </h2>
             </div>
 
-            <div className="flex gap-3 items-center">
+            <div className="flex flex-wrap gap-3 items-center">
               {chapter.status === "Draft" && (
                 <PublishChapterButton
                   chapterId={chapter.id}
@@ -243,6 +251,14 @@ export default async function ChaptersPage({
               >
                 Edit
               </Link>
+              
+              {story.author_id === user.id && (
+                <ChapterAuthorActions
+                chapterId={chapter.id}
+                  title={chapter.title}
+                  status={chapter.status}
+                />
+              )}
             </div>
           </div>
         ))}

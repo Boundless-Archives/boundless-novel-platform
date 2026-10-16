@@ -65,6 +65,14 @@ export default async function WalletPage() {
         <p className="mt-3 text-sm opacity-50">
           {wallet.lifetimeEarned.toLocaleString()} earned all-time
         </p>
+
+        {wallet.bonusBalance > 0 && (
+          <p className="mt-4 text-xs opacity-60">
+            {formatCoins(wallet.bonusBalance)} of these are bonus{" "}
+            {CURRENCY_NAME} (from streaks and rewards). You can gift
+            and spend them, but they can&apos;t be withdrawn.
+          </p>
+        )}
       </div>
 
       {/* <div className="mt-6">

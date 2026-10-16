@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { registerStreakDay } from "@/app/streaks/actions";
+import { registerStreakDay } from "@/lib/streakEngine";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { awardWritingXP } from "@/app/cultivation/actions";
 
