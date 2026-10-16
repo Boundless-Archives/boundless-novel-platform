@@ -53,6 +53,12 @@ function isIOS() {
   );
 }
 
+declare global {
+  interface Window {
+    __bip?: Event;
+  }
+}
+
 export default function InstallPrompt() {
   const pathname = usePathname();
   const [mode, setMode] = useState<"native" | "ios" | null>(null);
@@ -60,7 +66,16 @@ export default function InstallPrompt() {
   const deferred = useRef<InstallEvent | null>(null);
 
   useEffect(() => {
-    if (isStandalone()) return;
+    // add ?installdebug=1 to any URL to skip the waiting rules and log what's happening
+    const debug = new URLSearchParams(window.location.search).has("installdebug");
+    const log = (...a: unknown[]) => {
+      if (debug) console.log("[install-prompt]", ...a);
+    };
+
+    if (isStandalone()) {
+      log("stopped: already running as an installed app");
+      return;
+    }
 
     // count one visit per browser session
     if (!sessionStorage.getItem(SESSION_KEY)) {
@@ -71,26 +86,36 @@ export default function InstallPrompt() {
 
     const eligible = () => {
       const s = read();
+      log("stored state:", s);
       return (
-        !s.installed &&
-        s.dismissals < MAX_DISMISSALS &&
-        Date.now() >= s.snoozeUntil &&
-        s.visits >= MIN_VISITS
+        debug ||
+        (!s.installed &&
+          s.dismissals < MAX_DISMISSALS &&
+          Date.now() >= s.snoozeUntil &&
+          s.visits >= MIN_VISITS)
       );
     };
 
     let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = (kind: "native" | "ios") => {
-      if (!eligible()) return;
+      if (!eligible()) {
+        log("not eligible yet (needs 2+ sessions, not dismissed recently)");
+        return;
+      }
       clearTimeout(timer);
-      timer = setTimeout(() => {
-        setMode(kind);
-        setVisible(true);
-      }, DELAY_MS);
+      log("eligible: showing in", debug ? 500 : DELAY_MS, "ms");
+      timer = setTimeout(
+        () => {
+          setMode(kind);
+          setVisible(true);
+        },
+        debug ? 500 : DELAY_MS
+      );
     };
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
+      log("beforeinstallprompt fired");
       deferred.current = e as InstallEvent;
       schedule("native");
     };
@@ -104,7 +129,19 @@ export default function InstallPrompt() {
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
     window.addEventListener("appinstalled", onInstalled);
 
-    if (isIOS()) schedule("ios");
+    // the browser may have fired the event before this component loaded
+    if (window.__bip) {
+      log("using install event captured early");
+      deferred.current = window.__bip as InstallEvent;
+      schedule("native");
+    }
+
+    if (isIOS()) {
+      log("iOS detected");
+      schedule("ios");
+    } else if (!window.__bip) {
+      log("waiting for the browser's beforeinstallprompt event...");
+    }
 
     return () => {
       clearTimeout(timer);

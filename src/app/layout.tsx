@@ -8,6 +8,7 @@ import BugReportButton from "@/components/feedback/BugReportButton";
 import SecretCode from "@/components/easter/SecretCode";
 import InstallPrompt from "@/components/InstallPrompt";
 import AppSplash from "@/components/AppSplash";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -120,6 +121,10 @@ export default function RootLayout({
           text-foreground
         "
       >
+        <Script id="bip-capture" strategy="beforeInteractive">
+          {`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});`}
+        </Script>
+        <AppSplash />
         <AppSplash />
         <div className="cosmic-backdrop" aria-hidden="true" />
 
