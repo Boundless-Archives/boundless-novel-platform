@@ -204,3 +204,82 @@ html:not(.dark) .atmosphere {
     opacity: 0;
   }
 }
+
+/* ===========================
+   App launch splash (installed PWA only)
+=========================== */
+
+.app-splash {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a; /* matches manifest background_color */
+  transition: opacity 0.5s ease;
+}
+
+/* only when launched as an installed app; delete this wrapper to show for everyone */
+@media (display-mode: standalone) {
+  .app-splash {
+    display: flex;
+  }
+}
+
+.app-splash--hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.app-splash__glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201, 164, 76, 0.3), transparent 70%);
+  animation: splash-pulse 1.6s ease-in-out infinite;
+}
+
+.app-splash__logo {
+  position: relative;
+  animation: splash-in 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.app-splash__embers {
+  position: absolute;
+  inset: 0;
+}
+
+.app-splash__embers span {
+  position: absolute;
+  bottom: 38%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f5c542;
+  opacity: 0;
+  animation: splash-ember 1.8s ease-out infinite;
+}
+
+@keyframes splash-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+@keyframes splash-ember {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-140px); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-splash * {
+    animation: none !important;
+  }
+}

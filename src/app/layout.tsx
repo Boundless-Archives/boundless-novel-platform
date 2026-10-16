@@ -6,6 +6,8 @@ import ThemeProvider from "@/components/providers/ThemeProvider";
 import BreakthroughFanfare from "@/components/cultivation/BreakthroughFanfare";
 import BugReportButton from "@/components/feedback/BugReportButton";
 import SecretCode from "@/components/easter/SecretCode";
+import InstallPrompt from "@/components/InstallPrompt";
+import AppSplash from "@/components/AppSplash";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -118,6 +120,7 @@ export default function RootLayout({
           text-foreground
         "
       >
+        <AppSplash />
         <div className="cosmic-backdrop" aria-hidden="true" />
 
         <ThemeProvider>
@@ -133,6 +136,7 @@ export default function RootLayout({
           
           <BugReportButton />
           <SecretCode />
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
