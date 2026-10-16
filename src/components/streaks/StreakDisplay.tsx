@@ -1,13 +1,16 @@
-import { Flame, BookOpen, PenLine } from "lucide-react";
+import Link from "next/link";
+import { Flame, BookOpen, PenLine, Snowflake } from "lucide-react";
 import {
   getNextStreakMilestone,
   type StreakType,
 } from "@/lib/streaks";
+import { SPARK_NAME } from "@/lib/currency";
 
 type Streak = {
   current_streak: number;
   longest_streak: number;
   last_counted_date: string | null;
+  freezes?: number;
 } | null;
 
 type Props = {
@@ -28,6 +31,7 @@ function StreakCard({
 }) {
   const current = streak?.current_streak ?? 0;
   const longest = streak?.longest_streak ?? 0;
+  const freezes = streak?.freezes ?? 0;
   const next = getNextStreakMilestone(kind, current);
 
   return (
@@ -67,7 +71,25 @@ function StreakCard({
       </p>
 
       <p className="mt-1 text-xs opacity-50">
-        Next reward: {next.reward} embers at day {next.day}
+        Next reward: {next.reward.toLocaleString()} {SPARK_NAME} at
+        day {next.day}
+      </p>
+
+      <p className="mt-2 flex items-center gap-1.5 text-xs opacity-70">
+        <Snowflake size={13} />
+        {freezes > 0 ? (
+          <span>
+            {freezes} freeze{freezes === 1 ? "" : "s"} ready — used
+            automatically if you miss a day
+          </span>
+        ) : (
+          <Link
+            href="/shop"
+            className="underline underline-offset-4"
+          >
+            Protect it with a Streak Freeze
+          </Link>
+        )}
       </p>
     </div>
   );

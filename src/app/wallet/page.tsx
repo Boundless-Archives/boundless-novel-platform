@@ -5,8 +5,13 @@ import {
   getAdEarningStatus,
 } from "@/app/wallet/actions";
 // import AdEarnButton from "@/components/wallet/AdEarnButton";
-import { Flame } from "lucide-react";
-import { CURRENCY_NAME, formatCoins } from "@/lib/currency";
+import Link from "next/link";
+import { Flame, Zap } from "lucide-react";
+import {
+  CURRENCY_NAME,
+  SPARK_NAME,
+  formatCoins,
+} from "@/lib/currency";
 import OfferwallSection from "@/components/wallet/OfferwallSection";
 
 const TRANSACTION_LABELS: Record<string, string> = {
@@ -18,7 +23,24 @@ const TRANSACTION_LABELS: Record<string, string> = {
   admin_adjust: "Adjustment",
   cultivation_spend: "Cultivation",
   offerwall_reward: "Offer completed",
+  spark_exchange: "Exchanged for Sparks",
+  shop_purchase: "Shop purchase",
   other: "Other",
+};
+
+const SPARK_TRANSACTION_LABELS: Record<string, string> = {
+  streak_reward: "Streak reward",
+  shop_purchase: "Shop purchase",
+  ember_exchange: "Exchanged Embers",
+  conversion: "Converted from bonus Embers",
+  admin_adjust: "Adjustment",
+};
+
+type ActivityRow = {
+  id: string;
+  type: string;
+  description: string | null;
+  amount: number;
 };
 
 export default async function WalletPage() {
@@ -65,14 +87,47 @@ export default async function WalletPage() {
         <p className="mt-3 text-sm opacity-50">
           {wallet.lifetimeEarned.toLocaleString()} earned all-time
         </p>
+      </div>
 
-        {wallet.bonusBalance > 0 && (
-          <p className="mt-4 text-xs opacity-60">
-            {formatCoins(wallet.bonusBalance)} of these are bonus{" "}
-            {CURRENCY_NAME} (from streaks and rewards). You can gift
-            and spend them, but they can&apos;t be withdrawn.
-          </p>
-        )}
+      <div
+        className="mt-4 rounded-2xl border p-6"
+        style={{
+          borderColor: "var(--card-border)",
+          backgroundColor: "var(--card)",
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm uppercase tracking-wide opacity-60">
+              {SPARK_NAME}
+            </p>
+
+            <p
+              className="mt-1 flex items-center gap-2 text-3xl font-bold font-serif"
+              style={{ color: "var(--accent)" }}
+            >
+              <Zap size={28} />
+              {formatCoins(wallet.sparkBalance)}
+            </p>
+          </div>
+
+          <Link
+            href="/shop"
+            className="rounded-lg px-4 py-2 text-sm font-semibold"
+            style={{
+              backgroundColor: "var(--button)",
+              color: "var(--button-text)",
+            }}
+          >
+            Open the Spark Shop
+          </Link>
+        </div>
+
+        <p className="mt-3 text-xs opacity-60">
+          {SPARK_NAME} are free: you earn them from streak
+          milestones. They stay in the app. They can&apos;t be
+          gifted or withdrawn, but they can be used in the shop.
+        </p>
       </div>
 
       {/* <div className="mt-6">
@@ -93,7 +148,7 @@ export default async function WalletPage() {
           </p>
         ) : (
           <div className="space-y-2">
-            {wallet.transactions.map((tx: any) => (
+            {wallet.transactions.map((tx: ActivityRow) => (
               <div
                 key={tx.id}
                 className="flex items-center justify-between rounded-lg border p-3 text-sm"
@@ -128,6 +183,49 @@ export default async function WalletPage() {
           </div>
         )}
       </section>
+
+        {wallet.sparkTransactions.length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-xl font-semibold mb-4">
+            Recent {SPARK_NAME} Activity
+          </h2>
+
+          <div className="space-y-2">
+            {wallet.sparkTransactions.map((tx: ActivityRow) => (
+              <div
+                key={tx.id}
+                className="flex items-center justify-between rounded-lg border p-3 text-sm"
+                style={{ borderColor: "var(--card-border)" }}
+              >
+                <div>
+                  <p className="font-medium">
+                    {SPARK_TRANSACTION_LABELS[tx.type] ?? tx.type}
+                  </p>
+
+                  {tx.description && (
+                    <p className="opacity-50 text-xs mt-0.5">
+                      {tx.description}
+                    </p>
+                  )}
+                </div>
+
+                <span
+                  className="font-semibold"
+                  style={{
+                    color:
+                      tx.amount >= 0
+                        ? "var(--accent)"
+                        : "inherit",
+                  }}
+                >
+                  {tx.amount >= 0 ? "+" : ""}
+                  {tx.amount.toLocaleString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

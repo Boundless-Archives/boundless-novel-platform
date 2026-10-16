@@ -58,18 +58,21 @@ export async function getWalletSummary() {
     .order("created_at", { ascending: false })
     .limit(20);
 
-    const balance: number = wallet?.balance ?? 0;
-   const bonusBalance: number = wallet?.bonus_balance ?? 0;
+  const { data: sparkTransactions } = await supabase
+    .from("spark_transactions")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
 
-   return {
-     balance,
-     // Bonus Embers (streaks etc.) can be gifted and spent, but not cashed out.
-     bonusBalance,
-     cashableBalance: Math.max(0, balance - bonusBalance),
-     lifetimeEarned: wallet?.lifetime_earned ?? 0,
-     lifetimePurchased: wallet?.lifetime_purchased ?? 0,
-     transactions: transactions ?? [],
-   };
+  return {
+    balance: (wallet?.balance as number) ?? 0,
+    sparkBalance: (wallet?.spark_balance as number) ?? 0,
+    lifetimeEarned: wallet?.lifetime_earned ?? 0,
+    lifetimePurchased: wallet?.lifetime_purchased ?? 0,
+    transactions: transactions ?? [],
+    sparkTransactions: sparkTransactions ?? [],
+  };
 }
 
 /*

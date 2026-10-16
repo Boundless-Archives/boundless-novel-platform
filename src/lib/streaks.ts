@@ -6,23 +6,23 @@ export const MIN_READ_SECONDS = 90;
 // (0-1) before a read can count.
 export const SCROLL_COMPLETE_THRESHOLD = 0.9;
 
-/*
- * STREAK REWARDS
- *
- * Embers are paid ONLY when a streak reaches a milestone day:
- * the days listed in `milestones`, then every `repeatEvery` days
- * after the last one (150, 200, 250, ... with the numbers below).
- * Ordinary streak days pay nothing.
- *
- * These amounts are placeholders. Change any number here and it
- * takes effect everywhere.
- */
+//  STREAK REWARDS
+//  
+//  Sparks (the free, in-app-only currency) are paid ONLY when a streak
+//  reaches a milestone day: the days listed in `milestones`, then every
+//  `repeatEvery` days after the last one (150, 200, 250, ... with the
+//  numbers below). Ordinary streak days pay nothing.
+//  
+//  10 Sparks = 1 Ember of buying power, so a reader's 100-day streak
+//  is worth 1,700 Sparks (about 170 Embers) in total; a writer's is
+//  worth 3,400. Change any number here and it takes effect everywhere.
+//  
 export type StreakType = "reader" | "writer";
 
 type RewardTable = {
-  // streak day -> embers
+  // streak day -> sparks
   milestones: Record<number, number>;
-  // embers for every `repeatEvery`-th day after the last milestone
+  // sparks for every `repeatEvery`-th day after the last milestone
   repeatReward: number;
 };
 
@@ -30,12 +30,12 @@ export const STREAK_REPEAT_EVERY = 50;
 
 export const STREAK_REWARDS: Record<StreakType, RewardTable> = {
   reader: {
-    milestones: { 10: 10, 25: 20, 50: 40, 100: 100 },
-    repeatReward: 50,
+    milestones: { 10: 100, 25: 200, 50: 400, 100: 1000 },
+    repeatReward: 500,
   },
   writer: {
-    milestones: { 10: 20, 25: 40, 50: 80, 100: 200 },
-    repeatReward: 100,
+    milestones: { 10: 200, 25: 400, 50: 800, 100: 2000 },
+    repeatReward: 1000,
   },
 };
 
@@ -45,7 +45,7 @@ function lastMilestoneDay(type: StreakType) {
   );
 }
 
-/* Embers owed for reaching `day` of a streak (0 if not a milestone day). */
+/* Sparks owed for reaching `day` of a streak (0 if not a milestone day). */
 export function getStreakReward(
   type: StreakType,
   day: number

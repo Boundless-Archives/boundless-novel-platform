@@ -73,13 +73,22 @@ export async function registerMyWriterStreak(timeZone?: string) {
   return registerStreakDay(user.id, "writer", timeZone);
 }
 
+type StreakRow = {
+  current_streak: number;
+  longest_streak: number;
+  last_counted_date: string | null;
+  // Streak Freezes the user holds for this streak type.
+  freezes: number;
+};
+
 /*
  * Get the current user's reader + writer streak state,
  * for display on their profile/dashboard.
  *
- * A streak that wasn't continued yesterday (in the user's own time
- * zone) is shown as 0 straight away, even before the hourly cleanup
- * job has reset it in the database.
+ * A streak that has been missed for more days than the user holds
+ * Streak Freezes for (in the user's own time zone) is shown as 0
+ * straight away, even before the hourly cleanup job has reset it in
+ * the database. A streak that a freeze will cover stays alive.
  */
 export async function getMyStreaks() {
   const supabase = await createClient();
@@ -92,14 +101,23 @@ export async function getMyStreaks() {
     return { reader: null, writer: null };
   }
 
-  const [{ data }, { data: profile }] = await Promise.all([
-    supabase.from("streaks").select("*").eq("user_id", user.id),
-    supabase
-      .from("profiles")
-      .select("timezone")
-      .eq("id", user.id)
-      .maybeSingle(),
-  ]);
+  const [{ data }, { data: profile }, { data: items }] =
+    await Promise.all([
+      supabase.from("streaks").select("*").eq("user_id", user.id),
+      supabase
+        .from("profiles")
+        .select("timezone")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("user_items")
+        .select("item_slug, quantity")
+        .eq("user_id", user.id)
+        .in("item_slug", [
+          "streak-freeze-reader",
+          "streak-freeze-writer",
+        ]),
+    ]);
 
   let today: string;
 
@@ -111,31 +129,61 @@ export async function getMyStreaks() {
     today = new Date().toISOString().slice(0, 10);
   }
 
-  const yesterday = new Date(`${today}T00:00:00Z`);
-  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  const todayMs = Date.parse(`${today}T00:00:00Z`);
 
-  function effective<
-    T extends {
-      current_streak: number;
-      last_counted_date: string | null;
-    },
-  >(row: T | undefined) {
-    if (!row) return null;
+  function freezesFor(type: "reader" | "writer") {
+    return (
+      items?.find((i) => i.item_slug === `streak-freeze-${type}`)
+        ?.quantity ?? 0
+    );
+  }
 
-    const alive =
-      row.last_counted_date !== null &&
-      row.last_counted_date >= yesterdayStr;
+  function effective(
+    row:
+      | {
+          current_streak: number;
+          longest_streak: number;
+          last_counted_date: string | null;
+        }
+      | undefined,
+    freezes: number
+  ): StreakRow | null {
+    if (!row) {
+      return freezes > 0
+        ? {
+            current_streak: 0,
+            longest_streak: 0,
+            last_counted_date: null,
+            freezes,
+          }
+        : null;
+    }
 
-    return alive ? row : { ...row, current_streak: 0 };
+    let alive = false;
+
+    if (row.last_counted_date) {
+      const gapDays = Math.round(
+        (todayMs - Date.parse(`${row.last_counted_date}T00:00:00Z`)) /
+          86_400_000
+      );
+
+      // Days missed = gapDays - 1; each one needs a freeze.
+      alive = gapDays - 1 <= freezes;
+    }
+
+    return alive
+      ? { ...row, freezes }
+      : { ...row, current_streak: 0, freezes };
   }
 
   const reader = effective(
-    data?.find((s) => s.streak_type === "reader")
+    data?.find((s) => s.streak_type === "reader"),
+    freezesFor("reader")
   );
 
   const writer = effective(
-    data?.find((s) => s.streak_type === "writer")
+    data?.find((s) => s.streak_type === "writer"),
+    freezesFor("writer")
   );
 
   return { reader, writer };

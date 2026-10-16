@@ -23,6 +23,7 @@ import {
   FileEdit,
   Flame,
   Gem,
+  ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
 
@@ -129,6 +130,13 @@ export default function NavbarClient({
         href: "/wallet",
         label: "Embers",
         Icon: Gem,
+        show: user,
+      },
+
+      {
+        href: "/shop",
+        label: "Shop",
+        Icon: ShoppingBag,
         show: user,
       },
     ],
