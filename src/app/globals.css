@@ -283,3 +283,42 @@ html:not(.dark) .atmosphere {
     animation: none !important;
   }
 }
+
+/* ===========================
+   Comment jump highlight (notification links)
+=========================== */
+
+.comment-card:target,
+.comment-card.comment-flash {
+  animation: comment-flash 2.5s ease-out;
+}
+
+@keyframes comment-flash {
+  0%,
+  30% {
+    box-shadow:
+      0 0 0 2px var(--accent, #c9a44c),
+      0 0 24px color-mix(in srgb, var(--accent, #c9a44c) 35%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* ===========================
+   Paragraph comments
+=========================== */
+
+#chapter-reading-content [data-pi] {
+  scroll-margin-top: 6rem;
+}
+
+.pc-active {
+  background: color-mix(in srgb, var(--accent, #c9a44c) 10%, transparent);
+  box-shadow: 0 0 0 6px
+    color-mix(in srgb, var(--accent, #c9a44c) 10%, transparent);
+  border-radius: 0.5rem;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}

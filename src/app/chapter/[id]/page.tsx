@@ -7,6 +7,12 @@ import CommentForm from "@/components/chapter/CommentForm";
 import CommentList from "@/components/chapter/CommentList";
 import ReadingProgress from "@/components/chapter/ReadingProgress";
 import ReadingTracker from "@/components/chapter/ReadingTracker";
+import CommentJump from "@/components/chapter/CommentJump";
+import ParagraphComments from "@/components/chapter/ParagraphComments";
+import {
+  resolveParagraphIndex,
+  tagParagraphs,
+} from "@/lib/paragraphs";
 
 type Props = {
   params: Promise<{
@@ -89,6 +95,14 @@ export default async function ChapterPage({
     notFound();
   }
 
+  // A chapter that isn't published is for its author's eyes only.
+  if (
+    chapter.status !== "Published" &&
+    story.author_id !== user?.id
+  ) {
+    notFound();
+  }
+
   if (user) {
     await supabase
       .from("reading_history")
@@ -110,6 +124,7 @@ export default async function ChapterPage({
       .from("chapters")
       .select("*")
       .eq("story_id", story.id)
+      .eq("status", "Published")
       .eq(
         "chapter_number",
         chapter.chapter_number - 1
@@ -121,6 +136,7 @@ export default async function ChapterPage({
       .from("chapters")
       .select("*")
       .eq("story_id", story.id)
+      .eq("status", "Published")
       .eq(
         "chapter_number",
         chapter.chapter_number + 1
@@ -169,6 +185,25 @@ export default async function ChapterPage({
     ])
   );
 
+  // number the paragraphs, and work out where each paragraph comment lives now
+  const tagged = tagParagraphs(chapter.content ?? "");
+
+  const enrichedComments = (comments ?? []).map((comment) => ({
+    ...comment,
+    resolved_paragraph:
+      comment.paragraph_index == null
+        ? null
+        : resolveParagraphIndex(
+            tagged.paragraphs,
+            comment.paragraph_index,
+            comment.paragraph_snippet
+          ),
+  }));
+
+  const paragraphComments = enrichedComments.filter(
+    (comment) => comment.resolved_paragraph !== null
+  );
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
 
@@ -178,6 +213,8 @@ export default async function ChapterPage({
       />
 
       <ReadingTracker />
+
+      <CommentJump />
 
       <header className="text-center">
 
@@ -234,6 +271,7 @@ export default async function ChapterPage({
       <article
         id="chapter-reading-content"
         className="
+          relative
           mx-auto
           mt-16
           max-w-3xl
@@ -242,11 +280,20 @@ export default async function ChapterPage({
           whitespace-pre-wrap
         "
       >
+        <ParagraphComments
+          chapterId={chapter.id}
+          currentUserId={user?.id}
+          comments={paragraphComments}
+          profiles={profiles}
+        />
+
         <div
           dangerouslySetInnerHTML={{
-            __html: chapter.content,
+            __html: tagged.html,
           }}
         />
+
+{/* ...the "End of Chapter" paragraph stays as it is... */}
 
         <p
           className="
@@ -350,7 +397,7 @@ export default async function ChapterPage({
 
       </section>
 
-      <section className="mt-20">
+      <section id="comments" className="mt-20 scroll-mt-24">
 
         <div className="flex items-center justify-between">
 
@@ -404,10 +451,10 @@ export default async function ChapterPage({
         )}
 
         <div className="mt-10">
-          <CommentList
+            <CommentList
             chapterId={chapter.id}
             currentUserId={user?.id}
-            comments={comments ?? []}
+            comments={enrichedComments}
             profiles={profiles}
           />
         </div>
