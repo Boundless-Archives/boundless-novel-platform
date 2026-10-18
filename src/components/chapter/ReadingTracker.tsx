@@ -65,6 +65,21 @@ export default function ReadingTracker() {
       passive: true,
     });
 
+    // The horizontal page reader reports its progress instead of scrolling
+    function handleReaderProgress(e: Event) {
+      const value = (e as CustomEvent<{ progress: number }>).detail?.progress;
+
+      if (
+        typeof value === "number" &&
+        value / 100 >= SCROLL_COMPLETE_THRESHOLD
+      ) {
+        reachedScrollEndRef.current = true;
+        maybeRegister();
+      }
+    }
+
+    window.addEventListener("reader-progress", handleReaderProgress);
+
     async function maybeRegister() {
       if (hasRegisteredRef.current) return;
 
@@ -94,6 +109,7 @@ export default function ReadingTracker() {
       window.removeEventListener("focus", updateActivity);
       window.removeEventListener("blur", updateActivity);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("reader-progress", handleReaderProgress);
       clearInterval(tick);
     };
   }, []);

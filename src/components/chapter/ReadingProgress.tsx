@@ -96,6 +96,10 @@ export default function ReadingProgress({
         )
       );
 
+      queueProgress(progress);
+    }
+
+    function queueProgress(progress: number) {
       if (
         progress === 0 ||
         progress === 25 ||
@@ -116,6 +120,17 @@ export default function ReadingProgress({
       }, 2000);
     }
 
+    // Progress reported by the horizontal page reader (no scrolling there)
+    function onReaderProgress(e: Event) {
+      const value = (e as CustomEvent<{ progress: number }>).detail?.progress;
+
+      if (typeof value === "number") {
+        queueProgress(Math.min(100, Math.max(0, Math.round(value))));
+      }
+    }
+
+    window.addEventListener("reader-progress", onReaderProgress);
+
     window.addEventListener(
       "scroll",
       calculateProgress,
@@ -131,6 +146,8 @@ export default function ReadingProgress({
         "scroll",
         calculateProgress
       );
+
+      window.removeEventListener("reader-progress", onReaderProgress);
 
       if (saveTimeout.current) {
         clearTimeout(saveTimeout.current);

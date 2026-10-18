@@ -13,6 +13,7 @@ import {
   resolveParagraphIndex,
   tagParagraphs,
 } from "@/lib/paragraphs";
+import ReaderMode from "@/components/chapter/ReaderMode";
 
 type Props = {
   params: Promise<{
@@ -218,6 +219,14 @@ export default async function ChapterPage({
 
       <CommentJump />
 
+      <ReaderMode
+        chapterNumber={chapter.chapter_number}
+        chapterTitle={chapter.title}
+        storyHref={`/story/${story.slug}`}
+        prevHref={previousChapter ? `/chapter/${previousChapter.id}` : null}
+        nextHref={nextChapter ? `/chapter/${nextChapter.id}` : null}
+      />
+
       <header className="text-center">
 
         <Link
@@ -290,6 +299,7 @@ export default async function ChapterPage({
         />
 
         <div
+          id="chapter-html"
           dangerouslySetInnerHTML={{
             __html: tagged.html,
           }}

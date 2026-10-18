@@ -339,3 +339,36 @@ body {
   white-space: pre-wrap !important;
 }
 
+/* ===========================
+   Horizontal page reader
+=========================== */
+
+.reader-columns {
+  column-fill: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  transition: transform 0.28s ease;
+  will-change: transform;
+}
+
+.reader-columns img {
+  max-width: 100%;
+  height: auto;
+  break-inside: avoid;
+}
+
+.reader-end {
+  break-before: column;
+  padding-top: 2rem;
+}
+
+.reader-content
+  :where(p, span, div, li, blockquote, h1, h2, h3, h4, h5, h6, table) {
+  max-width: 100% !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reader-columns {
+    transition: none;
+  }
+}
