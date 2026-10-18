@@ -186,7 +186,9 @@ export default async function ChapterPage({
   );
 
   // number the paragraphs, and work out where each paragraph comment lives now
-  const tagged = tagParagraphs(chapter.content ?? "");
+  const tagged = tagParagraphs(
+    (chapter.content ?? "").replace(/&nbsp;|\u00a0/g, " ")
+  );
 
   const enrichedComments = (comments ?? []).map((comment) => ({
     ...comment,

@@ -585,7 +585,7 @@ relatedStories?.sort(
         </h2>
 
         <p className="mt-3 leading-8 opacity-90">
-          {story.description}
+          {story.description?.replace(/\u00a0/g, " ")}
         </p>
       </div>
 

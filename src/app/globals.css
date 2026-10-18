@@ -322,3 +322,20 @@ html:not(.dark) .atmosphere {
     background-color 0.2s ease,
     box-shadow 0.2s ease;
 }
+
+/* Pasted text (from WPS/Word) can contain unbreakable runs or fixed widths
+   that stretch the page on phones. This keeps everything inside the screen. */
+body {
+  overflow-wrap: break-word;
+}
+
+#chapter-reading-content
+  :where(p, span, div, li, blockquote, h1, h2, h3, h4, h5, h6, table) {
+  max-width: 100% !important;
+  overflow-wrap: anywhere;
+}
+
+#chapter-reading-content [style*="nowrap"] {
+  white-space: pre-wrap !important;
+}
+
