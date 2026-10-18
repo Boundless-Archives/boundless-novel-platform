@@ -30,6 +30,7 @@ import AutoFocusPlugin from "./plugins/AutoFocusPlugin";
 import HistoryPlugin from "./plugins/HistoryPlugin";
 import MarkdownPlugin from "./plugins/MarkdownPlugin";
 import PlaceholderPlugin from "./plugins/PlaceholderPlugin";
+import WordCountPlugin from "./plugins/WordCountPlugin";
 import {
   $generateHtmlFromNodes,
   $generateNodesFromDOM,
@@ -203,6 +204,8 @@ export default function LexicalEditor({
               handleChange(editorState, editor)
             }
         />
+
+        <WordCountPlugin />
       </div>
     </LexicalComposer>
   );
