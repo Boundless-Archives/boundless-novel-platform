@@ -21,6 +21,7 @@ export default function EditProfilePage() {
   const [usernameLocked, setUsernameLocked] = useState(true);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [searchable, setSearchable] = useState(true);
   const [avatarFile, setAvatarFile] =
     useState<File | null>(null);
   const [message, setMessage] = useState("");
@@ -52,6 +53,7 @@ export default function EditProfilePage() {
       );
       setDisplayName(data.display_name ?? "");
       setBio(data.bio ?? "");
+      setSearchable(data.is_searchable ?? true);
     }
 
     loadProfile();
@@ -157,6 +159,7 @@ export default function EditProfilePage() {
         ...(avatarUrl && {
           avatar_url: avatarUrl,
         }),
+        is_searchable: searchable,
       })
       .eq("id", user.id);
 
@@ -228,6 +231,25 @@ export default function EditProfilePage() {
           className="border p-2 rounded"
           rows={5}
         />
+
+        <label className="flex items-start gap-3 rounded border p-3 text-sm">
+          <input
+            type="checkbox"
+            checked={searchable}
+            onChange={(e) => setSearchable(e.target.checked)}
+            className="mt-1"
+          />
+
+          <span>
+            <span className="font-medium">Show my profile in search</span>
+
+            <span className="mt-0.5 block text-xs opacity-60">
+              Turn this off to stop appearing in search results. Your
+              profile can still be opened from a link, and your name still
+              shows on your comments and reviews.
+            </span>
+          </span>
+        </label>
 
         <input
           type="file"

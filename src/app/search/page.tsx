@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 
@@ -38,6 +37,7 @@ export default async function SearchPage({
 
   let stories: StorySearchResult[] = [];
   let authors: AuthorSearchResult[] = [];
+  let readers: AuthorSearchResult[] = [];
 
   const searchWords =
     q?.trim().split(/\s+/).filter(Boolean) ?? [];
@@ -59,7 +59,7 @@ export default async function SearchPage({
         bio,
         is_author
       `)
-      .eq("is_author", true)
+      .eq("is_searchable", true)
       .or(
         searchWords
           .flatMap((word) => [
@@ -68,9 +68,11 @@ export default async function SearchPage({
           ])
           .join(",")
       )
-      .order("display_name");
+      .order("display_name")
+      .limit(60);
 
-    authors = data ?? [];
+    authors = (data ?? []).filter((p) => p.is_author);
+    readers = (data ?? []).filter((p) => !p.is_author);
   }
 
   // ------------------------
@@ -307,6 +309,7 @@ return (
     {(q || genre || tag) &&
       stories.length === 0 &&
       authors.length === 0 &&
+      readers.length === 0 &&
       (!matchedGenres || matchedGenres.length === 0) &&
       (!matchedTags || matchedTags.length === 0) && (
 
@@ -502,6 +505,96 @@ return (
                   )}
 
                 </div>
+
+              </div>
+
+            </Link>
+
+          ))}
+
+        </div>
+
+      </div>
+
+    )}
+
+    {readers.length > 0 && (
+
+      <div className="mt-10">
+
+        <h2 className="text-2xl font-bold mb-4">
+          Readers
+        </h2>
+
+        <div className="space-y-3">
+
+          {readers.map((reader) => (
+
+            <Link
+              key={reader.id}
+              href={`/author/${reader.username}`}
+              className="
+                flex
+                items-center
+                gap-4
+                rounded-xl
+                border
+                p-4
+                transition
+                hover:-translate-y-1
+                hover:shadow-lg
+              "
+              style={{
+                backgroundColor: "var(--card)",
+                borderColor: "var(--card-border)",
+              }}
+            >
+
+              {reader.avatar_url ? (
+
+                <img
+                  src={reader.avatar_url}
+                  alt={reader.display_name ?? reader.username}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+
+              ) : (
+
+                <div
+                  className="
+                    w-12
+                    h-12
+                    rounded-full
+                    border
+                    flex
+                    items-center
+                    justify-center
+                    font-bold
+                  "
+                  style={{ borderColor: "var(--card-border)" }}
+                >
+                  {(reader.display_name ?? reader.username)
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+
+              )}
+
+              <div className="min-w-0">
+
+                <div className="font-semibold truncate">
+                  {reader.display_name ?? reader.username}
+                </div>
+
+                <div className="text-sm opacity-70 truncate">
+                  @{reader.username} · Reader
+                </div>
+
+                {reader.bio && (
+                  <p className="mt-1 text-sm opacity-80 line-clamp-1">
+                    {reader.bio}
+                  </p>
+                )}
 
               </div>
 

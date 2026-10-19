@@ -657,9 +657,17 @@ relatedStories?.sort(
             <div>
 
               <h3 className="font-semibold">
-                {profileMap.get(review.user_id)?.display_name ??
-                profileMap.get(review.user_id)?.username ??
-                "Unknown Reader"}
+                {profileMap.get(review.user_id)?.username ? (
+                  <Link
+                    href={`/author/${profileMap.get(review.user_id)?.username}`}
+                    className="hover:underline"
+                  >
+                    {profileMap.get(review.user_id)?.display_name ??
+                      profileMap.get(review.user_id)?.username}
+                  </Link>
+                ) : (
+                  "Unknown Reader"
+                )}
               </h3>
 
               <div className="text-yellow-500 mt-1">

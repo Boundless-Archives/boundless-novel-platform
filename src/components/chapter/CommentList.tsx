@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import {
   createComment,
@@ -103,6 +104,18 @@ export default function CommentList({
     return p?.display_name ?? p?.username ?? "Reader";
   }
 
+  function renderName(userId: string) {
+    const username = profiles.get(userId)?.username;
+
+    return username ? (
+      <Link href={`/author/${username}`} className="hover:underline">
+        {nameOf(userId)}
+      </Link>
+    ) : (
+      nameOf(userId)
+    );
+  }  
+
   function startReply(target: Comment, isReply: boolean) {
     setReplyingToId(target.id);
     // replying to a reply: mention who you're answering
@@ -127,7 +140,7 @@ export default function CommentList({
       >
         <div className="flex justify-between items-start">
           <div>
-            <h3 className="font-semibold">{nameOf(comment.user_id)}</h3>
+            <h3 className="font-semibold">{renderName(comment.user_id)}</h3>
 
             <p className="text-sm opacity-60 mt-1">
               {new Date(comment.updated_at).toLocaleDateString()}

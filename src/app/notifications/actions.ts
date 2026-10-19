@@ -41,6 +41,9 @@ export async function markNotificationAsRead(
   revalidatePath("/notifications");
 }
 
+const UUID_RE =
+  /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
 /*
  * Open Notifications
  */
@@ -53,7 +56,7 @@ export async function openNotification(
   const { data: notification, error } =
     await supabase
       .from("notifications")
-      .select("id, link")
+      .select("id, link, type, actor_id")
       .eq("id", notificationId)
       .eq("user_id", user.id)
       .maybeSingle();
@@ -78,7 +81,27 @@ export async function openNotification(
 
   revalidatePath("/notifications");
 
-  return notification.link;
+  let destination: string | null = notification.link;
+
+  // A "new follower" notification opens the follower's public profile
+  if (notification.type === "follow") {
+    const followerId =
+      notification.actor_id ?? notification.link?.match(UUID_RE)?.[0];
+
+    if (followerId) {
+      const { data: follower } = await supabase
+        .from("profiles")
+        .select("username")
+        .eq("id", followerId)
+        .maybeSingle();
+
+      if (follower?.username) {
+        destination = `/author/${follower.username}`;
+      }
+    }
+  }
+
+  return destination;
 }
 
 

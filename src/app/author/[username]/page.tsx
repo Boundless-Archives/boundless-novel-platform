@@ -33,7 +33,8 @@ export default async function AuthorPage({
       username,
       display_name,
       bio,
-      avatar_url
+      avatar_url,
+      is_author
     `)
     .eq("username", username)
     .single();
@@ -235,6 +236,8 @@ export default async function AuthorPage({
 
   const storyCount = stories?.length ?? 0;
   const seriesCount = publicSeries.length;
+  // readers (who haven't published) get a profile without the writer sections
+  const isWriter = Boolean(profile.is_author) || storyCount > 0;  
 
   return (
     <main className="max-w-6xl mx-auto px-5 py-8 md:px-8 md:py-10">
@@ -294,14 +297,14 @@ export default async function AuthorPage({
                   "var(--card-border)",
               }}
             >
-              ✍️
+              {isWriter ? "✍️" : "📖"}
             </div>
           )}
 
           <div className="flex-1 min-w-0">
 
             <div className="text-sm opacity-60">
-              Author
+              {isWriter ? "Author" : "Reader"}
             </div>
 
             <h1 className="
@@ -377,10 +380,13 @@ export default async function AuthorPage({
               whitespace-pre-wrap
             ">
               {profile.bio ||
-                "This author has not written a bio yet."}
+                (isWriter
+                  ? "This author has not written a bio yet."
+                  : "This reader has not written a bio yet.")}
             </p>
 
             {/* Author stats */}
+            {isWriter && (
             <div className="
               mt-5
               flex
@@ -409,6 +415,7 @@ export default async function AuthorPage({
                   : "series"}
               </span>
             </div>
+            )}
 
             </div>
         </div>
@@ -429,6 +436,7 @@ export default async function AuthorPage({
       {/* =====================================================
           STORIES
       ===================================================== */}
+      {isWriter && (
       <section className="mt-12">
 
         <div className="
@@ -606,6 +614,7 @@ export default async function AuthorPage({
         )}
 
       </section>
+      )}
 
       {/* =====================================================
           SERIES
