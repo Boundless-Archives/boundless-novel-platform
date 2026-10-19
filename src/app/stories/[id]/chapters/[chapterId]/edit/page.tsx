@@ -11,7 +11,7 @@ import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 import { registerMyWriterStreak } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
-import { awardWritingXP } from "@/app/cultivation/actions";
+import { claimWritingXP } from "@/app/cultivation/actions";
 
 type CrossoverOption = {
   crossoverRequestId: string;
@@ -181,7 +181,7 @@ export default function EditChapterPage() {
           Intl.DateTimeFormat().resolvedOptions().timeZone
         );
         await checkAndAwardBadges(user.id);
-        await awardWritingXP(user.id, content);
+        await claimWritingXP(chapterId);
       }
     }
 

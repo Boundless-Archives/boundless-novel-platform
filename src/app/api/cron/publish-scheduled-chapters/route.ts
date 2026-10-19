@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { registerStreakDay } from "@/lib/streakEngine";
 import { checkAndAwardBadges } from "@/app/badges/actions";
-import { awardWritingXP } from "@/app/cultivation/actions";
+import { awardWritingXPForChapter } from "@/lib/cultivationXp";
 
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   const { data: dueChapters, error } = await adminClient
     .from("chapters")
-    .select("id, story_id, content, stories ( author_id )")
+    .select("id, story_id, stories ( author_id )")
     .eq("status", "Draft")
     .not("scheduled_at", "is", null)
     .lte("scheduled_at", new Date().toISOString());
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      await awardWritingXP(story.author_id, chapter.content);
+      await awardWritingXPForChapter(chapter.id);
     } catch (e) {
       console.error("Writing XP award failed:", e);
     }

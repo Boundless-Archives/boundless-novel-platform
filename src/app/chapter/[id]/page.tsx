@@ -215,7 +215,7 @@ export default async function ChapterPage({
         chapterId={chapter.id}
       />
 
-      <ReadingTracker />
+      <ReadingTracker chapterId={chapter.id} />
 
       <CommentJump />
 

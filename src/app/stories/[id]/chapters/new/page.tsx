@@ -11,7 +11,7 @@ import LexicalEditor from "@/components/editor/LexicalEditor";
 import EditorToolbar from "@/components/editor/EditorToolbar";
 import { registerMyWriterStreak } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
-import { awardWritingXP } from "@/app/cultivation/actions";
+import { claimWritingXP } from "@/app/cultivation/actions";
 
 export default function NewChapterPage() {
   const supabase = createClient();
@@ -106,7 +106,7 @@ export default function NewChapterPage() {
           Intl.DateTimeFormat().resolvedOptions().timeZone
         );
         await checkAndAwardBadges(user.id);
-        await awardWritingXP(user.id, content);
+        await claimWritingXP(newChapter.id);
       }
     }
 
