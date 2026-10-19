@@ -118,6 +118,13 @@ export default async function AdminPage() {
           />
 
           <AdminCard
+            icon="🚩"
+            title="Plagiarism Reports"
+            description="Review reader reports about copied stories and track their status."
+            href="/admin/plagiarism-reports"
+          />
+
+          <AdminCard
             icon="🐞"
             title="Bug Reports"
             description="Review problems reported by users and track their status."

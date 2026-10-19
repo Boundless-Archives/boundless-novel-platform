@@ -13,6 +13,7 @@ type Props = {
   storyHref: string;
   prevHref: string | null;
   nextHref: string | null;
+  copyProtected?: boolean;
 };
 
 function currentFraction() {
@@ -44,6 +45,7 @@ export default function ReaderMode({
   storyHref,
   prevHref,
   nextHref,
+  copyProtected = false,
 }: Props) {
   const [ready, setReady] = useState(false);
   const [paged, setPaged] = useState<{
@@ -199,6 +201,7 @@ export default function ReaderMode({
         storyHref={storyHref}
         prevHref={prevHref}
         nextHref={nextHref}
+        copyProtected={copyProtected}
         startFraction={paged.fraction}
         seconds={seconds}
         playing={playing}

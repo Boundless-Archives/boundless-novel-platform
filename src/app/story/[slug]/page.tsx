@@ -16,6 +16,7 @@ import {
   getMyBalance,
   getStorySupporters,
 } from "@/app/gifts/actions";
+import ReportPlagiarismButton from "@/components/story/ReportPlagiarismButton";
 
 type Props = {
   params: Promise<{
@@ -542,6 +543,9 @@ relatedStories?.sort(
           description={story.description}
           coverUrl={story.cover_url}
           chapters={chapters ?? []}
+          copyProtected={
+            Boolean(story.copy_protected) && story.author_id !== user?.id
+          }
         />
 
         {user && user.id !== story.author_id && (
@@ -549,6 +553,10 @@ relatedStories?.sort(
             targetStoryId={story.id}
             targetCanonTier={story.canon_tier}
           />
+        )}
+
+        {user && user.id !== story.author_id && (
+          <ReportPlagiarismButton storyId={story.id} />
         )}
 
         {chapters?.[0] && (

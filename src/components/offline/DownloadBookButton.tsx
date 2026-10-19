@@ -21,6 +21,7 @@ type DownloadBookButtonProps = {
   description: string | null;
   coverUrl: string | null;
   chapters: Chapter[];
+  copyProtected?: boolean;
 };
 
 export default function DownloadBookButton({
@@ -30,6 +31,7 @@ export default function DownloadBookButton({
   description,
   coverUrl,
   chapters,
+  copyProtected = false,
 }: DownloadBookButtonProps) {
   const [downloaded, setDownloaded] =
     useState(false);
@@ -110,6 +112,7 @@ export default function DownloadBookButton({
         title,
         description,
         coverUrl,
+        copyProtected,
         downloadedAt:
           new Date().toISOString(),
         chapters: chapters.map(

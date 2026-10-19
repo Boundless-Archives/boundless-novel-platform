@@ -15,6 +15,8 @@ import {
   tagParagraphs,
 } from "@/lib/paragraphs";
 import ReaderMode from "@/components/chapter/ReaderMode";
+import CopyGuard from "@/components/chapter/CopyGuard";
+import ReportPlagiarismButton from "@/components/story/ReportPlagiarismButton";
 
 type Props = {
   params: Promise<{
@@ -213,6 +215,19 @@ export default async function ChapterPage({
     (comment) => comment.resolved_paragraph !== null
   );
 
+  // Copy protection is the author's choice; authors can always copy their own text
+  const isAuthor = story.author_id === user?.id;
+  const copyProtected = Boolean(story.copy_protected) && !isAuthor;
+
+  const { data: authorProfile } = await supabase
+    .from("profiles")
+    .select("display_name, username")
+    .eq("id", story.author_id)
+    .maybeSingle();
+
+  const authorName =
+    authorProfile?.display_name ?? authorProfile?.username ?? "the author";
+
   return (
     <main className="max-w-5xl mx-auto px-6 py-10">
 
@@ -225,12 +240,18 @@ export default async function ChapterPage({
 
       <CommentJump />
 
+      <CopyGuard
+        attributionTitle={copyProtected || isAuthor ? undefined : story.title}
+        attributionAuthor={authorName}
+      />
+
       <ReaderMode
         chapterNumber={chapter.chapter_number}
         chapterTitle={chapter.title}
         storyHref={`/story/${story.slug}`}
         prevHref={previousChapter ? `/chapter/${previousChapter.id}` : null}
         nextHref={nextChapter ? `/chapter/${nextChapter.id}` : null}
+        copyProtected={copyProtected}
       />
 
       <header className="text-center">
@@ -306,6 +327,8 @@ export default async function ChapterPage({
 
         <div
           id="chapter-html"
+          className={copyProtected ? "copy-protected" : undefined}
+          data-attribute-copy={copyProtected ? undefined : ""}
           dangerouslySetInnerHTML={{
             __html: tagged.html,
           }}
@@ -324,6 +347,15 @@ export default async function ChapterPage({
           End of Chapter
         </p>
       </article>
+
+      {user && !isAuthor && (
+        <div className="mx-auto mt-6 flex max-w-3xl justify-end">
+          <ReportPlagiarismButton
+            storyId={story.id}
+            chapterId={chapter.id}
+          />
+        </div>
+      )}
 
       <section
         className="

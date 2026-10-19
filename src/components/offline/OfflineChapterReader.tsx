@@ -6,6 +6,7 @@ import {
   type OfflineBook,
   type OfflineChapter,
 } from "@/lib/offline-books";
+import CopyGuard from "@/components/chapter/CopyGuard";
 
 export default function OfflineChapterReader() {
   const [book, setBook] =
@@ -210,11 +211,12 @@ export default function OfflineChapterReader() {
         {chapter.title}
       </h1>
 
+      <CopyGuard />
+
       <article
-        className="prose mt-8 max-w-none dark:prose-invert"
-        dangerouslySetInnerHTML={{
-          __html: chapter.content,
-        }}
+        className={`prose mt-8 max-w-none dark:prose-invert ${
+          book?.copyProtected ? "copy-protected" : ""
+        }`}
       />
 
       <div className="mt-12 flex items-center justify-between gap-4 border-t pt-6">

@@ -11,6 +11,7 @@ export type OfflineBook = {
   title: string;
   description: string | null;
   coverUrl: string | null;
+  copyProtected?: boolean;
   downloadedAt: string;
   chapters: OfflineChapter[];
 };

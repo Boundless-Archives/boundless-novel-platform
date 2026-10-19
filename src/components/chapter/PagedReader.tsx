@@ -18,6 +18,7 @@ type Props = {
   startFraction: number;
   seconds: number;
   playing: boolean;
+  copyProtected?: boolean;
   onSecondsChange: (seconds: number) => void;
   onPlayingChange: (playing: boolean) => void;
   onExit: (opts: { fraction: number; toComments?: boolean }) => void;
@@ -34,6 +35,7 @@ export default function PagedReader({
   storyHref,
   prevHref,
   nextHref,
+  copyProtected = false,
   startFraction,
   seconds,
   playing,
@@ -294,7 +296,10 @@ export default function PagedReader({
         <div className="mx-auto h-full w-full max-w-2xl px-6 py-5">
           <div
             ref={viewportRef}
-            className="reader-content h-full w-full overflow-hidden"
+            className={`reader-content h-full w-full overflow-hidden ${
+              copyProtected ? "copy-protected" : ""
+            }`}
+            data-attribute-copy={copyProtected ? undefined : ""}
           >
             <div
               ref={innerRef}

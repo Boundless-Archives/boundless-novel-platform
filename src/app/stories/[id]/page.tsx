@@ -203,6 +203,22 @@ export default async function StoryPage({
               </Link>
 
               <Link
+                href={`/stories/${story.id}/proof`}
+                className="
+                  border
+                  rounded-lg
+                  px-4
+                  py-2
+                "
+                style={{
+                  borderColor:
+                    "var(--card-border)",
+                }}
+              >
+                🛡️ Proof of authorship
+              </Link>
+
+              <Link
                 href={`/stories/${story.id}/chapters/new`}
                 className="
                   border

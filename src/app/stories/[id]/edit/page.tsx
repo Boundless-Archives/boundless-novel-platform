@@ -20,6 +20,9 @@ export default function EditStoryPage() {
   const [description, setDescription] =
     useState("");
 
+  const [copyProtected, setCopyProtected] =
+    useState(false);
+
   const [status, setStatus] =
     useState("Draft");
 
@@ -56,6 +59,7 @@ export default function EditStoryPage() {
 
       setTitle(story.title);
       setDescription(story.description ?? "");
+      setCopyProtected(story.copy_protected ?? false);
       setStatus(story.status);
       setCoverUrl(story.cover_url);
 
@@ -196,6 +200,7 @@ export default function EditStoryPage() {
         description,
         status,
         cover_url: newCoverUrl,
+        copy_protected: copyProtected,
       })
       .eq("id", storyId);
 
@@ -350,6 +355,28 @@ export default function EditStoryPage() {
               "
             />
           </div>
+
+      <label className="flex items-start gap-3 rounded-lg border p-4 text-sm">
+        <input
+          type="checkbox"
+          checked={copyProtected}
+          onChange={(e) => setCopyProtected(e.target.checked)}
+          className="mt-1"
+        />
+
+        <span>
+          <span className="font-medium">
+            Protect my chapters from copying
+          </span>
+
+          <span className="mt-1 block text-xs opacity-70">
+            Readers won&apos;t be able to select, copy, right-click or print your
+            chapter text. This discourages casual copying, but it can&apos;t
+            stop determined or automated copying, and it can&apos;t prevent
+            screenshots.
+          </span>
+        </span>
+      </label>
 
           <div>
             <label className="block mb-2 font-medium">
