@@ -6,6 +6,7 @@ import ThemeProvider from "@/components/providers/ThemeProvider";
 import BreakthroughFanfare from "@/components/cultivation/BreakthroughFanfare";
 import BugReportButton from "@/components/feedback/BugReportButton";
 import SecretCode from "@/components/easter/SecretCode";
+import SiteBeacon from "@/components/quests/SiteBeacon";
 import InstallPrompt from "@/components/InstallPrompt";
 import AppSplash from "@/components/AppSplash";
 import Script from "next/script";
@@ -141,6 +142,7 @@ export default function RootLayout({
           
           <BugReportButton />
           <SecretCode />
+          <SiteBeacon />
           <InstallPrompt />
         </ThemeProvider>
       </body>
