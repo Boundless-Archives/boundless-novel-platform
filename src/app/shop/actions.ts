@@ -277,3 +277,144 @@ export async function restoreStreak(
     embers: result.new_ember_balance,
   };
 }
+
+
+/* ------------------------------------------------------------------ */
+/* Cosmetics                                                          */
+/* ------------------------------------------------------------------ */
+
+export type CosmeticSlot = "frame" | "name_color" | "title" | "flame";
+
+export type CosmeticItem = {
+  slug: string;
+  slot: CosmeticSlot;
+  name: string;
+  description: string;
+  style: Record<string, unknown>;
+  spark_price: number;
+  ember_price: number;
+  min_realm: number | null;
+  required_path: "qi" | "mana" | null;
+};
+
+export async function getCosmeticsData() {
+  const { supabase, user } = await requireUser();
+
+  const [
+    { data: items },
+    { data: owned },
+    { data: equipped },
+    { data: cultivation },
+  ] = await Promise.all([
+    supabase
+      .from("cosmetics")
+      .select(
+        "slug, slot, name, description, style, spark_price, ember_price, min_realm, required_path"
+      )
+      .eq("is_active", true)
+      .order("sort_order"),
+    supabase
+      .from("user_cosmetics")
+      .select("slug")
+      .eq("user_id", user.id),
+    supabase
+      .from("equipped_cosmetics")
+      .select("slot, slug")
+      .eq("user_id", user.id),
+    supabase
+      .from("cultivation_profiles")
+      .select("path, current_major")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
+
+  const equippedBySlot: Partial<Record<CosmeticSlot, string>> = {};
+
+  for (const row of equipped ?? []) {
+    equippedBySlot[row.slot as CosmeticSlot] = row.slug as string;
+  }
+
+  return {
+    items: (items ?? []) as CosmeticItem[],
+    owned: (owned ?? []).map((row) => row.slug as string),
+    equipped: equippedBySlot,
+    realm: (cultivation?.current_major as number | undefined) ?? 0,
+    path: (cultivation?.path as "qi" | "mana" | undefined) ?? null,
+  };
+}
+
+export async function buyCosmetic(
+  slug: string,
+  currency: "sparks" | "embers"
+) {
+  const { user } = await requireUser();
+
+  if (typeof slug !== "string" || slug.length === 0) {
+    throw new Error("That item is not available.");
+  }
+
+  if (currency !== "sparks" && currency !== "embers") {
+    throw new Error("Unknown currency.");
+  }
+
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient
+    .rpc("buy_cosmetic", {
+      p_user: user.id,
+      p_slug: slug,
+      p_currency: currency,
+    })
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/shop");
+  revalidatePath("/wallet");
+  revalidatePath("/profile");
+
+  const result = data as {
+    new_spark_balance: number;
+    new_ember_balance: number;
+    equipped: boolean;
+  };
+
+  return {
+    sparks: result.new_spark_balance,
+    embers: result.new_ember_balance,
+    equipped: result.equipped,
+  };
+}
+
+/* Wear something you own, or pass null to take the slot off. */
+export async function equipCosmetic(
+  slot: CosmeticSlot,
+  slug: string | null
+) {
+  const { user } = await requireUser();
+
+  if (!["frame", "name_color", "title", "flame"].includes(slot)) {
+    throw new Error("Unknown slot.");
+  }
+
+  if (slug !== null && (typeof slug !== "string" || slug.length === 0)) {
+    throw new Error("That is not an item.");
+  }
+
+  const adminClient = createAdminClient();
+
+  const { error } = await adminClient.rpc("equip_cosmetic", {
+    p_user: user.id,
+    p_slot: slot,
+    p_slug: slug,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/shop");
+  revalidatePath("/profile");
+}

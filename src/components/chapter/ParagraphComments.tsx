@@ -11,6 +11,7 @@ import {
 import { MessageSquare, Plus, X } from "lucide-react";
 import { createComment } from "@/app/actions/chapterComments";
 import CommentList from "./CommentList";
+import type { Cosmetic } from "@/lib/cosmetics";
 
 type PComment = {
   id: string;
@@ -29,6 +30,8 @@ type ProfileMap = Map<
   {
     display_name: string | null;
     username: string | null;
+    nameColor?: Cosmetic | null;
+    title?: Cosmetic | null;
   }
 >;
 

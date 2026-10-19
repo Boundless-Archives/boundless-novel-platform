@@ -21,6 +21,9 @@ import {
   type RestoreOffer,
   type ShopItem,
 } from "@/app/shop/actions";
+import CosmeticsSection, {
+  type CosmeticsData,
+} from "@/components/shop/CosmeticsSection";
 import {
   CURRENCY_NAME,
   SPARK_NAME,
@@ -41,6 +44,7 @@ type Props = {
   sparks: number;
   inventory: Record<string, number>;
   restoreOffers: RestoreOffer[];
+  cosmetics: CosmeticsData;
   activeBooster: {
     name: string;
     percent: number;
@@ -99,6 +103,7 @@ export default function ShopClient({
   sparks,
   inventory,
   restoreOffers,
+  cosmetics,
   activeBooster,
 }: Props) {
   const router = useRouter();
@@ -389,6 +394,13 @@ export default function ShopClient({
           {boosters.map(renderItem)}
         </div>
       </section>
+
+      <CosmeticsSection
+        data={cosmetics}
+        sparks={sparks}
+        embers={embers}
+        onMessage={setMessage}
+      />
 
       <section
         className="mt-8 rounded-xl border p-5"

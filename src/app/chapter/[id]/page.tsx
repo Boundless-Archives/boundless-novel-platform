@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import CommentForm from "@/components/chapter/CommentForm";
 import CommentList from "@/components/chapter/CommentList";
+import { getEquippedFor } from "@/lib/cosmetics";
 import ReadingProgress from "@/components/chapter/ReadingProgress";
 import ReadingTracker from "@/components/chapter/ReadingTracker";
 import CommentJump from "@/components/chapter/CommentJump";
@@ -175,6 +176,8 @@ export default async function ChapterPage({
           data: [],
         };
 
+  const loadouts = await getEquippedFor(profileIds);
+
   const profiles = new Map(
     (profileRows ?? []).map((profile) => [
       profile.id,
@@ -182,6 +185,9 @@ export default async function ChapterPage({
         username: profile.username,
         display_name:
           profile.display_name,
+        nameColor:
+          loadouts.get(profile.id)?.name_color ?? null,
+        title: loadouts.get(profile.id)?.title ?? null,
       },
     ])
   );

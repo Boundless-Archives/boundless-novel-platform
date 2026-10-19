@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-import { getShopData } from "@/app/shop/actions";
+import { getShopData, getCosmeticsData } from "@/app/shop/actions";
 import ShopClient from "@/components/shop/ShopClient";
 
 export const metadata = {
@@ -18,7 +18,10 @@ export default async function ShopPage() {
     redirect("/auth/login");
   }
 
-  const data = await getShopData();
+  const [data, cosmetics] = await Promise.all([
+    getShopData(),
+    getCosmeticsData(),
+  ]);
 
-  return <ShopClient {...data} />;
+  return <ShopClient {...data} cosmetics={cosmetics} />;
 }

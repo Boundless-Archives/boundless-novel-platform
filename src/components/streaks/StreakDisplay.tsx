@@ -5,6 +5,7 @@ import {
   type StreakType,
 } from "@/lib/streaks";
 import { SPARK_NAME } from "@/lib/currency";
+import type { Cosmetic } from "@/lib/cosmetics";
 
 type Streak = {
   current_streak: number;
@@ -16,6 +17,7 @@ type Streak = {
 type Props = {
   reader: Streak;
   writer: Streak;
+  flame?: Cosmetic | null;
 };
 
 function StreakCard({
@@ -23,16 +25,23 @@ function StreakCard({
   Icon,
   streak,
   kind,
+  flame,
 }: {
   label: string;
   Icon: typeof BookOpen;
   streak: Streak;
   kind: StreakType;
+  flame?: Cosmetic | null;
 }) {
   const current = streak?.current_streak ?? 0;
   const longest = streak?.longest_streak ?? 0;
   const freezes = streak?.freezes ?? 0;
   const next = getNextStreakMilestone(kind, current);
+
+  const flameColor =
+    typeof flame?.style.color === "string" ? flame.style.color : null;
+  const flameGlow =
+    typeof flame?.style.glow === "string" ? flame.style.glow : null;
 
   return (
     <div
@@ -52,8 +61,14 @@ function StreakCard({
           size={28}
           style={{
             color:
-              current > 0 ? "var(--accent)" : "inherit",
+              current > 0
+                ? flameColor ?? "var(--accent)"
+                : "inherit",
             opacity: current > 0 ? 1 : 0.3,
+            filter:
+              current > 0 && flameGlow
+                ? `drop-shadow(0 0 6px ${flameGlow})`
+                : undefined,
           }}
         />
 
@@ -98,6 +113,7 @@ function StreakCard({
 export default function StreakDisplay({
   reader,
   writer,
+  flame,
 }: Props) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
@@ -106,6 +122,7 @@ export default function StreakDisplay({
         Icon={BookOpen}
         streak={reader}
         kind="reader"
+        flame={flame}
       />
 
       <StreakCard
@@ -113,6 +130,7 @@ export default function StreakDisplay({
         Icon={PenLine}
         streak={writer}
         kind="writer"
+        flame={flame}
       />
     </div>
   );

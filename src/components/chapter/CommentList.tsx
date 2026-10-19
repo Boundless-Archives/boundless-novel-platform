@@ -8,6 +8,8 @@ import {
   deleteComment,
 } from "@/app/actions/chapterComments";
 import { SNIPPET_LENGTH } from "@/lib/paragraphs";
+import StyledName from "@/components/cosmetics/StyledName";
+import type { Cosmetic } from "@/lib/cosmetics";
 
 type Comment = {
   id: string;
@@ -26,6 +28,8 @@ type ProfileMap = Map<
   {
     display_name: string | null;
     username: string | null;
+    nameColor?: Cosmetic | null;
+    title?: Cosmetic | null;
   }
 >;
 
@@ -105,14 +109,23 @@ export default function CommentList({
   }
 
   function renderName(userId: string) {
-    const username = profiles.get(userId)?.username;
+    const p = profiles.get(userId);
+    const username = p?.username;
+
+    const styled = (
+      <StyledName
+        name={nameOf(userId)}
+        nameColor={p?.nameColor}
+        title={p?.title}
+      />
+    );
 
     return username ? (
       <Link href={`/author/${username}`} className="hover:underline">
-        {nameOf(userId)}
+        {styled}
       </Link>
     ) : (
-      nameOf(userId)
+      styled
     );
   }  
 

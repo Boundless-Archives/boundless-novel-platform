@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import Link from "next/link";
@@ -8,6 +7,9 @@ import StreakDisplay from "@/components/streaks/StreakDisplay";
 import { getMyStreaks } from "@/app/streaks/actions";
 import CultivationWidget from "@/components/cultivation/CultivationWidget";
 import { getMyCultivationProfile } from "@/app/cultivation/actions";
+import FramedAvatar from "@/components/cosmetics/FramedAvatar";
+import StyledName from "@/components/cosmetics/StyledName";
+import { getEquippedFor } from "@/lib/cosmetics";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -47,6 +49,8 @@ export default async function ProfilePage() {
   const { reader, writer } = await getMyStreaks();
 
   const cultivation = await getMyCultivationProfile();
+
+  const loadout = (await getEquippedFor([user.id])).get(user.id) ?? {};
 
   const formattedBadges =
     badges
@@ -110,47 +114,30 @@ export default async function ProfilePage() {
         >
 
           <div>
-            {profile?.avatar_url ? (
-              <Image
-                src={profile.avatar_url}
-                alt="Profile Avatar"
-                width={120}
-                height={120}
-                className="rounded-full"
-              />
-            ) : (
-              <div
-                className="
-                  w-[120px]
-                  h-[120px]
-                  md:w-[140px]
-                  md:h-[140px]
-                  rounded-full
-                  border
-                  flex
-                  items-center
-                  justify-center
-                  text-4xl
-                  font-bold
-                "
-                style={{
-                  borderColor: "var(--card-border)",
-                }}
-              >
-                {(profile?.display_name ??
-                  profile?.username ??
-                  "U")
-                  .charAt(0)
-                  .toUpperCase()}
-              </div>
-            )}
+            <FramedAvatar
+              src={profile?.avatar_url}
+              alt="Profile Avatar"
+              size={120}
+              frame={loadout.frame}
+              fallback={(
+                profile?.display_name ??
+                profile?.username ??
+                "U"
+              )
+                .charAt(0)
+                .toUpperCase()}
+            />
           </div>
 
           <div className="flex-1">
 
             <h2 className="text-3xl font-bold">
-              {profile?.display_name ??
-                "Unnamed User"}
+              <StyledName
+                name={profile?.display_name ?? "Unnamed User"}
+                nameColor={loadout.name_color}
+                title={loadout.title}
+                stacked
+              />
             </h2>
 
             <p className="mt-2 opacity-70">
@@ -346,7 +333,11 @@ export default async function ProfilePage() {
           Streaks
         </h2>
 
-        <StreakDisplay reader={reader} writer={writer} />
+        <StreakDisplay
+          reader={reader}
+          writer={writer}
+          flame={loadout.flame}
+        />
       </section>
 
       </section>

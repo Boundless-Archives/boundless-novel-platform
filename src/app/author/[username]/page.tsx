@@ -5,6 +5,9 @@ import FollowButton from "@/components/profile/FollowButton";
 import BadgeCollection from "@/components/badges/BadgeCollection";
 import { createClient } from "@/utils/supabase/server";
 import { getCultivationProfileFor } from "@/app/cultivation/actions";
+import FramedAvatar from "@/components/cosmetics/FramedAvatar";
+import StyledName from "@/components/cosmetics/StyledName";
+import { getEquippedFor } from "@/lib/cosmetics";
 
 type Props = {
   params: Promise<{
@@ -42,6 +45,9 @@ export default async function AuthorPage({
   if (!profile) {
     notFound();
   }
+
+  const loadout =
+    (await getEquippedFor([profile.id])).get(profile.id) ?? {};
 
   /*
    * Load Following Button
@@ -262,44 +268,13 @@ export default async function AuthorPage({
         <div className="flex flex-col sm:flex-row gap-6 items-start">
 
           {/* Avatar */}
-          {profile.avatar_url ? (
-            <Image
-              src={profile.avatar_url}
-              alt={
-                profile.display_name ??
-                profile.username
-              }
-              width={112}
-              height={112}
-              className="
-                w-28
-                h-28
-                rounded-full
-                object-cover
-                shrink-0
-              "
-            />
-          ) : (
-            <div
-              className="
-                w-28
-                h-28
-                rounded-full
-                border
-                flex
-                items-center
-                justify-center
-                text-4xl
-                shrink-0
-              "
-              style={{
-                borderColor:
-                  "var(--card-border)",
-              }}
-            >
-              {isWriter ? "✍️" : "📖"}
-            </div>
-          )}
+          <FramedAvatar
+            src={profile.avatar_url}
+            alt={profile.display_name ?? profile.username}
+            size={112}
+            frame={loadout.frame}
+            fallback={<span className="text-4xl">{isWriter ? "✍️" : "📖"}</span>}
+          />
 
           <div className="flex-1 min-w-0">
 
@@ -314,8 +289,12 @@ export default async function AuthorPage({
               font-bold
               tracking-tight
             ">
-              {profile.display_name ||
-                profile.username}
+              <StyledName
+                name={profile.display_name || profile.username}
+                nameColor={loadout.name_color}
+                title={loadout.title}
+                stacked
+              />
             </h1>
 
             <p className="mt-1 text-sm opacity-60">

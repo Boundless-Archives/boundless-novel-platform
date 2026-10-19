@@ -2,6 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import FramedAvatar from "@/components/cosmetics/FramedAvatar";
+import StyledName from "@/components/cosmetics/StyledName";
+import { getEquippedFor } from "@/lib/cosmetics";
 
 type Props = {
   params: Promise<{
@@ -45,6 +48,10 @@ export default async function FollowingPage({
   if (error) {
     throw new Error(error.message);
   }
+
+  const loadouts = await getEquippedFor(
+    (following ?? []).map((entry) => entry.following_id)
+  );
 
   return (
     <main className="mx-auto max-w-4xl px-5 py-10">
@@ -93,6 +100,8 @@ export default async function FollowingPage({
 
             if (!person) return null;
 
+            const loadout = loadouts.get(entry.following_id) ?? {};
+
             const href = person.is_author
               ? `/author/${person.username}`
               : `/profile/${person.username}`;
@@ -119,45 +128,21 @@ export default async function FollowingPage({
                 }}
               >
 
-                {person.avatar_url ? (
-                  <img
-                    src={person.avatar_url}
-                    alt={
-                      person.display_name ||
-                      person.username
-                    }
-                    className="
-                      h-12
-                      w-12
-                      rounded-full
-                      object-cover
-                    "
-                  />
-                ) : (
-                  <div
-                    className="
-                      flex
-                      h-12
-                      w-12
-                      items-center
-                      justify-center
-                      rounded-full
-                      border
-                      opacity-50
-                    "
-                    style={{
-                      borderColor:
-                        "var(--card-border)",
-                    }}
-                  >
-                    👤
-                  </div>
-                )}
+                <FramedAvatar
+                  src={person.avatar_url}
+                  alt={person.display_name || person.username}
+                  size={48}
+                  frame={loadout.frame}
+                  fallback="👤"
+                />
 
                 <div className="min-w-0">
                   <p className="font-semibold">
-                    {person.display_name ||
-                      person.username}
+                    <StyledName
+                      name={person.display_name || person.username}
+                      nameColor={loadout.name_color}
+                      title={loadout.title}
+                    />
                   </p>
 
                   <p className="text-sm opacity-60">
