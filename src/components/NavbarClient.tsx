@@ -24,6 +24,8 @@ import {
   Flame,
   Gem,
   ShoppingBag,
+  ScrollText,
+  Mountain,
   type LucideIcon,
 } from "lucide-react";
 
@@ -130,6 +132,20 @@ export default function NavbarClient({
         href: "/wallet",
         label: "Embers",
         Icon: Gem,
+        show: user,
+      },
+
+      {
+        href: "/quests",
+        label: "Quests",
+        Icon: ScrollText,
+        show: user,
+      },
+
+      {
+        href: "/cultivation",
+        label: "Path",
+        Icon: Mountain,
         show: user,
       },
 

@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { recordChapterCompletion } from "@/app/streaks/actions";
+import {
+  recordChapterCompletion,
+  startChapterRead,
+} from "@/app/streaks/actions";
 import { tickReadingXP } from "@/app/cultivation/actions";
 import {
   MIN_READ_SECONDS,
   SCROLL_COMPLETE_THRESHOLD,
 } from "@/lib/streaks";
 
-export default function ReadingTracker() {
+export default function ReadingTracker({
+  chapterId,
+}: {
+  chapterId: string;
+}) {
   const activeSecondsRef = useRef(0);
   const reachedScrollEndRef = useRef(false);
   const hasRegisteredRef = useRef(false);
@@ -30,12 +37,19 @@ export default function ReadingTracker() {
 
     updateActivity();
 
+    // Tell the server this chapter was just opened. Everything later
+    // (reading minutes, "finished", the streak) is measured from here.
+    startChapterRead(
+      chapterId,
+      Intl.DateTimeFormat().resolvedOptions().timeZone
+    ).catch(() => {});
+
     const tick = setInterval(() => {
       if (isActiveRef.current) {
         activeSecondsRef.current += 1;
 
         if (activeSecondsRef.current % 60 === 0) {
-          tickReadingXP().catch(() => {});
+          tickReadingXP(chapterId).catch(() => {});
         }
       }
       maybeRegister();
@@ -91,6 +105,7 @@ export default function ReadingTracker() {
 
         try {
           await recordChapterCompletion(
+            chapterId,
             new Date().getHours(),
             Intl.DateTimeFormat().resolvedOptions().timeZone
           );
@@ -112,7 +127,7 @@ export default function ReadingTracker() {
       window.removeEventListener("reader-progress", handleReaderProgress);
       clearInterval(tick);
     };
-  }, []);
+  }, [chapterId]);
 
   return null;
 }

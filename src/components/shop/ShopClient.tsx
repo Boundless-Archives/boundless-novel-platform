@@ -17,6 +17,8 @@ import {
   buyShopItem,
   exchangeEmbersForSparks,
   activateBooster,
+  restoreStreak,
+  type RestoreOffer,
   type ShopItem,
 } from "@/app/shop/actions";
 import {
@@ -38,6 +40,7 @@ type Props = {
   embers: number;
   sparks: number;
   inventory: Record<string, number>;
+  restoreOffers: RestoreOffer[];
   activeBooster: {
     name: string;
     percent: number;
@@ -95,6 +98,7 @@ export default function ShopClient({
   embers,
   sparks,
   inventory,
+  restoreOffers,
   activeBooster,
 }: Props) {
   const router = useRouter();
@@ -129,6 +133,16 @@ export default function ShopClient({
     run(async () => {
       const result = await activateBooster(item.slug);
       return `${item.name} is active: +${result.percent}% cultivation speed.`;
+    });
+  }
+
+  function handleRestore(
+    offer: RestoreOffer,
+    currency: "sparks" | "embers"
+  ) {
+    run(async () => {
+      const result = await restoreStreak(offer.streak_type, currency);
+      return `Your ${offer.streak_type} streak is back at ${result.streak} days.`;
     });
   }
 
@@ -278,6 +292,74 @@ export default function ShopClient({
         <p role="status" className="mt-4 text-sm opacity-90">
           {message}
         </p>
+      )}
+
+      {restoreOffers.length > 0 && (
+        <section id="restore" className="mt-8">
+          <h2 className="mb-1 text-xl font-semibold">
+            Restore a lost streak
+          </h2>
+          <p className="mb-4 text-sm opacity-60">
+            A streak of 7+ days that ended in the last 3 days can be
+            brought back, once every 30 days. You keep the old count
+            plus any days you have rebuilt since.
+          </p>
+
+          <div className="grid gap-4">
+            {restoreOffers.map((offer) => (
+              <div
+                key={offer.streak_type}
+                className="rounded-xl border p-5"
+                style={{ borderColor: "var(--accent)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <Flame
+                    size={28}
+                    style={{ color: "var(--accent)" }}
+                  />
+
+                  <div>
+                    <p className="font-semibold">
+                      {offer.broken_streak}-day {offer.streak_type}{" "}
+                      streak
+                    </p>
+                    <p className="text-xs opacity-60">
+                      Restore before{" "}
+                      {new Date(offer.expires_at).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={isPending || sparks < offer.spark_price}
+                    onClick={() => handleRestore(offer, "sparks")}
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{
+                      backgroundColor: "var(--button)",
+                      color: "var(--button-text)",
+                    }}
+                  >
+                    <Zap size={14} />
+                    {formatCoins(offer.spark_price)}
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isPending || embers < offer.ember_price}
+                    onClick={() => handleRestore(offer, "embers")}
+                    className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{ borderColor: "var(--card-border)" }}
+                  >
+                    <Flame size={14} />
+                    {formatCoins(offer.ember_price)}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="mt-8">

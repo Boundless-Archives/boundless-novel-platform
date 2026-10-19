@@ -2,11 +2,13 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
-import { countWords } from "@/lib/wordCount";
 import { XP_PER_EMBER } from "@/lib/cultivation";
-
-const XP_PER_WORD_DIVISOR = 40;
-const READING_XP_PER_TICK = 1;
+import {
+  awardCultivationXP,
+  awardWritingXPForChapter,
+  announceBreakthrough,
+  type BreakthroughResult,
+} from "@/lib/cultivationXp";
 
 export async function choosePath(path: "qi" | "mana") {
   const supabase = await createClient();
@@ -131,205 +133,20 @@ export async function getCultivationProfileFor(
   };
 }
 
-type BreakthroughResult = {
-  new_total_xp: number;
-  old_major: number;
-  old_minor: number;
-  new_major: number;
-  new_minor: number;
-  is_major_breakthrough: boolean;
-  is_minor_breakthrough: boolean;
-  new_major_name: string | null;
-  new_minor_name: string | null;
-  cultivation_path: string | null;
-};
-
 /*
- * Core XP-award function. Call this any time a user does
- * something that earns cultivation XP — reading time ticks,
- * published word counts, Embers spent to accelerate (realm
- * 7+, not wired yet). Handles breakthrough detection and the
- * resulting celebration (notification, badge for major
- * breakthroughs). The site-wide announcement for realm 7+ is
- * intentionally not wired yet, pending the real announcements
- * table schema.
+ * One reading-XP tick, called about once a minute by ReadingTracker
+ * while a reader is actively reading a chapter.
+ *
+ * The database checks that this reader really has this chapter open,
+ * that about a minute has passed since the last tick, and that the
+ * per-chapter daily limit isn't used up, so calling this in a loop
+ * earns nothing extra.
  */
-export async function awardCultivationXP(
-  userId: string,
-  xp: number,
-  source: string
-) {
-  if (xp <= 0) return null;
-
-  const adminClient = createAdminClient();
-
-  const { data, error } = await adminClient
-    .rpc("award_cultivation_xp", {
-      p_user_id: userId,
-      p_xp: xp,
-      p_source: source,
-    })
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const result = data as BreakthroughResult;
-
-  if (!result || result.cultivation_path === null) {
-    // User hasn't chosen a path yet — nothing to award.
+export async function tickReadingXP(chapterId: string) {
+  if (typeof chapterId !== "string" || chapterId.length === 0) {
     return null;
   }
 
-  if (result.is_major_breakthrough) {
-    await handleMajorBreakthrough(userId, result);
-  } else if (result.is_minor_breakthrough) {
-    await handleMinorBreakthrough(userId, result);
-  }
-
-  return result;
-}
-
-async function handleMinorBreakthrough(
-  userId: string,
-  result: BreakthroughResult
-) {
-  const adminClient = createAdminClient();
-
-  const label = result.new_minor_name
-    ? `${result.new_major_name}, ${result.new_minor_name}`
-    : `${result.new_major_name}, Stage ${result.new_minor}`;
-
-  const { error } = await adminClient
-    .from("notifications")
-    .insert({
-      user_id: userId,
-      type: "cultivation_breakthrough",
-      title: "Cultivation Advanced",
-      message: `You've advanced to ${label}.`,
-      link: "/profile",
-    });
-
-  if (error) {
-    console.error(
-      "Cultivation notification failed:",
-      error.message
-    );
-  }
-}
-
-async function handleMajorBreakthrough(
-  userId: string,
-  result: BreakthroughResult
-) {
-  const adminClient = createAdminClient();
-
-  const { error: notifyError } = await adminClient
-    .from("notifications")
-    .insert({
-      user_id: userId,
-      type: "cultivation_breakthrough",
-      title: "Realm Breakthrough!",
-      message: `You've broken through to ${result.new_major_name} (Realm ${result.new_major}).`,
-      link: "/profile",
-    });
-
-  if (notifyError) {
-    console.error(
-      "Cultivation notification failed:",
-      notifyError.message
-    );
-  }
-
-  const { data: badge } = await adminClient
-    .from("badges")
-    .select("id, name")
-    .eq("slug", `realm_${result.new_major}`)
-    .maybeSingle();
-
-  if (badge) {
-    const { error: badgeError } = await adminClient
-      .from("user_badges")
-      .insert({ user_id: userId, badge_id: badge.id });
-
-    if (!badgeError) {
-      await adminClient.from("notifications").insert({
-        user_id: userId,
-        type: "badge_earned",
-        title: "New badge earned!",
-        message: `You've earned the "${badge.name}" badge.`,
-        link: "/profile",
-      });
-    }
-  }
-
-  // Realm 7+ triggers a brief, live, site-wide fanfare —
-  // broadcast only, nothing persisted to any table.
-  if (result.new_major >= 7) {
-    const { data: profile } = await adminClient
-      .from("profiles")
-      .select("username, display_name")
-      .eq("id", userId)
-      .maybeSingle();
-
-    const name =
-      profile?.display_name ?? profile?.username ?? "A cultivator";
-
-    try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/realtime/v1/api/broadcast`,
-        {
-          method: "POST",
-          headers: {
-            apikey: process.env.SUPABASE_SECRET_KEY!,
-            Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: [
-              {
-                topic: "global-events",
-                event: "cultivation_breakthrough",
-                payload: {
-                  name,
-                  realmName: result.new_major_name,
-                  path: result.cultivation_path,
-                },
-              },
-            ],
-          }),
-        }
-      );
-    } catch (e) {
-      console.error("Breakthrough broadcast failed:", e);
-    }
-  }
-}
-
-/*
- * Award cultivation XP for a published chapter's word count.
- * Call this from every place a chapter actually goes live —
- * immediate publish (both chapter pages) and the scheduled
- * cron route.
- */
-export async function awardWritingXP(
-  authorId: string,
-  content: string
-) {
-  const words = countWords(content);
-  const xp = Math.floor(words / XP_PER_WORD_DIVISOR);
-
-  if (xp <= 0) return null;
-
-  return awardCultivationXP(authorId, xp, "writing");
-}
-
-/*
- * One reading-XP tick, called periodically by ReadingTracker
- * while a user is actively reading a chapter.
- */
-export async function tickReadingXP() {
   const supabase = await createClient();
 
   const {
@@ -338,11 +155,41 @@ export async function tickReadingXP() {
 
   if (!user) return null;
 
-  return awardCultivationXP(
-    user.id,
-    READING_XP_PER_TICK,
-    "reading"
-  );
+  const adminClient = createAdminClient();
+
+  const { data: ok } = await adminClient.rpc("tick_reading", {
+    p_user: user.id,
+    p_chapter: chapterId,
+  });
+
+  if (!ok) return null;
+
+  await awardCultivationXP(user.id, 1, "reading");
+
+  return { ok: true };
+}
+
+/*
+ * Claim writing XP for a chapter the signed-in user just published.
+ * Everything is checked on the server: it must be the user's own
+ * published chapter, recent, and not already paid.
+ */
+export async function claimWritingXP(chapterId: string) {
+  if (typeof chapterId !== "string" || chapterId.length === 0) {
+    return null;
+  }
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  await awardWritingXPForChapter(chapterId, user.id);
+
+  return { ok: true };
 }
 
 /*
@@ -363,7 +210,7 @@ export async function spendEmbersForCultivation(
     throw new Error("You must be logged in.");
   }
 
-  if (embersAmount <= 0) {
+  if (!Number.isInteger(embersAmount) || embersAmount <= 0) {
     throw new Error("Enter a valid amount.");
   }
 
@@ -385,11 +232,7 @@ export async function spendEmbersForCultivation(
     new_wallet_balance: number;
   };
 
-  if (result.is_major_breakthrough) {
-    await handleMajorBreakthrough(user.id, result);
-  } else if (result.is_minor_breakthrough) {
-    await handleMinorBreakthrough(user.id, result);
-  }
+  await announceBreakthrough(user.id, result);
 
   return result;
 }

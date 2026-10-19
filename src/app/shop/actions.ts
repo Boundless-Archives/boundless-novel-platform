@@ -37,14 +37,25 @@ export type ShopItem = {
   boost_minutes: number | null;
 };
 
+export type RestoreOffer = {
+  streak_type: "reader" | "writer";
+  broken_streak: number;
+  spark_price: number;
+  ember_price: number;
+  expires_at: string;
+};
+
 export async function getShopData() {
   const { supabase, user } = await requireUser();
+
+  const adminClient = createAdminClient();
 
   const [
     { data: items },
     { data: wallet },
     { data: owned },
     { data: boosters },
+    { data: offers },
   ] = await Promise.all([
     supabase
       .from("shop_items")
@@ -69,6 +80,7 @@ export async function getShopData() {
       .gt("expires_at", new Date().toISOString())
       .order("percent", { ascending: false })
       .limit(1),
+    adminClient.rpc("restore_offers", { p_user: user.id }),
   ]);
 
   const shopItems = (items ?? []) as ShopItem[];
@@ -86,6 +98,7 @@ export async function getShopData() {
     embers: (wallet?.balance as number) ?? 0,
     sparks: (wallet?.spark_balance as number) ?? 0,
     inventory,
+    restoreOffers: (offers ?? []) as RestoreOffer[],
     activeBooster: booster
       ? {
           name:
@@ -211,5 +224,56 @@ export async function activateBooster(slug: string) {
   return {
     percent: result.percent,
     expiresAt: result.expires_at,
+  };
+}
+
+/*
+ * Bring back a streak that broke in the last 3 days (7+ days long, once
+ * per 30 days per streak). The database checks every rule and takes the
+ * payment in one step.
+ */
+export async function restoreStreak(
+  streakType: "reader" | "writer",
+  currency: "sparks" | "embers"
+) {
+  const { user } = await requireUser();
+
+  if (streakType !== "reader" && streakType !== "writer") {
+    throw new Error("Unknown streak.");
+  }
+
+  if (currency !== "sparks" && currency !== "embers") {
+    throw new Error("Unknown currency.");
+  }
+
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient
+    .rpc("restore_streak", {
+      p_user: user.id,
+      p_type: streakType,
+      p_currency: currency,
+    })
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/shop");
+  revalidatePath("/wallet");
+  revalidatePath("/profile");
+
+  const result = data as {
+    new_streak: number;
+    price: number;
+    new_spark_balance: number;
+    new_ember_balance: number;
+  };
+
+  return {
+    streak: result.new_streak,
+    sparks: result.new_spark_balance,
+    embers: result.new_ember_balance,
   };
 }

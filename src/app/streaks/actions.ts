@@ -1,12 +1,59 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { registerStreakDay } from "@/lib/streakEngine";
 import { awardBadgeBySlug } from "@/lib/badgeAward";
 
+async function syncQuests(userId: string) {
+  try {
+    const adminClient = createAdminClient();
+    await adminClient.rpc("quest_sync", { p_user: userId });
+  } catch (e) {
+    console.error("Quest sync failed:", e);
+  }
+}
+
 /*
- * Called from the chapter reading page once a reader has
- * spent enough active time and reached the end of a chapter.
+ * Called when a reader opens a chapter. It tells the server "this
+ * reader started this chapter now", which is what the later checks
+ * (reading time, quests, streak) are measured against. Returns false
+ * when the chapter doesn't count (a draft, or the reader's own).
+ */
+export async function startChapterRead(
+  chapterId: string,
+  timeZone?: string
+) {
+  if (typeof chapterId !== "string" || chapterId.length === 0) {
+    return false;
+  }
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return false;
+
+  const adminClient = createAdminClient();
+
+  const { data } = await adminClient.rpc("start_chapter_read", {
+    p_user: user.id,
+    p_chapter: chapterId,
+    p_tz: timeZone ?? null,
+  });
+
+  return data === true;
+}
+
+/*
+ * Called from the chapter reading page once a reader has spent enough
+ * active time and reached the end of a chapter.
+ *
+ * The server only believes it if this reader really opened this
+ * chapter at least ~90 seconds ago (see startChapterRead), so calling
+ * it directly earns nothing.
  *
  * `localHour` and `timeZone` come from the reader's own browser:
  *  - "Night Owl" (finished a chapter between midnight and 4 AM)
@@ -14,9 +61,14 @@ import { awardBadgeBySlug } from "@/lib/badgeAward";
  *  - the streak day rolls over at the reader's own midnight.
  */
 export async function recordChapterCompletion(
+  chapterId: string,
   localHour?: number,
   timeZone?: string
 ) {
+  if (typeof chapterId !== "string" || chapterId.length === 0) {
+    return null;
+  }
+
   const supabase = await createClient();
 
   const {
@@ -24,6 +76,19 @@ export async function recordChapterCompletion(
   } = await supabase.auth.getUser();
 
   if (!user) return null;
+
+  const adminClient = createAdminClient();
+
+  const { data, error } = await adminClient
+    .rpc("finish_chapter_read", {
+      p_user: user.id,
+      p_chapter: chapterId,
+    })
+    .single();
+
+  const check = data as { verified: boolean; counted: boolean } | null;
+
+  if (error || !check?.verified) return null;
 
   if (
     typeof localHour === "number" &&
@@ -38,7 +103,11 @@ export async function recordChapterCompletion(
     }
   }
 
-  return registerStreakDay(user.id, "reader", timeZone);
+  const result = await registerStreakDay(user.id, "reader", timeZone);
+
+  await syncQuests(user.id);
+
+  return result;
 }
 
 /*
@@ -70,7 +139,11 @@ export async function registerMyWriterStreak(timeZone?: string) {
 
   if ((count ?? 0) < 1) return null;
 
-  return registerStreakDay(user.id, "writer", timeZone);
+  const result = await registerStreakDay(user.id, "writer", timeZone);
+
+  await syncQuests(user.id);
+
+  return result;
 }
 
 type StreakRow = {

@@ -11,6 +11,7 @@ import {
   XP_PER_EMBER,
   EMBERS_ACCELERATION_MIN_REALM,
 } from "@/lib/cultivation";
+import Link from "next/link";
 
 type CultivationProfile = {
   path: "qi" | "mana";
@@ -196,6 +197,13 @@ export default function CultivationWidget({
           ? `${profile.totalXp.toLocaleString()} XP — the end of the path`
           : `${profile.xpInCurrentStage.toLocaleString()} / ${profile.xpNeededForStage.toLocaleString()} XP to next stage`}
       </p>
+
+      <Link
+        href="/cultivation"
+        className="mt-2 inline-block text-xs underline underline-offset-4 opacity-70 hover:opacity-100"
+      >
+        The Path ahead
+      </Link>
 
       {profile.majorNumber >= EMBERS_ACCELERATION_MIN_REALM && (
         <div
