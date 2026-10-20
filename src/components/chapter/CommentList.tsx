@@ -310,7 +310,12 @@ export default function CommentList({
                     disabled={pending || !replyText.trim()}
                     onClick={() =>
                       startTransition(async () => {
-                        await createComment(chapterId, replyText, comment.id);
+                        const res = await createComment(chapterId, replyText, comment.id);
+
+                        if (res?.error) {
+                          alert(res.error);
+                          return;
+                        }
 
                         setReplyText("");
                         setReplyingToId(null);

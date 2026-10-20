@@ -76,12 +76,16 @@ export default function ReviewForm({
           disabled={pending || rating === 0}
           onClick={() =>
             startTransition(async () => {
-              await submitStoryReview(
+              const res = await submitStoryReview(
                 storyId,
                 storySlug,
                 rating,
                 review
               );
+
+              if (res?.error) {
+                alert(res.error);
+              }
             })
           }
           className="

@@ -481,12 +481,17 @@ export default function ParagraphComments({
                     disabled={pending || !draft.trim()}
                     onClick={() =>
                       startTransition(async () => {
-                        await createComment(
+                        const res = await createComment(
                           chapterId,
                           draft,
                           null,
                           open.index
                         );
+
+                        if (res?.error) {
+                          alert(res.error);
+                          return;
+                        }
 
                         setDraft("");
                       })

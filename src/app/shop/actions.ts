@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { requireFeature } from "@/lib/platform";
 
 /*
  * Everything here works on the logged-in user only: the user id always
@@ -117,6 +118,7 @@ export async function buyShopItem(
   quantity = 1
 ) {
   const { user } = await requireUser();
+  await requireFeature("shop", user.id);
 
   if (typeof slug !== "string" || slug.length === 0) {
     throw new Error("That item is not available.");
@@ -163,6 +165,7 @@ export async function buyShopItem(
 
 export async function exchangeEmbersForSparks(embers: number) {
   const { user } = await requireUser();
+  await requireFeature("shop", user.id);
 
   if (!Number.isInteger(embers) || embers < 1 || embers > 100000) {
     throw new Error("Enter a valid amount.");
@@ -199,6 +202,7 @@ export async function exchangeEmbersForSparks(embers: number) {
 
 export async function activateBooster(slug: string) {
   const { user } = await requireUser();
+  await requireFeature("shop", user.id);
 
   if (typeof slug !== "string" || slug.length === 0) {
     throw new Error("That is not a booster.");
@@ -237,6 +241,7 @@ export async function restoreStreak(
   currency: "sparks" | "embers"
 ) {
   const { user } = await requireUser();
+  await requireFeature("shop", user.id);
 
   if (streakType !== "reader" && streakType !== "writer") {
     throw new Error("Unknown streak.");
@@ -348,6 +353,7 @@ export async function buyCosmetic(
   currency: "sparks" | "embers"
 ) {
   const { user } = await requireUser();
+  await requireFeature("shop", user.id);
 
   if (typeof slug !== "string" || slug.length === 0) {
     throw new Error("That item is not available.");

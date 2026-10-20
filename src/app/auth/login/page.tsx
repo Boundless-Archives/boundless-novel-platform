@@ -16,12 +16,17 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   useEffect(() => {
-    if (
-      new URLSearchParams(window.location.search).get("error") ===
-      "oauth"
-    ) {
+    const error = new URLSearchParams(window.location.search).get(
+      "error"
+    );
+
+    if (error === "oauth") {
       setMessage(
         "Google sign-in didn't complete. Please try again."
+      );
+    } else if (error === "closed") {
+      setMessage(
+        "New registrations are closed right now. Existing members can still sign in."
       );
     }
   }, []);

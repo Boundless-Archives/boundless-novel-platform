@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { featureBlock } from "@/lib/platform";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 
 export async function submitStoryReview(
@@ -18,6 +19,9 @@ export async function submitStoryReview(
   } = await supabase.auth.getUser();
 
   if (!user) return;
+
+  const blocked = await featureBlock("reviews", user.id);
+  if (blocked) return { error: blocked };
 
   const { data: existing } = await supabase
     .from("story_reviews")

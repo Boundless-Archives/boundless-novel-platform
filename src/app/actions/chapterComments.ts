@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { featureBlock } from "@/lib/platform";
 import {
   makeSnippet,
   resolveParagraphIndex,
@@ -27,6 +28,9 @@ export async function createComment(
   } = await supabase.auth.getUser();
 
   if (!user) return;
+
+  const blocked = await featureBlock("comments", user.id);
+  if (blocked) return { error: blocked };
 
   const text = comment.trim();
 

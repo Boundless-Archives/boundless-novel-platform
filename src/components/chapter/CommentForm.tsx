@@ -57,10 +57,15 @@ export default function CommentForm({
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
-            await createComment(
+            const res = await createComment(
               chapterId,
               comment
             );
+
+            if (res?.error) {
+              alert(res.error);
+              return;
+            }
 
             setComment("");
           })

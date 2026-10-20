@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { requireFeature } from "@/lib/platform";
 
 export async function getGiftCatalog() {
   const supabase = await createClient();
@@ -44,6 +45,8 @@ export async function sendGift(giftId: string, storyId: string) {
   if (!user) {
     throw new Error("You must be logged in.");
   }
+
+  await requireFeature("gifts", user.id);
 
   const adminClient = createAdminClient();
 

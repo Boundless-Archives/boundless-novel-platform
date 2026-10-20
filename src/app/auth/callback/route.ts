@@ -41,5 +41,13 @@ export async function GET(request: Request) {
     }
   }
 
+  // Supabase reports a refused new account (registrations closed) as a
+  // generic database error on the redirect.
+  const reason = `${searchParams.get("error_description") ?? ""}`;
+
+  if (/database error saving new user/i.test(reason)) {
+    return NextResponse.redirect(`${base}/auth/login?error=closed`);
+  }
+
   return NextResponse.redirect(`${base}/auth/login?error=oauth`);
 }

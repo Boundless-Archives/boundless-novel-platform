@@ -324,7 +324,7 @@ readingHistory.forEach((entry) => {
 
           {continueReading && (
             <Link
-              href="/library/history"
+              href="/library/activity"
               className="
                 text-sm
                 font-medium
@@ -633,7 +633,7 @@ readingHistory.forEach((entry) => {
             </div>
 
             <Link
-              href="/library/history"
+              href="/library/activity"
               className="
                 text-sm
                 font-medium

@@ -10,7 +10,11 @@ import SiteBeacon from "@/components/quests/SiteBeacon";
 import InstallPrompt from "@/components/InstallPrompt";
 import AppSplash from "@/components/AppSplash";
 import Script from "next/script";
-import ReferralCapture from "@/components/referrals/ReferralCapture";
+import { headers } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
+import { getPublicSettings, isAdminUser } from "@/lib/platform";
+import MaintenanceScreen from "@/components/platform/MaintenanceScreen";
+import PlatformBanner from "@/components/platform/PlatformBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,86 +32,119 @@ const spectral = Spectral({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata: Metadata = {
-metadataBase: new URL(
-"https://boundless.com"
-),
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.boundlessarchive.org";
 
-title: {
-default: "Boundless",
-template: "%s | Boundless",
-},
+/*
+ * The name and description come from Admin > Platform Settings, so a
+ * change there shows up in browser titles and link previews.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getPublicSettings();
+  const name = settings.platform_name;
+  const description = settings.platform_description;
 
-description:
-"Discover, read, and share original stories, novels, and web serials without limits.",
+  return {
+    metadataBase: new URL(SITE_URL),
 
-applicationName: "Boundless",
+    title: {
+      default: name,
+      template: `%s | ${name}`,
+    },
 
-manifest: "/manifest.webmanifest",
+    description,
 
-appleWebApp: {
-  capable: true,
-  title: "Boundless",
-  statusBarStyle: "black-translucent",
-},
+    applicationName: name,
 
-formatDetection: {
-  telephone: false,
-},
+    manifest: "/manifest.webmanifest",
 
-keywords: [
-"stories",
-"novels",
-"web novels",
-"web serials",
-"fiction",
-"authors",
-"reading",
-"writing",
-"story platform",
-"online novels",
-"fantasy",
-"science fiction",
-"romance",
-],
+    appleWebApp: {
+      capable: true,
+      title: name,
+      statusBarStyle: "black-translucent",
+    },
 
-authors: [
-{
-name: "Boundless",
-},
-],
+    formatDetection: {
+      telephone: false,
+    },
 
-creator: "Boundless",
+    keywords: [
+      "stories",
+      "novels",
+      "web novels",
+      "web serials",
+      "fiction",
+      "authors",
+      "reading",
+      "writing",
+      "story platform",
+      "online novels",
+      "fantasy",
+      "science fiction",
+      "romance",
+    ],
 
-publisher: "Boundless",
+    authors: [{ name }],
+    creator: name,
+    publisher: name,
 
-openGraph: {
-title: "Boundless",
-description:
-"Discover, read, and share original stories without limits.",
-siteName: "Boundless",
-type: "website",
-},
+    openGraph: {
+      title: name,
+      description,
+      siteName: name,
+      type: "website",
+    },
 
-twitter: {
-card: "summary_large_image",
-title: "Boundless",
-description:
-"Discover, read, and share original stories without limits.",
-},
+    twitter: {
+      card: "summary_large_image",
+      title: name,
+      description,
+    },
 
-robots: {
-index: true,
-follow: true,
-},
-};
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const settings = await getPublicSettings();
+
+  // Only look up who is visiting when the answer matters.
+  let isAdmin = false;
+
+  if (
+    settings.maintenance_mode ||
+    settings.read_only_mode ||
+    !settings.comments_enabled ||
+    !settings.reviews_enabled ||
+    !settings.gifts_enabled ||
+    !settings.shop_enabled ||
+    !settings.quests_enabled
+  ) {
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) isAdmin = await isAdminUser(user.id);
+    } catch {
+      isAdmin = false;
+    }
+  }
+
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const lockedOut =
+    settings.maintenance_mode &&
+    !isAdmin &&
+    !pathname.startsWith("/auth");
+
   return (
     <html
       lang="en"
@@ -127,7 +164,7 @@ export default function RootLayout({
           {`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});`}
         </Script>
         <AppSplash />
-        <ReferralCapture />
+        <AppSplash />
         <div className="cosmic-backdrop" aria-hidden="true" />
 
         <ThemeProvider>
@@ -135,10 +172,18 @@ export default function RootLayout({
 
           <BreakthroughFanfare />
 
-          <Navbar />
+          {lockedOut ? null : <Navbar />}
+
+          {lockedOut ? null : (
+            <PlatformBanner settings={settings} isAdmin={isAdmin} />
+          )}
 
           <div className="flex-1">
-            {children}
+            {lockedOut ? (
+              <MaintenanceScreen settings={settings} />
+            ) : (
+              children
+            )}
           </div>
           
           <BugReportButton />

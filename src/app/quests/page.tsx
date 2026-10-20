@@ -125,7 +125,7 @@ export default async function QuestsPage() {
     redirect("/auth/login");
   }
 
-  const { overview, sparks } = data;
+  const { overview, sparks, paused, multiplier } = data;
 
   const starterOpen = overview.starter.filter((q) => !q.done);
 
@@ -150,6 +150,24 @@ export default async function QuestsPage() {
           {formatCoins(sparks)} {SPARK_NAME}
         </Link>
       </div>
+
+      {paused ? (
+        <p
+          className="mt-6 rounded-xl border p-4 text-sm"
+          style={{ borderColor: "var(--card-border)" }}
+        >
+          Quests are paused for now, so progress isn&apos;t counting
+          until they&apos;re back.
+        </p>
+      ) : multiplier > 1 ? (
+        <p
+          className="mt-6 rounded-xl border p-4 text-sm font-medium"
+          style={{ borderColor: "var(--card-border)" }}
+        >
+          Sparks event: every quest reward is x{multiplier} while it
+          lasts.
+        </p>
+      ) : null}
 
       <section className="mt-8">
         <div className="flex items-baseline justify-between">

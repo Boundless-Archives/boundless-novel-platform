@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
+import { getPublicSettings } from "@/lib/platform";
 
 /*
  * Browser-facing entry points for quests. The user always comes from
@@ -51,6 +52,7 @@ export async function getQuests() {
   if (!user) return null;
 
   const adminClient = createAdminClient();
+  const settings = await getPublicSettings();
 
   // Opening the Quests page counts as showing up, and catches up the
   // quests that are counted from what the user has already done.
@@ -76,6 +78,8 @@ export async function getQuests() {
   return {
     overview: data as QuestsOverview,
     sparks: (wallet?.spark_balance as number) ?? 0,
+    paused: !settings.quests_enabled,
+    multiplier: settings.sparks_multiplier,
   };
 }
 
