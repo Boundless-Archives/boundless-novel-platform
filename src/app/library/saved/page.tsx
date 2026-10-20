@@ -3,6 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import ShelfSelect from "@/components/library/ShelfSelect";
+import { SHELVES, isShelf, type Shelf } from "@/lib/shelves";
 
 type SavedStory = {
   id: string;
@@ -16,11 +18,19 @@ type SavedStory = {
 type LibraryEntry = {
   id: string;
   story_id: string;
+  shelf: string;
   created_at: string | null;
   stories: SavedStory | SavedStory[] | null;
 };
 
-export default async function SavedStoriesPage() {
+export default async function SavedStoriesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ shelf?: string }>;
+}) {
+  const { shelf: shelfParam } = await searchParams;
+  const activeShelf: Shelf | "all" = isShelf(shelfParam) ? shelfParam : "all";
+
   const supabase = await createClient();
 
   const {
@@ -36,6 +46,7 @@ export default async function SavedStoriesPage() {
     .select(`
       id,
       story_id,
+      shelf,
       created_at,
       stories (
         id,
@@ -55,18 +66,31 @@ export default async function SavedStoriesPage() {
     throw new Error(error.message);
   }
 
-  const savedStories: SavedStory[] = (rows ?? [])
+  const entries = ((rows ?? []) as unknown as LibraryEntry[])
     .map((entry) => {
       const story = Array.isArray(entry.stories)
         ? entry.stories[0] ?? null
         : entry.stories;
 
-      return story;
+      return story
+        ? { story, shelf: (isShelf(entry.shelf) ? entry.shelf : "want_to_read") as Shelf }
+        : null;
     })
     .filter(
-      (story): story is SavedStory =>
-        story !== null
+      (e): e is { story: SavedStory; shelf: Shelf } => e !== null
     );
+
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    counts.set(e.shelf, (counts.get(e.shelf) ?? 0) + 1);
+  }
+
+  const visible = entries.filter(
+    (e) => activeShelf === "all" || e.shelf === activeShelf
+  );
+
+  const savedStories = visible.map((e) => e.story);
+  const shelfById = new Map(visible.map((e) => [e.story.id, e.shelf]));
 
   return (
     <main className="max-w-7xl mx-auto px-5 py-10">
@@ -93,10 +117,47 @@ export default async function SavedStoriesPage() {
         </h1>
 
         <p className="mt-2 opacity-70">
-          Stories you've saved to your personal library.
+          Stories you&apos;ve saved to your personal library.
         </p>
 
       </div>
+
+      {/* SHELF TABS */}
+
+      {entries.length > 0 && (
+        <nav className="mb-8 flex flex-wrap gap-2" aria-label="Shelves">
+          {[
+            { value: "all", label: "All", icon: "📚", n: entries.length },
+            ...SHELVES.map((sh) => ({
+              value: sh.value as string,
+              label: sh.label,
+              icon: sh.icon as string,
+              n: counts.get(sh.value) ?? 0,
+            })),
+          ].map((tab) => (
+            <Link
+              key={tab.value}
+              href={
+                tab.value === "all"
+                  ? "/library/saved"
+                  : `/library/saved?shelf=${tab.value}`
+              }
+              className="rounded-full border px-4 py-2 text-sm font-medium"
+              style={
+                activeShelf === tab.value
+                  ? {
+                      backgroundColor: "var(--button)",
+                      color: "var(--button-text)",
+                      borderColor: "var(--button)",
+                    }
+                  : { borderColor: "var(--card-border)" }
+              }
+            >
+              {tab.icon} {tab.label} · {tab.n}
+            </Link>
+          ))}
+        </nav>
+      )}
 
       {/* EMPTY STATE */}
 
@@ -120,11 +181,15 @@ export default async function SavedStoriesPage() {
           </div>
 
           <h2 className="text-3xl font-bold">
-            No Saved Stories
+            {entries.length === 0
+              ? "No Saved Stories"
+              : "Nothing on this shelf yet"}
           </h2>
 
           <p className="mt-4 opacity-70">
-            Stories you save will appear here.
+            {entries.length === 0
+              ? "Stories you save will appear here."
+              : "Move a story here from any shelf, or save a new one."}
           </p>
 
           <Link
@@ -244,7 +309,13 @@ export default async function SavedStoriesPage() {
                     {story.title}
                   </Link>
 
-                  <div className="mt-4">
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+
+                    <ShelfSelect
+                      key={`${story.id}-${shelfById.get(story.id)}`}
+                      storyId={story.id}
+                      initial={shelfById.get(story.id) ?? "want_to_read"}
+                    />
 
                     <span
                       className="

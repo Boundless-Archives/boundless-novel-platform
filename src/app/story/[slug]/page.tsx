@@ -3,8 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SaveStoryButton from "@/components/SaveStoryButton";
+import ChapterList from "@/components/story/ChapterList";
 import LikeButton from "@/components/story/LikeButton";
 import ReviewForm from "@/components/story/ReviewForm";
+import ReviewList from "@/components/story/ReviewList";
 import Card from "@/components/ui/Card";
 import DownloadBookButton from "@/components/offline/DownloadBookButton";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
@@ -84,6 +86,20 @@ export default async function PublicStoryPage({
     .eq("story_id", story.id)
     .eq("status", "Published")
     .order("chapter_number");
+
+  // Where this reader left off, so the list can highlight it.
+  let currentChapterId: string | null = null;
+
+  if (user) {
+    const { data: history } = await supabase
+      .from("reading_history")
+      .select("chapter_id")
+      .eq("user_id", user.id)
+      .eq("story_id", story.id)
+      .maybeSingle();
+
+    currentChapterId = history?.chapter_id ?? null;
+  }
 
   const acceptedCrossovers =
     await getAcceptedCrossoversForStory(story.id);
@@ -648,72 +664,44 @@ relatedStories?.sort(
     </div>
   )}
 
-  <div className="mt-10 space-y-5">
+  {reviews?.length ? (
+    <ReviewList
+      myUserId={user?.id ?? null}
+      reviews={reviews.map((review) => {
+        const reviewer = profileMap.get(review.user_id);
 
-    {reviews?.length ? (
-      reviews.map((review: any) => (
-        <div
-          key={review.id}
-          className="rounded-xl border p-5"
-          style={{
-            borderColor: "var(--card-border)",
-            backgroundColor: "var(--card)",
-          }}
-        >
-          <div className="flex items-center justify-between">
-
-            <div>
-
-              <h3 className="font-semibold">
-                {profileMap.get(review.user_id)?.username ? (
-                  <Link
-                    href={`/author/${profileMap.get(review.user_id)?.username}`}
-                    className="hover:underline"
-                  >
-                    {profileMap.get(review.user_id)?.display_name ??
-                      profileMap.get(review.user_id)?.username}
-                  </Link>
-                ) : (
-                  "Unknown Reader"
-                )}
-              </h3>
-
-              <div className="text-yellow-500 mt-1">
-                {"★".repeat(review.rating)}
-                {"☆".repeat(5 - review.rating)}
-              </div>
-
-            </div>
-
-            <div className="text-sm opacity-60">
-              {new Date(
-                review.updated_at
-              ).toLocaleDateString()}
-            </div>
-
-          </div>
-
-          <p className="mt-4 whitespace-pre-wrap opacity-90">
-            {review.review}
-          </p>
-
-        </div>
-      ))
-    ) : (
-      <div
-        className="rounded-xl border p-8 text-center"
-        style={{
-          borderColor: "var(--card-border)",
-          backgroundColor: "var(--card)",
-        }}
-      >
-        <p className="opacity-70">
-          No reviews yet.
-        </p>
-      </div>
-    )}
-
-  </div>
+        return {
+          id: review.id,
+          userId: review.user_id,
+          name: reviewer?.display_name ?? reviewer?.username ?? null,
+          username: reviewer?.username ?? null,
+          rating: review.rating,
+          text: review.review ?? "",
+          dateLabel: new Date(
+            review.updated_at ?? review.created_at
+          ).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            timeZone: "UTC",
+          }),
+          createdAt: review.created_at ?? "",
+        };
+      })}
+    />
+  ) : (
+    <div
+      className="mt-10 rounded-xl border p-8 text-center"
+      style={{
+        borderColor: "var(--card-border)",
+        backgroundColor: "var(--card)",
+      }}
+    >
+      <p className="opacity-70">
+        No reviews yet.
+      </p>
+    </div>
+  )}
 
 </section>
 
@@ -741,39 +729,15 @@ className="text-center"
 </Card>
 
 
-) : ( <div className="mt-6 space-y-3">
-{chapters.map((chapter) => (
-<Link
-key={chapter.id}
-href={`/chapter/${chapter.id}`}
-className="
-block
-rounded-xl
-border
-p-4
-transition
-hover:shadow-md
-"
-style={{
-backgroundColor: "var(--card)",
-borderColor: "var(--card-border)",
-}}
-> <div className="flex items-center justify-between"> <div> <div className="font-semibold">
-Chapter {chapter.chapter_number} </div>
-
-
-          <div className="opacity-80">
-            {chapter.title}
-          </div>
-        </div>
-
-        <div className="text-sm opacity-70">
-          Read →
-        </div>
-      </div>
-    </Link>
-  ))}
-</div>
+) : (
+<ChapterList
+  chapters={chapters.map((c) => ({
+    id: c.id,
+    chapter_number: c.chapter_number,
+    title: c.title,
+  }))}
+  currentChapterId={currentChapterId}
+/>
 )}
 </div>
 

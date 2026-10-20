@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import Button from "@/components/ui/Button";
+import ShelfSelect from "@/components/library/ShelfSelect";
+import { isShelf, type Shelf } from "@/lib/shelves";
 
 type Props = {
   storyId: string;
@@ -19,6 +21,9 @@ export default function SaveStoryButton({
   const [loading, setLoading] =
     useState(true);
 
+  const [shelf, setShelf] =
+    useState<Shelf>("want_to_read");
+
   useEffect(() => {
     async function checkSaved() {
       const {
@@ -32,12 +37,16 @@ export default function SaveStoryButton({
 
       const { data } = await supabase
         .from("library")
-        .select("id")
+        .select("id, shelf")
         .eq("user_id", user.id)
         .eq("story_id", storyId)
         .maybeSingle();
 
       setSaved(!!data);
+
+      if (data && isShelf(data.shelf)) {
+        setShelf(data.shelf);
+      }
       setLoading(false);
     }
 
@@ -64,6 +73,17 @@ export default function SaveStoryButton({
       });
 
     if (!error) {
+      const { data } = await supabase
+        .from("library")
+        .select("shelf")
+        .eq("user_id", user.id)
+        .eq("story_id", storyId)
+        .maybeSingle();
+
+      if (data && isShelf(data.shelf)) {
+        setShelf(data.shelf);
+      }
+
       setSaved(true);
     }
   }
@@ -97,12 +117,20 @@ export default function SaveStoryButton({
   return (
     <div className="mt-4">
       {saved ? (
-        <Button
-          type="button"
-          onClick={handleRemove}
-        >
-          Remove from Library
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <ShelfSelect
+            key={shelf}
+            storyId={storyId}
+            initial={shelf}
+          />
+
+          <Button
+            type="button"
+            onClick={handleRemove}
+          >
+            Remove from Library
+          </Button>
+        </div>
       ) : (
         <Button
           type="button"

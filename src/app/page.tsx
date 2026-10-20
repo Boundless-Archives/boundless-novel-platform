@@ -6,7 +6,8 @@ import TrendingStories from "@/components/home/TrendingStories";
 import PopularStories from "@/components/home/PopularStories";
 import AnnouncementBanner from "@/components/home/AnnouncementBanner";
 
-import { ContinueReading } from "@/types/database";
+import { getContinueReading, type ContinueItem } from "@/lib/continueReading";
+import ContinueReadingRow from "@/components/library/ContinueReadingRow";
 
 import StoryGrid from "@/components/story/StoryGrid";
 import FeaturedStoryCard from "@/components/story/FeaturedStoryCard";
@@ -33,36 +34,14 @@ export default async function HomePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let continueReading: ContinueReading | null = null;
+  let continueItems: ContinueItem[] = [];
 
   /*
    * CONTINUE READING
    */
 
   if (user) {
-    const { data } = await supabase
-      .from("reading_history")
-      .select(`
-        chapter_id,
-        stories (
-          title,
-          slug,
-          cover_url
-        ),
-        chapters (
-          title,
-          chapter_number
-        )
-      `)
-      .eq("user_id", user.id)
-      .order("last_read_at", {
-        ascending: false,
-      })
-      .limit(1)
-      .maybeSingle();
-
-    continueReading =
-      data as unknown as ContinueReading;
+    continueItems = await getContinueReading(supabase, user.id);
   }
 
   /*
@@ -215,62 +194,7 @@ export default async function HomePage() {
 
       {/* CONTINUE READING */}
 
-      {continueReading && (
-        <Card
-          elevated
-          padding="lg"
-          className="mb-16"
-        >
-
-          <div className="flex gap-6 items-center">
-
-            {continueReading.stories.cover_url && (
-              <Image
-                src={
-                  continueReading.stories.cover_url
-                }
-                alt={
-                  continueReading.stories.title
-                }
-                width={110}
-                height={160}
-                className="rounded-xl object-cover"
-              />
-            )}
-
-            <div className="flex-1">
-
-              <p className="text-sm opacity-70">
-                Continue Reading
-              </p>
-
-              <h2 className="mt-1 text-3xl font-bold">
-                {continueReading.stories.title}
-              </h2>
-
-              <p className="mt-2 opacity-80">
-
-                Chapter{" "}
-                {continueReading.chapters.chapter_number}
-
-                {" — "}
-
-                {continueReading.chapters.title}
-
-              </p>
-
-              <Button
-                href={`/chapter/${continueReading.chapter_id}`}
-              >
-                Continue Reading →
-              </Button>
-
-            </div>
-
-          </div>
-
-        </Card>
-      )}
+      <ContinueReadingRow items={continueItems} />
 
       {/* FEATURED STORY */}
 
