@@ -128,6 +128,14 @@ export default async function WalletPage() {
           milestones. They stay in the app. They can&apos;t be
           gifted or withdrawn, but they can be used in the shop.
         </p>
+
+        <p className="mt-2 text-xs opacity-80">
+          Want more?{" "}
+          <Link href="/refer" className="underline">
+            Refer a friend
+          </Link>{" "}
+          and earn {SPARK_NAME} when they join and publish.
+        </p>
       </div>
 
       {/* <div className="mt-6">

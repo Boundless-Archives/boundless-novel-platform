@@ -118,6 +118,13 @@ export default async function AdminPage() {
           />
 
           <AdminCard
+            icon="🤝"
+            title="Referrals"
+            description="See who referred whom, and reverse rewards from fake accounts."
+            href="/admin/referrals"
+          />
+
+          <AdminCard
             icon="🚩"
             title="Plagiarism Reports"
             description="Review reader reports about copied stories and track their status."

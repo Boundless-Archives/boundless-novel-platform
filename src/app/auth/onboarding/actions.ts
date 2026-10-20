@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { validateUsername } from "@/lib/username";
+import { registerReferralAfterOnboarding } from "@/lib/referralServer";
 
 export async function completeOnboarding(
   rawUsername: string,
@@ -77,6 +78,9 @@ export async function completeOnboarding(
 
     throw new Error(error.message);
   }
+
+  // If they came through a referral link, record it and reward the referrer
+  await registerReferralAfterOnboarding(user);
 
   revalidatePath("/profile");
 }

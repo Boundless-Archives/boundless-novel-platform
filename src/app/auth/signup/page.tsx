@@ -5,6 +5,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { createClient } from "@/utils/supabase/client";
 import GoogleButton from "@/components/google-button/google-button";
+import { REFERRAL_COOKIE, isValidReferralCode } from "@/lib/referrals";
 
 export default function SignupPage() {
   const supabase = createClient();
@@ -27,9 +28,22 @@ export default function SignupPage() {
     setMessage("");
     setSuccess(false);
 
+    // Keep a referral code with the account, so it still counts if they
+    // verify their email on a different device.
+    const refMatch = document.cookie.match(
+      new RegExp(`(?:^|; )${REFERRAL_COOKIE}=([^;]*)`)
+    );
+
+    const refCode = refMatch
+      ? decodeURIComponent(refMatch[1]).trim().toLowerCase()
+      : "";
+
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: isValidReferralCode(refCode)
+        ? { data: { referral_code: refCode } }
+        : undefined,
     });
 
     if (error) {

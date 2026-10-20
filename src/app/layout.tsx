@@ -10,6 +10,7 @@ import SiteBeacon from "@/components/quests/SiteBeacon";
 import InstallPrompt from "@/components/InstallPrompt";
 import AppSplash from "@/components/AppSplash";
 import Script from "next/script";
+import ReferralCapture from "@/components/referrals/ReferralCapture";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -126,7 +127,7 @@ export default function RootLayout({
           {`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});`}
         </Script>
         <AppSplash />
-        <AppSplash />
+        <ReferralCapture />
         <div className="cosmic-backdrop" aria-hidden="true" />
 
         <ThemeProvider>
