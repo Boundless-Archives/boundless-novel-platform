@@ -5,6 +5,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -113,6 +114,7 @@ export default function ParagraphComments({
   const [positions, setPositions] = useState<Record<number, number>>({});
   const [draft, setDraft] = useState("");
   const [pending, startTransition] = useTransition();
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);  
   const [reactionState, setReactionState] = useState<ReactionState>(() =>
     buildReactionState(reactions)
   );
@@ -252,9 +254,12 @@ export default function ParagraphComments({
 
       if (value == null) return;
 
+      clearTimeout(hideTimer.current);
+
       setHover(Number(value));
 
       clearTimeout(touchTimer);
+      clearTimeout(hideTimer.current);
 
       // on phones, tuck the "+" away again after a few seconds
       if (e.pointerType === "touch") {
@@ -262,8 +267,13 @@ export default function ParagraphComments({
       }
     };
 
+    // The "+" sits in the margin, so the mouse crosses a small gap to reach
+    // it. Wait a moment before hiding, so there's time to get there.
     const onLeave = (e: PointerEvent) => {
-      if (e.pointerType === "mouse") setHover(null);
+      if (e.pointerType === "mouse") {
+        clearTimeout(hideTimer.current);
+        hideTimer.current = setTimeout(() => setHover(null), 700);
+      }
     };
 
     article.addEventListener("pointerover", onOver);
@@ -271,6 +281,7 @@ export default function ParagraphComments({
 
     return () => {
       clearTimeout(touchTimer);
+      clearTimeout(hideTimer.current);
       article.removeEventListener("pointerover", onOver);
       article.removeEventListener("pointerleave", onLeave);
     };
@@ -411,6 +422,13 @@ export default function ParagraphComments({
               <button
                 key={key}
                 onClick={() => openParagraph(index, false)}
+                onPointerEnter={() => clearTimeout(hideTimer.current)}
+                onPointerLeave={(e) => {
+                  if (e.pointerType === "mouse") {
+                    clearTimeout(hideTimer.current);
+                    hideTimer.current = setTimeout(() => setHover(null), 700);
+                  }
+                }}
                 aria-label={
                   count > 0 || reactionTop
                     ? `${count} comment${count === 1 ? "" : "s"}${

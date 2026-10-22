@@ -27,6 +27,31 @@ export function normalizeText(html: string): string {
     .trim();
 }
 
+// Blocks of text this long with single line breaks are treated as several
+// paragraphs (a poem stanza is far shorter than this).
+const LONG_BLOCK_LENGTH = 1200;
+
+const DOUBLE_BREAK_RE = /(?:<br\s*\/?>\s*){2,}/i;
+const SINGLE_BREAK_RE = /<br\s*\/?>/i;
+
+/*
+ * Pasted text (for example from WPS or Word) often uses line breaks instead
+ * of real paragraph breaks, so a whole stretch of the chapter becomes ONE
+ * paragraph and only its top can be commented on. A blank line made of line
+ * breaks is treated as a paragraph break here; and if a block is still very
+ * long, every line break in it is treated as one. Display only: the saved
+ * chapter is never changed.
+ */
+function splitSoftBreaks(inner: string): string[] {
+  const parts = inner.split(DOUBLE_BREAK_RE).flatMap((part) =>
+    normalizeText(part).length > LONG_BLOCK_LENGTH
+      ? part.split(SINGLE_BREAK_RE)
+      : [part]
+  );
+
+  return parts;
+}
+
 const BLOCK_TAG_RE = /<\/?(p|div|h[1-6]|ul|ol|li|blockquote|pre|table)\b/i;
 
 /*
@@ -77,11 +102,28 @@ export function tagParagraphs(html: string): {
 
       if (!text) return match;
 
-      const index = paragraphs.length;
+      const pieces = splitSoftBreaks(inner).filter((part) =>
+        normalizeText(part)
+      );
 
-      paragraphs.push(text);
+      // an ordinary paragraph: one block, exactly as before
+      if (pieces.length <= 1) {
+        const index = paragraphs.length;
 
-      return `<p${attrs} data-pi="${index}">${inner}</p>`;
+        paragraphs.push(text);
+
+        return `<p${attrs} data-pi="${index}">${inner}</p>`;
+      }
+
+      return pieces
+        .map((part) => {
+          const index = paragraphs.length;
+
+          paragraphs.push(normalizeText(part));
+
+          return `<p${attrs} data-pi="${index}">${part}</p>`;
+        })
+        .join("");
     }
   );
 
@@ -115,5 +157,13 @@ export function resolveParagraphIndex(
 
   const moved = paragraphs.findIndex((p) => p.startsWith(snippet));
 
-  return moved === -1 ? null : moved;
+  if (moved !== -1) return moved;
+
+  // A comment made before a long block was split into paragraphs: its
+  // snippet runs past the end of the first piece, so find that piece.
+  const piece = paragraphs.findIndex(
+    (p) => p.length >= 12 && snippet.startsWith(p)
+  );
+
+  return piece === -1 ? null : piece;
 }
