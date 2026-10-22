@@ -12,6 +12,9 @@ import EditorToolbar from "@/components/editor/EditorToolbar";
 import { registerMyWriterStreak } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { claimWritingXP } from "@/app/cultivation/actions";
+import AuthorNoteFields from "@/components/editor/AuthorNoteFields";
+import PollEditor, { EMPTY_POLL, type PollDraft } from "@/components/editor/PollEditor";
+import { saveChapterPoll } from "@/app/actions/chapterPolls";
 
 export default function NewChapterPage() {
   const supabase = createClient();
@@ -31,6 +34,13 @@ export default function NewChapterPage() {
   const [message, setMessage] = useState("");
 
   const [scheduledAt, setScheduledAt] = useState("");
+
+  const [authorNote, setAuthorNote] = useState("");
+
+  const [poll, setPoll] = useState<PollDraft>(EMPTY_POLL);
+
+  const [authorNotePosition, setAuthorNotePosition] =
+    useState<"before" | "after">("after");
 
   useEffect(() => {
     async function loadNextChapterNumber() {
@@ -78,6 +88,8 @@ export default function NewChapterPage() {
           Number(chapterNumber),
         title,
         content,
+        author_note: authorNote.trim() || null,
+        author_note_position: authorNotePosition,
         status: nextStatus,
         scheduled_at: isScheduling
           ? new Date(scheduledAt).toISOString()
@@ -93,6 +105,19 @@ export default function NewChapterPage() {
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (poll.enabled && newChapter) {
+      const res = await saveChapterPoll(newChapter.id, {
+        question: poll.question,
+        options: poll.options,
+        closesAt: poll.closesAt ? new Date(poll.closesAt).toISOString() : null,
+      });
+
+      if (res.error) {
+        // the chapter is saved; the poll can be added from the edit page
+        alert(`Chapter saved, but the poll wasn't: ${res.error}`);
+      }
     }
 
     if (nextStatus === "Published" && newChapter) {
@@ -178,6 +203,16 @@ export default function NewChapterPage() {
         <EditorToolbar />
       </LexicalEditor>
     </div>
+
+    <AuthorNoteFields
+      content={content}
+      note={authorNote}
+      position={authorNotePosition}
+      onNote={setAuthorNote}
+      onPosition={setAuthorNotePosition}
+    />
+
+    <PollEditor poll={poll} onChange={setPoll} />
 
       <div>
       <label className="block mb-2 font-medium">

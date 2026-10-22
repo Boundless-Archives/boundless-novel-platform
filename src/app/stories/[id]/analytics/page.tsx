@@ -4,6 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 
 import StoryAnalyticsChart from "@/components/story/StoryAnalyticsChart";
+import ChapterPerformance, {
+  type ChapterAnalytics,
+} from "@/components/story/ChapterPerformance";
 
 type Props = {
   params: Promise<{
@@ -58,6 +61,18 @@ export default async function StoryAnalyticsPage({
     .select("*")
     .eq("story_id", story.id)
     .maybeSingle();
+
+  /*
+   * Per-chapter reader behaviour.
+   */
+  const { data: chapterData } = await supabase.rpc("chapter_analytics", {
+    p_story: story.id,
+  });
+
+  const chapterAnalytics = (chapterData ?? {
+    tracking_since: null,
+    chapters: [],
+  }) as ChapterAnalytics;
 
   /*
    * Last 30 days of daily statistics.
@@ -483,6 +498,9 @@ export default async function StoryAnalyticsPage({
 
 </section>
 
-  </main>
+  
+<ChapterPerformance data={chapterAnalytics} storyId={story.id} />
+
+</main>
   )
 }

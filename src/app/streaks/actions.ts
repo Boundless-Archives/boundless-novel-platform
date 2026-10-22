@@ -3,6 +3,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { registerStreakDay } from "@/lib/streakEngine";
+import { countWords } from "@/lib/wordCount";
+import { MIN_STREAK_WORDS } from "@/lib/writing";
 import { awardBadgeBySlug } from "@/lib/badgeAward";
 
 async function syncQuests(userId: string) {
@@ -127,17 +129,19 @@ export async function registerMyWriterStreak(timeZone?: string) {
 
   const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
 
-  const { count } = await supabase
+  const { data: recent } = await supabase
     .from("chapters")
-    .select("id, stories!inner ( author_id )", {
-      count: "exact",
-      head: true,
-    })
+    .select("content, stories!inner ( author_id )")
     .eq("status", "Published")
     .eq("stories.author_id", user.id)
     .gte("published_at", since);
 
-  if ((count ?? 0) < 1) return null;
+  // Only a real chapter keeps the streak: a short note doesn't.
+  const qualifies = (recent ?? []).some(
+    (c) => countWords(c.content ?? "") >= MIN_STREAK_WORDS
+  );
+
+  if (!qualifies) return null;
 
   const result = await registerStreakDay(user.id, "writer", timeZone);
 

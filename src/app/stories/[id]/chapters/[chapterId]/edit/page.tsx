@@ -12,6 +12,13 @@ import EditorToolbar from "@/components/editor/EditorToolbar";
 import { registerMyWriterStreak } from "@/app/streaks/actions";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { claimWritingXP } from "@/app/cultivation/actions";
+import AuthorNoteFields from "@/components/editor/AuthorNoteFields";
+import PollEditor, { EMPTY_POLL, type PollDraft } from "@/components/editor/PollEditor";
+import {
+  getMyChapterPoll,
+  removeChapterPoll,
+  saveChapterPoll,
+} from "@/app/actions/chapterPolls";
 
 type CrossoverOption = {
   crossoverRequestId: string;
@@ -46,6 +53,15 @@ export default function EditChapterPage() {
 
   const [scheduledAt, setScheduledAt] = useState("");
 
+  const [authorNote, setAuthorNote] = useState("");
+
+  const [poll, setPoll] = useState<PollDraft>(EMPTY_POLL);
+
+  const [hadPoll, setHadPoll] = useState(false);
+
+  const [authorNotePosition, setAuthorNotePosition] =
+    useState<"before" | "after">("after");
+
   const [message, setMessage] =
     useState("");
 
@@ -75,6 +91,12 @@ export default function EditChapterPage() {
       setTitle(data.title);
 
       setContent(data.content);
+
+      setAuthorNote(data.author_note ?? "");
+
+      setAuthorNotePosition(
+        data.author_note_position === "before" ? "before" : "after"
+      );
 
       setStatus(data.status);
 
@@ -130,8 +152,32 @@ export default function EditChapterPage() {
       setCrossoverOptions(options);
     }
 
+    async function loadPoll() {
+      const existing = await getMyChapterPoll(chapterId);
+
+      if (!existing) return;
+
+      setHadPoll(true);
+
+      const closes = existing.closes_at ? new Date(existing.closes_at) : null;
+      const pad = (n: number) => String(n).padStart(2, "0");
+
+      setPoll({
+        enabled: true,
+        question: existing.question,
+        options: existing.options,
+        closesAt: closes
+          ? `${closes.getFullYear()}-${pad(closes.getMonth() + 1)}-${pad(
+              closes.getDate()
+            )}T${pad(closes.getHours())}:${pad(closes.getMinutes())}`
+          : "",
+        locked: (existing.total ?? 0) > 0,
+      });
+    }
+
     loadChapter();
     loadCrossoverOptions();
+    loadPoll();
   }, [chapterId, storyId, supabase]);
 
     async function saveChapter(
@@ -154,6 +200,8 @@ export default function EditChapterPage() {
         chapter_number: Number(chapterNumber),
         title,
         content,
+        author_note: authorNote.trim() || null,
+        author_note_position: authorNotePosition,
         status: nextStatus,
         crossover_request_id: selectedCrossover || null,
         scheduled_at: isScheduling
@@ -168,6 +216,21 @@ export default function EditChapterPage() {
     if (error) {
       setMessage(error.message);
       return;
+    }
+
+    if (poll.enabled) {
+      const res = await saveChapterPoll(chapterId, {
+        question: poll.question,
+        options: poll.options,
+        closesAt: poll.closesAt ? new Date(poll.closesAt).toISOString() : null,
+      });
+
+      if (res.error) {
+        setMessage(`Chapter saved, but the poll wasn't: ${res.error}`);
+        return;
+      }
+    } else if (hadPoll) {
+      await removeChapterPoll(chapterId);
     }
 
     if (nextStatus === "Published" && !wasPublished) {
@@ -281,6 +344,16 @@ export default function EditChapterPage() {
       </LexicalEditor>
     </div>
 
+    <AuthorNoteFields
+      content={content}
+      note={authorNote}
+      position={authorNotePosition}
+      onNote={setAuthorNote}
+      onPosition={setAuthorNotePosition}
+    />
+
+    <PollEditor poll={poll} onChange={setPoll} />
+
         {crossoverOptions.length > 0 && (
       <div>
         <label className="block mb-2 font-medium">
@@ -341,7 +414,7 @@ export default function EditChapterPage() {
             type="button"
             onClick={() => saveChapter("Draft")}
           >
-            Save Draft to {scheduledAt ? "Schedule" : "Save Draft"}
+            {scheduledAt ? "Schedule" : "Save Draft"}
           </Button>
 
           <Button

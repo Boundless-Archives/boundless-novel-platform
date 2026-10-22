@@ -70,6 +70,9 @@ function getNotificationIcon(type: string) {
     case "gift_received":
       return "🎁";
 
+    case "milestone":
+      return "🎉";
+
     default:
       return "🔔";
   }
@@ -127,6 +130,9 @@ function getNotificationLabel(type: string) {
 
     case "gift_received":
       return "Gift";
+
+    case "milestone":
+      return "Milestone";
 
     default:
       return "Notification";

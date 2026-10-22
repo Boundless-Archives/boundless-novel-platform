@@ -41,8 +41,8 @@ export default async function AdminEditorsPage() {
 
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, display_name, role")
-    .in("role", ["editor", "author"])
+    .select("id, username, display_name, role, is_author")
+    .or("role.in.(editor,author),is_author.eq.true")
     .order("username", { ascending: true });
 
   if (profilesError) {
@@ -54,7 +54,9 @@ export default async function AdminEditorsPage() {
   ) as Profile[];
 
   const authors = (profiles ?? []).filter(
-    (profile) => profile.role === "author"
+    (profile) =>
+      profile.role === "author" ||
+      (profile.role === "reader" && profile.is_author)
   ) as Profile[];
 
   const { data: assignments, error: assignmentsError } =

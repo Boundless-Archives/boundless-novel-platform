@@ -10,6 +10,8 @@ import {
 } from "react";
 import { MessageSquare, Plus, X } from "lucide-react";
 import { createComment } from "@/app/actions/chapterComments";
+import { reactToParagraph } from "@/app/actions/paragraphReactions";
+import { REACTION_EMOJIS, type ReactionRow } from "@/lib/engage";
 import CommentList from "./CommentList";
 import type { Cosmetic } from "@/lib/cosmetics";
 
@@ -40,7 +42,42 @@ type Props = {
   currentUserId?: string;
   comments: PComment[]; // only comments that belong to a paragraph
   profiles: ProfileMap;
+  reactions?: ReactionRow[]; // with resolved_paragraph filled in
 };
+
+type ReactionState = Record<
+  number,
+  { counts: Record<string, number>; mine: string | null }
+>;
+
+function buildReactionState(rows: ReactionRow[]): ReactionState {
+  const state: ReactionState = {};
+
+  for (const r of rows) {
+    if (r.resolved_paragraph == null) continue;
+
+    const entry = (state[r.resolved_paragraph] ??= { counts: {}, mine: null });
+
+    entry.counts[r.emoji] = (entry.counts[r.emoji] ?? 0) + r.n;
+
+    if (r.mine) entry.mine = r.emoji;
+  }
+
+  return state;
+}
+
+function topReaction(entry?: ReactionState[number]) {
+  if (!entry) return null;
+
+  const all = Object.entries(entry.counts).filter(([, n]) => n > 0);
+  const total = all.reduce((t, [, n]) => t + n, 0);
+
+  if (total === 0) return null;
+
+  all.sort((a, b) => b[1] - a[1]);
+
+  return { emoji: all[0][0], total };
+}
 
 const PREF_KEY = "paragraph-comment-markers";
 
@@ -65,6 +102,7 @@ export default function ParagraphComments({
   currentUserId,
   comments,
   profiles,
+  reactions = [],
 }: Props) {
   const [ready, setReady] = useState(false);
   const [enabled, setEnabled] = useState(true);
@@ -75,6 +113,30 @@ export default function ParagraphComments({
   const [positions, setPositions] = useState<Record<number, number>>({});
   const [draft, setDraft] = useState("");
   const [pending, startTransition] = useTransition();
+  const [reactionState, setReactionState] = useState<ReactionState>(() =>
+    buildReactionState(reactions)
+  );
+
+  function react(index: number, emoji: string) {
+    const before = reactionState;
+    const entry = before[index] ?? { counts: {}, mine: null };
+    const counts = { ...entry.counts };
+
+    // take back the old pick, then add the new one (same emoji = undo)
+    if (entry.mine) counts[entry.mine] = Math.max(0, (counts[entry.mine] ?? 1) - 1);
+
+    const mine = entry.mine === emoji ? null : emoji;
+    if (mine) counts[mine] = (counts[mine] ?? 0) + 1;
+
+    setReactionState({ ...before, [index]: { counts, mine } });
+
+    void reactToParagraph(chapterId, index, mine).then((res) => {
+      if (res.error) {
+        setReactionState(before);
+        alert(res.error);
+      }
+    });
+  }
 
   const counts = useMemo(() => {
     const map: Record<number, number> = {};
@@ -224,6 +286,10 @@ export default function ParagraphComments({
 
     const wanted = new Set<number>(Object.keys(counts).map(Number));
 
+    for (const key of Object.keys(reactionState)) {
+      if (topReaction(reactionState[Number(key)])) wanted.add(Number(key));
+    }
+
     if (hover !== null) wanted.add(hover);
     if (openIndex !== null) wanted.add(openIndex);
 
@@ -238,7 +304,7 @@ export default function ParagraphComments({
     setPositions((prev) =>
       JSON.stringify(prev) === JSON.stringify(next) ? prev : next
     );
-  }, [counts, hover, openIndex]);
+  }, [counts, reactionState, hover, openIndex]);
 
   useEffect(() => {
     if (!ready || !enabled) return;
@@ -330,8 +396,14 @@ export default function ParagraphComments({
           Object.entries(positions).map(([key, top]) => {
             const index = Number(key);
             const count = counts[index] ?? 0;
+            const reactionTop = topReaction(reactionState[index]);
 
-            if (count === 0 && hover !== index && openIndex !== index) {
+            if (
+              count === 0 &&
+              !reactionTop &&
+              hover !== index &&
+              openIndex !== index
+            ) {
               return null;
             }
 
@@ -340,9 +412,11 @@ export default function ParagraphComments({
                 key={key}
                 onClick={() => openParagraph(index, false)}
                 aria-label={
-                  count > 0
-                    ? `${count} comment${count === 1 ? "" : "s"} on this paragraph`
-                    : "Comment on this paragraph"
+                  count > 0 || reactionTop
+                    ? `${count} comment${count === 1 ? "" : "s"}${
+                        reactionTop ? `, ${reactionTop.total} reaction${reactionTop.total === 1 ? "" : "s"}` : ""
+                      } on this paragraph`
+                    : "React or comment on this paragraph"
                 }
                 className="
                   pointer-events-auto
@@ -373,10 +447,20 @@ export default function ParagraphComments({
                   borderColor: "var(--card-border)",
                 }}
               >
-                {count > 0 ? (
+                {count > 0 || reactionTop ? (
                   <>
-                    <MessageSquare size={10} />
-                    {count > 9 ? "9+" : count}
+                    {reactionTop && (
+                      <span aria-hidden="true">
+                        {reactionTop.emoji}
+                        {reactionTop.total > 1 ? reactionTop.total : ""}
+                      </span>
+                    )}
+                    {count > 0 && (
+                      <>
+                        <MessageSquare size={10} />
+                        {count > 9 ? "9+" : count}
+                      </>
+                    )}
                   </>
                 ) : (
                   <Plus size={12} />
@@ -430,7 +514,7 @@ export default function ParagraphComments({
             >
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-medium uppercase tracking-wide opacity-60">
-                  Paragraph comments
+                  Reactions &amp; comments
                 </p>
 
                 <p className="mt-1 line-clamp-3 text-sm italic opacity-80">
@@ -448,6 +532,49 @@ export default function ParagraphComments({
             </header>
 
             <div className="flex-1 space-y-5 overflow-y-auto p-4">
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {REACTION_EMOJIS.map((emoji) => {
+                    const entry = reactionState[open.index];
+                    const n = entry?.counts[emoji] ?? 0;
+                    const mine = entry?.mine === emoji;
+
+                    return (
+                      <button
+                        key={emoji}
+                        type="button"
+                        disabled={!currentUserId}
+                        onClick={() => react(open.index, emoji)}
+                        aria-pressed={mine}
+                        aria-label={`React with ${emoji}`}
+                        className="flex items-center gap-1 rounded-full border px-3 py-1.5 text-sm transition hover:-translate-y-0.5 disabled:opacity-60"
+                        style={{
+                          borderColor: mine
+                            ? "var(--accent)"
+                            : "var(--card-border)",
+                          backgroundColor: mine
+                            ? "var(--accent-soft)"
+                            : "transparent",
+                        }}
+                      >
+                        <span>{emoji}</span>
+                        {n > 0 && (
+                          <span className="text-xs tabular-nums opacity-70">
+                            {n}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {!currentUserId && (
+                  <p className="mt-2 text-xs opacity-60">
+                    Sign in to react.
+                  </p>
+                )}
+              </div>
+
               {panelComments.length > 0 ? (
                 <CommentList
                   chapterId={chapterId}

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { registerStreakDay } from "@/lib/streakEngine";
+import { countWords } from "@/lib/wordCount";
+import { MIN_STREAK_WORDS } from "@/lib/writing";
 import { checkAndAwardBadges } from "@/app/badges/actions";
 import { awardWritingXPForChapter } from "@/lib/cultivationXp";
 
@@ -19,7 +21,7 @@ export async function GET(request: NextRequest) {
 
   const { data: dueChapters, error } = await adminClient
     .from("chapters")
-    .select("id, story_id, stories ( author_id )")
+    .select("id, story_id, content, stories ( author_id )")
     .eq("status", "Draft")
     .not("scheduled_at", "is", null)
     .lte("scheduled_at", new Date().toISOString());
@@ -55,10 +57,12 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    try {
-      await registerStreakDay(story.author_id, "writer");
-    } catch (e) {
-      console.error("Writer streak registration failed:", e);
+    if (countWords(chapter.content ?? "") >= MIN_STREAK_WORDS) {
+      try {
+        await registerStreakDay(story.author_id, "writer");
+      } catch (e) {
+        console.error("Writer streak registration failed:", e);
+      }
     }
 
     try {

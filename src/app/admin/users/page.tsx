@@ -71,6 +71,7 @@ export default async function AdminUsersPage() {
 
   const authorCount = userList.filter(
     (profile) =>
+      profile.is_author ||
       profile.role === "author" ||
       profile.role === "editor" ||
       profile.role === "admin" ||

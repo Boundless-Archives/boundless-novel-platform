@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { fetchReactions, fetchPoll } from "@/lib/engageData";
+import PollCard from "@/components/chapter/PollCard";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
@@ -199,6 +201,20 @@ export default async function ChapterPage({
     (chapter.content ?? "").replace(/&nbsp;|\u00a0/g, " ")
   );
 
+  const [reactionRows, poll] = await Promise.all([
+    fetchReactions(chapter.id, user?.id ?? null),
+    fetchPoll(chapter.id, user?.id ?? null),
+  ]);
+
+  const reactions = reactionRows.map((row) => ({
+    ...row,
+    resolved_paragraph: resolveParagraphIndex(
+      tagged.paragraphs,
+      row.paragraph_index,
+      row.paragraph_snippet
+    ),
+  }));
+
   const enrichedComments = (comments ?? []).map((comment) => ({
     ...comment,
     resolved_paragraph:
@@ -306,6 +322,23 @@ export default async function ChapterPage({
         </div>
       )}
 
+      {chapter.author_note?.trim() && chapter.author_note_position === "before" && (
+        <aside
+          className="mx-auto max-w-3xl rounded-2xl border p-5 mt-10"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-60">
+            Author&apos;s note
+          </p>
+          <p className="mt-2 whitespace-pre-wrap text-base leading-7 opacity-90">
+            {chapter.author_note}
+          </p>
+        </aside>
+      )}
+
       <article
         id="chapter-reading-content"
         className="
@@ -323,6 +356,7 @@ export default async function ChapterPage({
           currentUserId={user?.id}
           comments={paragraphComments}
           profiles={profiles}
+          reactions={reactions}
         />
 
         <div
@@ -347,6 +381,31 @@ export default async function ChapterPage({
           End of Chapter
         </p>
       </article>
+
+      {chapter.author_note?.trim() && chapter.author_note_position !== "before" && (
+        <aside
+          className="mx-auto max-w-3xl rounded-2xl border p-5 mt-8"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--card-border)",
+          }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-60">
+            Author&apos;s note
+          </p>
+          <p className="mt-2 whitespace-pre-wrap text-base leading-7 opacity-90">
+            {chapter.author_note}
+          </p>
+        </aside>
+      )}
+
+      {poll && (
+        <PollCard
+          chapterId={chapter.id}
+          initial={poll}
+          signedIn={!!user}
+        />
+      )}
 
       {user && !isAuthor && (
         <div className="mx-auto mt-6 flex max-w-3xl justify-end">

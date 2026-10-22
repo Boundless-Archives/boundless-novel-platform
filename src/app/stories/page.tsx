@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MessageCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
+import WritingGoalCard from "@/components/writing/WritingGoalCard";
+import { getWritingProgress } from "@/lib/writingGoals";
 
 export default async function StoriesPage() {
   const supabase = await createClient();
@@ -31,6 +33,8 @@ export default async function StoriesPage() {
     .order("created_at", {
       ascending: false,
     });
+
+  const writingProgress = await getWritingProgress(supabase, user.id);
 
   const storyIds = (stories ?? []).map((story) => story.id);
 
@@ -180,6 +184,8 @@ export default async function StoriesPage() {
         </div>
 
       </section>
+
+      <WritingGoalCard progress={writingProgress} />
 
 
       {/* Overview */}
