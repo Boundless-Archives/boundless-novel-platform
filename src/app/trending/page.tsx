@@ -55,6 +55,8 @@ export default async function TrendingPage() {
         icon="🔥"
         title="Trending"
         description="Stories readers can't stop talking about. Ranked using community engagement across the platform."
+        actionHref="/leaderboard"
+        actionLabel="🏆 Leaderboard"
       />
 
       {!rankedStories.length ? (

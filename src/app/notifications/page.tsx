@@ -73,6 +73,12 @@ function getNotificationIcon(type: string) {
     case "milestone":
       return "🎉";
 
+    case "weekly_digest":
+      return "🗞️";
+
+    case "leaderboard":
+      return "🏆";
+
     default:
       return "🔔";
   }
@@ -133,6 +139,12 @@ function getNotificationLabel(type: string) {
 
     case "milestone":
       return "Milestone";
+
+    case "weekly_digest":
+      return "Weekly digest";
+
+    case "leaderboard":
+      return "Leaderboard";
 
     default:
       return "Notification";

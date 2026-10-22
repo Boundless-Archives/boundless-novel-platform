@@ -30,6 +30,7 @@ const TRANSACTION_LABELS: Record<string, string> = {
 
 const SPARK_TRANSACTION_LABELS: Record<string, string> = {
   streak_reward: "Streak reward",
+  leaderboard: "Leaderboard prize",
   shop_purchase: "Shop purchase",
   ember_exchange: "Exchanged Embers",
   conversion: "Converted from bonus Embers",

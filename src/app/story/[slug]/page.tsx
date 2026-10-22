@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import SaveStoryButton from "@/components/SaveStoryButton";
 import ChapterList from "@/components/story/ChapterList";
+import NextChapterCountdown from "@/components/story/NextChapterCountdown";
 import LikeButton from "@/components/story/LikeButton";
 import ReviewForm from "@/components/story/ReviewForm";
 import ReviewList from "@/components/story/ReviewList";
@@ -86,6 +87,15 @@ export default async function PublicStoryPage({
     .eq("story_id", story.id)
     .eq("status", "Published")
     .order("chapter_number");
+
+  const { data: nextScheduledRaw } = await supabase.rpc(
+    "next_scheduled_chapter",
+    { p_story: story.id }
+  );
+  const nextScheduled = nextScheduledRaw as {
+    chapter_number: number;
+    scheduled_at: string;
+  } | null;
 
   // Where this reader left off, so the list can highlight it.
   let currentChapterId: string | null = null;
@@ -709,6 +719,15 @@ relatedStories?.sort(
   <h2 className="text-3xl font-bold">
     Chapters
   </h2>
+
+  {nextScheduled && (
+    <div className="mt-3">
+      <NextChapterCountdown
+        scheduledAt={nextScheduled.scheduled_at}
+        chapterNumber={nextScheduled.chapter_number}
+      />
+    </div>
+  )}
 
 {!chapters?.length ? (
 <Card

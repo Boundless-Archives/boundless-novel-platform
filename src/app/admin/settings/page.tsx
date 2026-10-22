@@ -70,6 +70,11 @@ async function saveSettings(formData: FormData) {
     redirect("/admin/settings?error=window");
   }
 
+  const prize = (key: string) => {
+    const n = Math.floor(Number(text(key) || "0"));
+    return Number.isFinite(n) ? Math.min(1000, Math.max(0, n)) : 0;
+  };
+
   const { error } = await supabase
     .from("platform_settings")
     .update({
@@ -94,6 +99,14 @@ async function saveSettings(formData: FormData) {
       sparks_multiplier: Math.round(multiplier * 100) / 100,
       sparks_multiplier_starts_at: startsAt,
       sparks_multiplier_ends_at: endsAt,
+
+      leaderboard_enabled: on("leaderboard_enabled"),
+      lb_reader_prize_1: prize("lb_reader_prize_1"),
+      lb_reader_prize_2: prize("lb_reader_prize_2"),
+      lb_reader_prize_3: prize("lb_reader_prize_3"),
+      lb_author_prize_1: prize("lb_author_prize_1"),
+      lb_author_prize_2: prize("lb_author_prize_2"),
+      lb_author_prize_3: prize("lb_author_prize_3"),
     })
     .not("id", "is", null);
 
@@ -132,6 +145,13 @@ const FIELD_LABELS: Record<string, string> = {
   sparks_multiplier: "Sparks multiplier",
   sparks_multiplier_starts_at: "Sparks event start",
   sparks_multiplier_ends_at: "Sparks event end",
+  leaderboard_enabled: "Leaderboard",
+  lb_reader_prize_1: "Reader prize #1",
+  lb_reader_prize_2: "Reader prize #2",
+  lb_reader_prize_3: "Reader prize #3",
+  lb_author_prize_1: "Author prize #1",
+  lb_author_prize_2: "Author prize #2",
+  lb_author_prize_3: "Author prize #3",
 };
 
 function showValue(field: string, value: string | null) {
@@ -437,6 +457,56 @@ export default async function AdminSettingsPage({
                   defaultValue={settings.sparks_multiplier_ends_at}
                 />
               </Field>
+            </div>
+          </Section>
+
+
+          {/* LEADERBOARD */}
+          <Section
+            title="Leaderboard"
+            hint="Weekly boards for readers and authors. Prizes are free Sparks paid every Monday to the top 3 on each board (0 = no prize). They are not multiplied by a Sparks event."
+          >
+            <Toggle
+              name="leaderboard_enabled"
+              label="Leaderboard"
+              description="Show the boards and pay weekly prizes."
+              checked={settings.leaderboard_enabled}
+            />
+
+            <p className="text-sm font-medium">Reader prizes (Sparks)</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([1, 2, 3] as const).map((n) => (
+                <Field key={n} label={`#${n}`}>
+                  <input
+                    name={`lb_reader_prize_${n}`}
+                    type="number"
+                    min={0}
+                    max={1000}
+                    step={1}
+                    defaultValue={settings[`lb_reader_prize_${n}`]}
+                    className={inputClass}
+                    style={{ borderColor: "var(--card-border)" }}
+                  />
+                </Field>
+              ))}
+            </div>
+
+            <p className="text-sm font-medium">Author prizes (Sparks)</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {([1, 2, 3] as const).map((n) => (
+                <Field key={n} label={`#${n}`}>
+                  <input
+                    name={`lb_author_prize_${n}`}
+                    type="number"
+                    min={0}
+                    max={1000}
+                    step={1}
+                    defaultValue={settings[`lb_author_prize_${n}`]}
+                    className={inputClass}
+                    style={{ borderColor: "var(--card-border)" }}
+                  />
+                </Field>
+              ))}
             </div>
           </Section>
 
