@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { registerStreakDay } from "@/lib/streakEngine";
@@ -109,6 +110,9 @@ export async function recordChapterCompletion(
 
   await syncQuests(user.id);
 
+  // Repaint the navbar so the flame lights up the moment today counts.
+  revalidatePath("/", "layout");
+
   return result;
 }
 
@@ -156,6 +160,8 @@ type StreakRow = {
   last_counted_date: string | null;
   // Streak Freezes the user holds for this streak type.
   freezes: number;
+  // Has today (in the user's own timezone) already been counted?
+  done_today: boolean;
 };
 
 /*
@@ -232,6 +238,7 @@ export async function getMyStreaks() {
             longest_streak: 0,
             last_counted_date: null,
             freezes,
+            done_today: false,
           }
         : null;
     }
@@ -248,9 +255,11 @@ export async function getMyStreaks() {
       alive = gapDays - 1 <= freezes;
     }
 
+    const doneToday = alive && row.last_counted_date === today;
+
     return alive
-      ? { ...row, freezes }
-      : { ...row, current_streak: 0, freezes };
+      ? { ...row, freezes, done_today: doneToday }
+      : { ...row, current_streak: 0, freezes, done_today: false };
   }
 
   const reader = effective(

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Flame, BookOpen, PenLine, Snowflake } from "lucide-react";
+import { BookOpen, PenLine, Snowflake } from "lucide-react";
+import StreakFlame from "@/components/streaks/StreakFlame";
 import {
   getNextStreakMilestone,
   type StreakType,
@@ -12,6 +13,7 @@ type Streak = {
   longest_streak: number;
   last_counted_date: string | null;
   freezes?: number;
+  done_today?: boolean;
 } | null;
 
 type Props = {
@@ -57,19 +59,12 @@ function StreakCard({
       </div>
 
       <div className="mt-3 flex items-center gap-2">
-        <Flame
+        <StreakFlame
           size={28}
-          style={{
-            color:
-              current > 0
-                ? flameColor ?? "var(--accent)"
-                : "inherit",
-            opacity: current > 0 ? 1 : 0.3,
-            filter:
-              current > 0 && flameGlow
-                ? `drop-shadow(0 0 6px ${flameGlow})`
-                : undefined,
-          }}
+          streak={current}
+          doneToday={streak?.done_today ?? false}
+          color={flameColor}
+          glow={flameGlow}
         />
 
         <span className="font-serif text-3xl font-bold">
@@ -80,6 +75,16 @@ function StreakCard({
           day{current === 1 ? "" : "s"}
         </span>
       </div>
+
+      {current > 0 && (
+        <p className="mt-2 text-xs font-medium opacity-80">
+          {streak?.done_today
+            ? "🔥 Extended today"
+            : kind === "reader"
+            ? "Read a chapter today to keep it going"
+            : "Publish a chapter today to keep it going"}
+        </p>
+      )}
 
       <p className="mt-2 text-xs opacity-50">
         Best: {longest} day{longest === 1 ? "" : "s"}

@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import NavbarClient from "./NavbarClient";
 import { getMyStreaks } from "@/app/streaks/actions";
+import { getEquippedFor } from "@/lib/cosmetics";
 
 export default async function Navbar() {
   const supabase = await createClient();
@@ -19,6 +20,8 @@ export default async function Navbar() {
     | null = null;
 
   let unreadNotificationCount = 0;
+  let flameColor: string | null = null;
+  let flameGlow: string | null = null;
 
   const { reader, writer } = await getMyStreaks();
 
@@ -43,6 +46,11 @@ export default async function Navbar() {
 
     unreadNotificationCount = count ?? 0;
 
+    const flame = (await getEquippedFor([user.id])).get(user.id)?.flame;
+    const style = flame?.style ?? {};
+    flameColor = typeof style.color === "string" ? style.color : null;
+    flameGlow = typeof style.glow === "string" ? style.glow : null;
+
   }
 
   return (
@@ -53,6 +61,10 @@ export default async function Navbar() {
     unreadNotificationCount={unreadNotificationCount}
     readerStreak={reader?.current_streak ?? 0}
     writerStreak={writer?.current_streak ?? 0}
+    readerDoneToday={reader?.done_today ?? false}
+    writerDoneToday={writer?.done_today ?? false}
+    flameColor={flameColor}
+    flameGlow={flameGlow}
   />
   );
 }

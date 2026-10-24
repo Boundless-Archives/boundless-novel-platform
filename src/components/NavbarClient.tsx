@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ThemeToggle from "@/components/ui/ThemeToggle";
+import StreakFlame from "@/components/streaks/StreakFlame";
 import {
   Home,
   Compass,
@@ -45,6 +46,10 @@ type NavbarClientProps = {
   unreadNotificationCount: number;
   readerStreak: number;
   writerStreak: number;
+  readerDoneToday: boolean;
+  writerDoneToday: boolean;
+  flameColor: string | null;
+  flameGlow: string | null;
 };
 
 type NavItem = {
@@ -61,6 +66,10 @@ export default function NavbarClient({
   unreadNotificationCount,
   readerStreak,
   writerStreak,
+  readerDoneToday,
+  writerDoneToday,
+  flameColor,
+  flameGlow,
 }: NavbarClientProps) {
   const pathname = usePathname();
 
@@ -607,22 +616,42 @@ export default function NavbarClient({
                 style={{ borderColor: "var(--card-border)" }}
                 title={`Reader streak: ${readerStreak} day${
                   readerStreak === 1 ? "" : "s"
+                }${
+                  readerStreak > 0 && !readerDoneToday
+                    ? " (read a chapter today to extend it)"
+                    : ""
                 } · Writer streak: ${writerStreak} day${
                   writerStreak === 1 ? "" : "s"
+                }${
+                  writerStreak > 0 && !writerDoneToday
+                    ? " (publish a chapter today to extend it)"
+                    : ""
                 }`}
               >
-                <span className="flex items-center gap-1">
-                  <Flame
+                <span
+                  className="flex items-center gap-1"
+                  style={{ opacity: readerDoneToday ? 1 : 0.7 }}
+                >
+                  <StreakFlame
                     size={16}
-                    style={{ color: "var(--accent)" }}
+                    streak={readerStreak}
+                    doneToday={readerDoneToday}
+                    color={flameColor}
+                    glow={flameGlow}
                   />
                   {readerStreak}
                 </span>
 
-                <span className="flex items-center gap-1">
-                  <Flame
+                <span
+                  className="flex items-center gap-1"
+                  style={{ opacity: writerDoneToday ? 1 : 0.7 }}
+                >
+                  <StreakFlame
                     size={16}
-                    style={{ color: "var(--accent)" }}
+                    streak={writerStreak}
+                    doneToday={writerDoneToday}
+                    color={flameColor}
+                    glow={flameGlow}
                   />
                   {writerStreak}
                 </span>
@@ -797,9 +826,12 @@ export default function NavbarClient({
                   style={{ borderColor: "var(--card-border)" }}
                 >
                   <div className="flex items-center justify-center gap-1.5">
-                    <Flame
+                    <StreakFlame
                       size={20}
-                      style={{ color: "var(--accent)" }}
+                      streak={readerStreak}
+                      doneToday={readerDoneToday}
+                      color={flameColor}
+                      glow={flameGlow}
                     />
                     <span className="font-serif text-2xl font-bold">
                       {readerStreak}
@@ -807,6 +839,8 @@ export default function NavbarClient({
                   </div>
                   <p className="mt-1 text-xs opacity-60">
                     Reader Streak
+                    {readerStreak > 0 &&
+                      (readerDoneToday ? " · done today" : " · not yet today")}
                   </p>
                 </div>
 
@@ -815,9 +849,12 @@ export default function NavbarClient({
                   style={{ borderColor: "var(--card-border)" }}
                 >
                   <div className="flex items-center justify-center gap-1.5">
-                    <Flame
+                    <StreakFlame
                       size={20}
-                      style={{ color: "var(--accent)" }}
+                      streak={writerStreak}
+                      doneToday={writerDoneToday}
+                      color={flameColor}
+                      glow={flameGlow}
                     />
                     <span className="font-serif text-2xl font-bold">
                       {writerStreak}
@@ -825,6 +862,8 @@ export default function NavbarClient({
                   </div>
                   <p className="mt-1 text-xs opacity-60">
                     Writer Streak
+                    {writerStreak > 0 &&
+                      (writerDoneToday ? " · done today" : " · not yet today")}
                   </p>
                 </div>
               </div>
