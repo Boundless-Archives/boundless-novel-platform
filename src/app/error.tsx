@@ -1,14 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
+import { reportClientError } from "@/app/actions/errorReport";
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error;
+  error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // Errors from the server already carry a digest and were logged there.
+    if (!error.digest) {
+      reportClientError(error.message, error.stack, window.location.pathname);
+    }
+  }, [error]);
+
   return (
     <main className="max-w-3xl mx-auto px-6 py-24 text-center">
 

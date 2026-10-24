@@ -9,6 +9,7 @@ import {
 } from "@/app/actions/chapterComments";
 import { SNIPPET_LENGTH } from "@/lib/paragraphs";
 import StyledName from "@/components/cosmetics/StyledName";
+import ReportButton from "@/components/moderation/ReportButton";
 import type { Cosmetic } from "@/lib/cosmetics";
 
 type Comment = {
@@ -348,12 +349,18 @@ export default function CommentList({
                 </div>
               </div>
             ) : (
-              <button
-                className="text-sm opacity-70 hover:opacity-100 transition"
-                onClick={() => startReply(comment, isReply)}
-              >
-                ↩ Reply
-              </button>
+              <div className="flex flex-wrap items-start gap-x-5 gap-y-2">
+                <button
+                  className="text-sm opacity-70 hover:opacity-100 transition"
+                  onClick={() => startReply(comment, isReply)}
+                >
+                  ↩ Reply
+                </button>
+
+                {!isOwner && (
+                  <ReportButton type="comment" targetId={comment.id} />
+                )}
+              </div>
             )}
           </div>
         )}

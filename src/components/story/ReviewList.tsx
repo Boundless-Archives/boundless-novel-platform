@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import ReportButton from "@/components/moderation/ReportButton";
 
 export type ReviewItem = {
   id: string;
@@ -183,6 +184,12 @@ export default function ReviewList({
                 <p className="mt-4 whitespace-pre-wrap opacity-90">
                   {review.text}
                 </p>
+              )}
+
+              {myUserId && review.userId !== myUserId && (
+                <div className="mt-3">
+                  <ReportButton type="review" targetId={review.id} />
+                </div>
               )}
             </div>
           ))

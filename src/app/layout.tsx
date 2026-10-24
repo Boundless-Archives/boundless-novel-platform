@@ -15,6 +15,7 @@ import { createClient } from "@/utils/supabase/server";
 import { getPublicSettings, isAdminUser } from "@/lib/platform";
 import MaintenanceScreen from "@/components/platform/MaintenanceScreen";
 import PlatformBanner from "@/components/platform/PlatformBanner";
+import SiteFooter from "@/components/layout/SiteFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -164,7 +165,6 @@ export default async function RootLayout({
           {`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});`}
         </Script>
         <AppSplash />
-        <AppSplash />
         <div className="cosmic-backdrop" aria-hidden="true" />
 
         <ThemeProvider>
@@ -185,7 +185,14 @@ export default async function RootLayout({
               children
             )}
           </div>
-          
+
+          {lockedOut ? null : (
+            <SiteFooter
+              name={settings.platform_name}
+              supportEmail={settings.support_email}
+            />
+          )}
+
           <BugReportButton />
           <SecretCode />
           <SiteBeacon />

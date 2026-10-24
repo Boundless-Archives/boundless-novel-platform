@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import FollowButton from "@/components/profile/FollowButton";
+import ReportButton from "@/components/moderation/ReportButton";
 import BadgeCollection from "@/components/badges/BadgeCollection";
 import { createClient } from "@/utils/supabase/server";
 import { getCultivationProfileFor } from "@/app/cultivation/actions";
@@ -320,6 +321,14 @@ export default async function AuthorPage({
                   userId={profile.id}
                   initialFollowing={isFollowing}
                 />
+
+                <div className="mt-3">
+                  <ReportButton
+                    type="user"
+                    targetId={profile.id}
+                    label="Report profile"
+                  />
+                </div>
               </div>
             )}
 

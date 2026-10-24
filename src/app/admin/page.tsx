@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export default async function AdminPage() {
   const supabase = await createClient();
@@ -26,6 +27,19 @@ export default async function AdminPage() {
   }
 
   const isSuperadmin = profile.role === "superadmin";
+
+  // Counts shown on the cards. A missing table (SQL not run yet) shows 0.
+  const admin = createAdminClient();
+  const [{ count: openReports }, { count: openErrors }] = await Promise.all([
+    admin
+      .from("content_reports")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open"),
+    admin
+      .from("app_errors")
+      .select("id", { count: "exact", head: true })
+      .eq("resolved", false),
+  ]);
 
   return (
     <main className="min-h-screen bg-background">
@@ -136,6 +150,20 @@ export default async function AdminPage() {
             title="Bug Reports"
             description="Review problems reported by users and track their status."
             href="/admin/bug-reports"
+          />
+
+          <AdminCard
+            icon="⚑"
+            title={`Content Reports${openReports ? ` (${openReports} open)` : ""}`}
+            description="Review reported comments, reviews and profiles, and remove what breaks the rules."
+            href="/admin/reports"
+          />
+
+          <AdminCard
+            icon="🧯"
+            title={`Errors${openErrors ? ` (${openErrors} open)` : ""}`}
+            description="Crashes from pages, actions and browsers, grouped and counted."
+            href="/admin/errors"
           />
 
           <AdminCard

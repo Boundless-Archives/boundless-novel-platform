@@ -227,7 +227,19 @@ export default function SignupPage() {
           </p>
         </div>
 
-        <p className="mt-6 text-center text-xs opacity-45">
+        <p className="mt-6 text-center text-xs opacity-60">
+          By creating an account you agree to our{" "}
+          <Link href="/terms" className="underline underline-offset-4">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline underline-offset-4">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+
+        <p className="mt-3 text-center text-xs opacity-45">
           Welcome to Boundless — Infinite stories - Infinte Worlds.
         </p>
       </div>
