@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 /*
@@ -28,6 +27,30 @@ function normalise(text: string) {
     .slice(0, 200);
 }
 
+/*
+ * A small, fast string hash (cyrb53). It only has to group identical
+ * errors, not be secure, and unlike node:crypto it also bundles for the
+ * edge runtime that Next builds instrumentation for.
+ */
+function hash(text: string) {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+  return (
+    (h2 >>> 0).toString(16).padStart(8, "0") +
+    (h1 >>> 0).toString(16).padStart(8, "0")
+  );
+}
+
 export function fingerprintOf(
   source: Source,
   message: string,
@@ -40,9 +63,7 @@ export function fingerprintOf(
       ?.replace(/:\d+:\d+\)?$/, "")
       .trim() ?? "";
 
-  return createHash("sha1")
-    .update(`${source}|${normalise(message)}|${firstFrame}`)
-    .digest("hex");
+  return hash(`${source}|${normalise(message)}|${firstFrame}`);
 }
 
 const IGNORED = ["NEXT_REDIRECT", "NEXT_NOT_FOUND", "NEXT_HTTP_ERROR_FALLBACK"];
