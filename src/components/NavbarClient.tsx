@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   ScrollText,
   Mountain,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 
@@ -118,6 +119,7 @@ export default function NavbarClient({
       { href: "/", label: "Home", Icon: Home, show: true },
       { href: "/explore", label: "Explore", Icon: Compass, show: true },
       { href: "/trending", label: "Trending", Icon: Flame, show: true },
+      { href: "/leaderboard", label: "Leaderboard", Icon: Trophy, show: true },
       { href: "/library", label: "Library", Icon: LibraryIcon, show: user },
       { href: "/stories", label: "Write", Icon: PenLine, show: isAuthor },
       { href: "/wiki", label: "Wiki", Icon: Sparkles, show: true },
