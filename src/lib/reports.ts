@@ -9,7 +9,7 @@ export const REPORT_REASONS = [
 ] as const;
 
 export type ReportReason = (typeof REPORT_REASONS)[number]["value"];
-export type ReportTarget = "comment" | "review" | "user";
+export type ReportTarget = "comment" | "review" | "user" | "guild_post" | "guild_reply";
 
 export const REASON_LABEL: Record<string, string> = Object.fromEntries(
   REPORT_REASONS.map((r) => [r.value, r.label])

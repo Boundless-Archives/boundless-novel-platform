@@ -16,6 +16,8 @@ import { getPublicSettings, isAdminUser } from "@/lib/platform";
 import MaintenanceScreen from "@/components/platform/MaintenanceScreen";
 import PlatformBanner from "@/components/platform/PlatformBanner";
 import SiteFooter from "@/components/layout/SiteFooter";
+import FirstVisitTour from "@/components/tour/FirstVisitTour";
+import Starfield from "@/components/atmosphere/Starfield";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -168,7 +170,9 @@ export default async function RootLayout({
         <div className="cosmic-backdrop" aria-hidden="true" />
 
         <ThemeProvider>
-          <div className="atmosphere" aria-hidden="true" />
+          <div className="atmosphere" aria-hidden="true">
+            <Starfield />
+          </div>
 
           <BreakthroughFanfare />
 
@@ -178,7 +182,7 @@ export default async function RootLayout({
             <PlatformBanner settings={settings} isAdmin={isAdmin} />
           )}
 
-          <div className="flex-1">
+          <div className="flex-1 pb-16 md:pb-0">
             {lockedOut ? (
               <MaintenanceScreen settings={settings} />
             ) : (
@@ -197,6 +201,7 @@ export default async function RootLayout({
           <SecretCode />
           <SiteBeacon />
           <InstallPrompt />
+          <FirstVisitTour />
         </ThemeProvider>
       </body>
     </html>

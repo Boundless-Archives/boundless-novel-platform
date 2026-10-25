@@ -7,6 +7,7 @@ import PopularStories from "@/components/home/PopularStories";
 import AnnouncementBanner from "@/components/home/AnnouncementBanner";
 
 import { getContinueReading, type ContinueItem } from "@/lib/continueReading";
+import HomeGreeting from "@/components/home/HomeGreeting";
 import ContinueReadingRow from "@/components/library/ContinueReadingRow";
 
 import StoryGrid from "@/components/story/StoryGrid";
@@ -27,6 +28,20 @@ type Announcement = {
   published_at: string | null;
 };
 
+function localHour(tz: string | null | undefined) {
+  try {
+    return Number(
+      new Intl.DateTimeFormat("en-US", {
+        hour: "numeric",
+        hour12: false,
+        timeZone: tz || "UTC",
+      }).format(new Date())
+    ) % 24;
+  } catch {
+    return new Date().getUTCHours();
+  }
+}
+
 export default async function HomePage() {
   const supabase = await createClient();
 
@@ -35,6 +50,7 @@ export default async function HomePage() {
   } = await supabase.auth.getUser();
 
   let continueItems: ContinueItem[] = [];
+  let userTimezone: string | null = null;
 
   /*
    * CONTINUE READING
@@ -42,6 +58,13 @@ export default async function HomePage() {
 
   if (user) {
     continueItems = await getContinueReading(supabase, user.id);
+
+    const { data: tzRow } = await supabase
+      .from("profiles")
+      .select("timezone")
+      .eq("id", user.id)
+      .maybeSingle();
+    userTimezone = tzRow?.timezone ?? null;
   }
 
   /*
@@ -185,6 +208,13 @@ export default async function HomePage() {
         </div>
 
       </section>
+
+      {user && (
+        <HomeGreeting
+          userId={user.id}
+          hour={localHour(userTimezone)}
+        />
+      )}
 
       {/* LATEST ANNOUNCEMENTS */}
 

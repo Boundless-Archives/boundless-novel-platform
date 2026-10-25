@@ -28,6 +28,8 @@ import {
   ScrollText,
   Mountain,
   Trophy,
+  Users,
+  CalendarDays,
   type LucideIcon,
 } from "lucide-react";
 
@@ -107,6 +109,26 @@ export default function NavbarClient({
       );
   }, [search]);
 
+  const tabs: { href: string; label: string; Icon: LucideIcon; badge: number }[] = user
+    ? [
+        { href: "/", label: "Home", Icon: Home, badge: 0 },
+        { href: "/explore", label: "Explore", Icon: Compass, badge: 0 },
+        { href: "/library", label: "Library", Icon: LibraryIcon, badge: 0 },
+        { href: "/notifications", label: "Inbox", Icon: Bell, badge: unreadNotificationCount },
+      ]
+    : [
+        { href: "/", label: "Home", Icon: Home, badge: 0 },
+        { href: "/explore", label: "Explore", Icon: Compass, badge: 0 },
+        { href: "/events", label: "Events", Icon: CalendarDays, badge: 0 },
+        { href: "/auth/login", label: "Sign in", Icon: User, badge: 0 },
+      ];
+
+  // Reading and writing screens keep the whole screen.
+  const hideTabBar =
+    pathname.startsWith("/chapter") ||
+    pathname.startsWith("/editor") ||
+    pathname.startsWith("/auth");
+
   const canManage =
     role === "editor" ||
     role === "admin" ||
@@ -129,6 +151,8 @@ export default function NavbarClient({
       { href: "/explore", label: "Explore", Icon: Compass, show: true },
       { href: "/trending", label: "Trending", Icon: Flame, show: true },
       { href: "/leaderboard", label: "Leaderboard", Icon: Trophy, show: true },
+      { href: "/guilds", label: "Sects & Guilds", Icon: Users, show: true },
+      { href: "/events", label: "Events", Icon: CalendarDays, show: true },
       { href: "/library", label: "Library", Icon: LibraryIcon, show: user },
       { href: "/stories", label: "Write", Icon: PenLine, show: isAuthor },
       { href: "/wiki", label: "Wiki", Icon: Sparkles, show: true },
@@ -222,10 +246,12 @@ export default function NavbarClient({
           >
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
+              data-tour="menu"
               className="
                 relative
                 z-[9999]
-                flex
+                hidden
+                md:flex
                 h-10
                 w-10
                 items-center
@@ -304,6 +330,7 @@ export default function NavbarClient({
                   <Link
                     key={item.href}
                     href={item.href}
+                    data-tour={item.href}
                     className={`
                       relative
                       flex
@@ -447,6 +474,7 @@ export default function NavbarClient({
               {user && (
                 <Link
                   href="/notifications"
+                  data-tour="/notifications"
                   aria-label="Notifications"
                   title="Notifications"
                   className={`
@@ -612,6 +640,7 @@ export default function NavbarClient({
 
             {user && (readerStreak > 0 || writerStreak > 0) && (
               <div
+                data-tour="streak"
                 className="flex items-center gap-3 rounded-xl border px-3 py-2 text-sm font-semibold"
                 style={{ borderColor: "var(--card-border)" }}
                 title={`Reader streak: ${readerStreak} day${
@@ -763,6 +792,55 @@ export default function NavbarClient({
         </div>
       </div>
     </header>
+
+      {/* Phone tab bar: the five places people go most */}
+      {!hideTabBar && (
+        <nav
+          aria-label="Quick navigation"
+          className="fixed inset-x-0 bottom-0 z-40 flex border-t md:hidden"
+          style={{
+            backgroundColor: "var(--background)",
+            borderColor: "var(--card-border)",
+            paddingBottom: "env(safe-area-inset-bottom)",
+          }}
+        >
+          {tabs.map(({ href, label, Icon, badge }) => {
+            const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={label}
+                href={href}
+                data-tour={href}
+                className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition ${
+                  active ? "" : "opacity-60"
+                }`}
+                style={active ? { color: "var(--button)" } : undefined}
+              >
+                <Icon size={20} />
+                {label}
+                {badge > 0 && (
+                  <span
+                    className="absolute right-[28%] top-1 min-w-4 rounded-full px-1 text-center text-[10px] font-bold leading-4"
+                    style={{ backgroundColor: "var(--button)", color: "var(--button-text)" }}
+                  >
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            data-tour="menu"
+            className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium opacity-60"
+          >
+            <Menu size={20} />
+            More
+          </button>
+        </nav>
+      )}
 
       {/* Mobile / tablet menu — full-screen overlay with its own scroll */}
       {mobileOpen && (

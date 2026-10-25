@@ -26,9 +26,10 @@ type LibraryEntry = {
 export default async function SavedStoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ shelf?: string }>;
+  searchParams: Promise<{ shelf?: string; view?: string }>;
 }) {
-  const { shelf: shelfParam } = await searchParams;
+  const { shelf: shelfParam, view: viewParam } = await searchParams;
+  const view = viewParam === "shelf" ? "shelf" : "cards";
   const activeShelf: Shelf | "all" = isShelf(shelfParam) ? shelfParam : "all";
 
   const supabase = await createClient();
@@ -89,6 +90,14 @@ export default async function SavedStoriesPage({
     (e) => activeShelf === "all" || e.shelf === activeShelf
   );
 
+  function hrefFor(shelfValue: string | null, v: string) {
+    const q = new URLSearchParams();
+    if (shelfValue) q.set("shelf", shelfValue);
+    if (v === "shelf") q.set("view", "shelf");
+    const qs = q.toString();
+    return qs ? `/library/saved?${qs}` : "/library/saved";
+  }
+
   const savedStories = visible.map((e) => e.story);
   const shelfById = new Map(visible.map((e) => [e.story.id, e.shelf]));
 
@@ -137,11 +146,7 @@ export default async function SavedStoriesPage({
           ].map((tab) => (
             <Link
               key={tab.value}
-              href={
-                tab.value === "all"
-                  ? "/library/saved"
-                  : `/library/saved?shelf=${tab.value}`
-              }
+              href={hrefFor(tab.value === "all" ? null : tab.value, view)}
               className="rounded-full border px-4 py-2 text-sm font-medium"
               style={
                 activeShelf === tab.value
@@ -157,6 +162,25 @@ export default async function SavedStoriesPage({
             </Link>
           ))}
         </nav>
+      )}
+
+      {entries.length > 0 && (
+        <div className="mb-6 flex gap-2 text-sm">
+          {(["cards", "shelf"] as const).map((v) => (
+            <Link
+              key={v}
+              href={hrefFor(activeShelf === "all" ? null : activeShelf, v)}
+              className="rounded-full border px-4 py-1.5 font-medium"
+              style={
+                view === v
+                  ? { backgroundColor: "var(--button)", color: "var(--button-text)", borderColor: "var(--button)" }
+                  : { borderColor: "var(--card-border)" }
+              }
+            >
+              {v === "cards" ? "▦ Cards" : "📚 Bookshelf"}
+            </Link>
+          ))}
+        </div>
       )}
 
       {/* EMPTY STATE */}
@@ -212,6 +236,46 @@ export default async function SavedStoriesPage({
             Explore Stories →
           </Link>
 
+        </section>
+
+      ) : view === "shelf" ? (
+
+        /* BOOKSHELF */
+
+        <section
+          className="grid grid-cols-3 gap-y-8 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8"
+          aria-label="Bookshelf"
+        >
+          {savedStories.map((story) => (
+            <Link
+              key={story.id}
+              href={`/story/${story.slug}`}
+              title={story.title}
+              className="group flex flex-col items-center"
+              style={{
+                paddingBottom: "0.6rem",
+                borderBottom: "10px solid var(--card-border)",
+                boxShadow: "0 8px 10px -8px rgba(0,0,0,.55)",
+              }}
+            >
+              {story.cover_url ? (
+                <Image
+                  src={story.cover_url}
+                  alt={story.title}
+                  width={160}
+                  height={240}
+                  className="aspect-[2/3] w-[78%] rounded-sm object-cover shadow-lg transition duration-200 group-hover:-translate-y-2"
+                />
+              ) : (
+                <div
+                  className="flex aspect-[2/3] w-[78%] items-center justify-center rounded-sm border p-1 text-center text-[11px] font-semibold leading-tight shadow-lg transition duration-200 group-hover:-translate-y-2"
+                  style={{ borderColor: "var(--card-border)", backgroundColor: "var(--card)" }}
+                >
+                  {story.title}
+                </div>
+              )}
+            </Link>
+          ))}
         </section>
 
       ) : (

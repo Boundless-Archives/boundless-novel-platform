@@ -41,14 +41,13 @@ export default async function PrivacyPage() {
       </LegalSection>
 
       <LegalSection title="Who we share data with">
-        <p>We don&apos;t sell your personal data. We use these service providers to run the site, and they process data on our behalf:</p>
+        <p>
+          We don&apos;t sell your personal data. We use trusted service providers to run the site, such as hosting, our database and sign-in system, email delivery, and payment processing if you buy Embers. They handle your data only on our behalf and under their own confidentiality and security obligations. Some of them may be located outside your country.
+        </p>
+        <p>A few features involve a third party you choose to use:</p>
         <ul>
-          <li>Supabase, for our database and sign-in.</li>
-          <li>Vercel, for hosting.</li>
-          <li>Resend, to send email.</li>
-          <li>Google, if you choose to sign in with Google.</li>
-          <li>AdGem, an offer provider, if you choose to complete offers for Embers (they receive an identifier for your account, not your email).</li>
-          <li>A payment provider, if you buy Embers. Card details go straight to them and never reach our servers.</li>
+          <li>Signing in with Google, if you pick that option.</li>
+          <li>Offers from our partners, if you choose to complete them for Embers. They receive an identifier for your account, not your email.</li>
         </ul>
         <p>We may also share information when the law requires it or to protect people and the site.</p>
       </LegalSection>

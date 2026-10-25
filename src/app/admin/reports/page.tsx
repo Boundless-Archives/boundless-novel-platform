@@ -7,7 +7,7 @@ import { REASON_LABEL } from "@/lib/reports";
 type Report = {
   id: string;
   reporter_id: string | null;
-  target_type: "comment" | "review" | "user";
+  target_type: "comment" | "review" | "user" | "guild_post" | "guild_reply";
   target_id: string;
   target_owner: string | null;
   context_url: string | null;
@@ -109,7 +109,7 @@ export default async function AdminReportsPage({
         </h1>
 
         <p className="mt-2 text-sm text-foreground/60">
-          Reports on comments, reviews and profiles. Removing content
+          Reports on comments, reviews, profiles and group posts. Removing content
           deletes it (and any replies to a comment), tells its author, and
           closes every report on it.
         </p>
@@ -151,7 +151,7 @@ export default async function AdminReportsPage({
                   <h2 className="font-semibold text-foreground">
                     {REASON_LABEL[r.reason] ?? r.reason}
                     <span className="ml-2 text-xs font-normal uppercase text-foreground/50">
-                      {r.target_type}
+                      {r.target_type.replace("_", " ")}
                     </span>
                     {same > 1 && filter === "open" && (
                       <span className="ml-2 rounded-full bg-red-500/15 px-2 py-0.5 text-xs font-semibold text-red-500">
