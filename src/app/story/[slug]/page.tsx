@@ -83,7 +83,7 @@ export default async function PublicStoryPage({
 
   const { data: chapters } = await supabase
     .from("chapters")
-    .select("*")
+    .select("id, chapter_number, title")
     .eq("story_id", story.id)
     .eq("status", "Published")
     .order("chapter_number");
@@ -568,7 +568,7 @@ relatedStories?.sort(
           title={story.title}
           description={story.description}
           coverUrl={story.cover_url}
-          chapters={chapters ?? []}
+          chapterCount={chapters?.length ?? 0}
           copyProtected={
             Boolean(story.copy_protected) && story.author_id !== user?.id
           }

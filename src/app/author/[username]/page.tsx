@@ -322,6 +322,16 @@ export default async function AuthorPage({
                   initialFollowing={isFollowing}
                 />
 
+                <div className="mt-3 flex flex-wrap items-center gap-4">
+                  <Link
+                    href={`/messages/${profile.username}`}
+                    className="rounded-lg border px-3 py-1.5 text-sm font-semibold transition hover:opacity-80"
+                    style={{ borderColor: "var(--card-border)" }}
+                  >
+                    ✉ Message
+                  </Link>
+                </div>
+
                 <div className="mt-3">
                   <ReportButton
                     type="user"

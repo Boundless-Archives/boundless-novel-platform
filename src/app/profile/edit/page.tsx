@@ -23,6 +23,7 @@ export default function EditProfilePage() {
   const [bio, setBio] = useState("");
   const [searchable, setSearchable] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(true);
+  const [dmSetting, setDmSetting] = useState("everyone");
   const [avatarFile, setAvatarFile] =
     useState<File | null>(null);
   const [message, setMessage] = useState("");
@@ -56,6 +57,7 @@ export default function EditProfilePage() {
       setBio(data.bio ?? "");
       setSearchable(data.is_searchable ?? true);
       setWeeklyDigest(data.weekly_digest ?? true);
+      setDmSetting(data.dm_setting ?? "everyone");
     }
 
     loadProfile();
@@ -163,6 +165,7 @@ export default function EditProfilePage() {
         }),
         is_searchable: searchable,
         weekly_digest: weeklyDigest,
+        dm_setting: dmSetting,
       })
       .eq("id", user.id);
 
@@ -270,6 +273,25 @@ export default function EditProfilePage() {
               for authors, how your stories did that week. Only sent when
               there is something to report.
             </span>
+          </span>
+        </label>
+
+        <label className="block rounded border p-3 text-sm">
+          <span className="font-medium">Who can message me</span>
+
+          <select
+            value={dmSetting}
+            onChange={(e) => setDmSetting(e.target.value)}
+            className="mt-2 w-full rounded border bg-transparent px-3 py-2"
+          >
+            <option value="everyone">Everyone</option>
+            <option value="following">Only people I follow</option>
+            <option value="nobody">Nobody</option>
+          </select>
+
+          <span className="mt-1 block text-xs opacity-60">
+            You can always block someone from their conversation, and report
+            any message you receive.
           </span>
         </label>
 

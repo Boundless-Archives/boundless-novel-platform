@@ -79,6 +79,9 @@ function getNotificationIcon(type: string) {
     case "leaderboard":
       return "🏆";
 
+    case "message":
+      return "✉️";
+
     default:
       return "🔔";
   }
@@ -146,8 +149,61 @@ function getNotificationLabel(type: string) {
     case "leaderboard":
       return "Leaderboard";
 
+    case "message":
+      return "Message";
+
     default:
       return "Notification";
+  }
+}
+
+/* The inbox sorts notifications into rooms. */
+const TABS = [
+  { key: "all", label: "All" },
+  { key: "books", label: "Books" },
+  { key: "reviews", label: "Reviews" },
+  { key: "reputation", label: "Reputation" },
+  { key: "rewards", label: "Rewards" },
+  { key: "guilds", label: "Guilds" },
+  { key: "messages", label: "Messages" },
+  { key: "system", label: "System" },
+] as const;
+
+type TabKey = (typeof TABS)[number]["key"];
+
+function categoryOf(n: { type: string; link: string | null }): TabKey {
+  if (n.link?.startsWith("/guilds")) return "guilds";
+  if (n.type === "message") return "messages";
+
+  switch (n.type) {
+    case "new_book":
+    case "new_chapter":
+    case "followed_author_update":
+    case "book_completed":
+    case "book_status":
+    case "weekly_digest":
+      return "books";
+
+    case "story_review":
+    case "chapter_comment":
+      return "reviews";
+
+    case "follow":
+    case "gift_received":
+    case "crossover_request":
+    case "crossover_response":
+    case "tier_submission":
+    case "tier_submission_response":
+      return "reputation";
+
+    case "badge_earned":
+    case "cultivation_breakthrough":
+    case "leaderboard":
+    case "milestone":
+      return "rewards";
+
+    default:
+      return "system";
   }
 }
 
@@ -241,7 +297,15 @@ function getNotificationMessage(
   }
 }
 
-export default async function NotificationsPage() {
+export default async function NotificationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const sp = await searchParams;
+  const tab: TabKey =
+    TABS.find((t) => t.key === sp.tab)?.key ?? "all";
+
   const supabase = await createClient();
 
   const {
@@ -276,7 +340,8 @@ export default async function NotificationsPage() {
       .eq("user_id", user.id)
       .order("created_at", {
         ascending: false,
-      });
+      })
+      .limit(300);
 
   if (error) {
     throw new Error(error.message);
@@ -289,6 +354,17 @@ export default async function NotificationsPage() {
     (notification) => !notification.is_read
   ).length;
 
+  const unreadBy: Record<string, number> = {};
+  for (const n of items) {
+    if (!n.is_read) {
+      const k = categoryOf(n);
+      unreadBy[k] = (unreadBy[k] ?? 0) + 1;
+    }
+  }
+
+  const visible =
+    tab === "all" ? items : items.filter((n) => categoryOf(n) === tab);
+
   return (
     <main className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
@@ -298,7 +374,7 @@ export default async function NotificationsPage() {
             <span className="text-3xl">🔔</span>
 
             <h1 className="text-4xl font-bold tracking-tight">
-              Notifications
+              Inbox
             </h1>
           </div>
 
@@ -349,8 +425,54 @@ export default async function NotificationsPage() {
         )}
       </div>
 
+      {tab === "messages" && (
+        <p className="mb-4 text-sm">
+          <Link href="/messages" className="underline underline-offset-4">
+            Open all messages →
+          </Link>
+        </p>
+      )}
+
+      <nav
+        className="-mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1"
+        aria-label="Inbox sections"
+      >
+        {TABS.map((t) => {
+          const active = t.key === tab;
+          const count =
+            t.key === "all" ? unreadCount : (unreadBy[t.key] ?? 0);
+          return (
+            <Link
+              key={t.key}
+              href={t.key === "all" ? "/notifications" : `/notifications?tab=${t.key}`}
+              className={`flex shrink-0 items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                active ? "" : "opacity-60 hover:opacity-100"
+              }`}
+              style={
+                active
+                  ? { backgroundColor: "var(--button)", color: "var(--button-text)" }
+                  : { borderColor: "var(--card-border)" }
+              }
+            >
+              {t.label}
+              {count > 0 && (
+                <span
+                  className="rounded-full px-1.5 text-xs"
+                  style={{
+                    backgroundColor: active ? "var(--button-text)" : "var(--button)",
+                    color: active ? "var(--button)" : "var(--button-text)",
+                  }}
+                >
+                  {count}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
       {/* Empty state */}
-      {items.length === 0 ? (
+      {visible.length === 0 ? (
         <div
           className="
             rounded-2xl
@@ -369,7 +491,7 @@ export default async function NotificationsPage() {
           </div>
 
           <h2 className="text-2xl font-bold">
-            Nothing here yet
+            {tab === "all" ? "Nothing here yet" : "Nothing in this room"}
           </h2>
 
           <p className="mx-auto mt-3 max-w-md opacity-70">
@@ -401,7 +523,7 @@ export default async function NotificationsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {items.map((notification) => {
+          {visible.map((notification) => {
             const actor = notification.profiles?.[0] ?? null;
 
             const actorName =

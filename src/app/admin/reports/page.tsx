@@ -7,7 +7,7 @@ import { REASON_LABEL } from "@/lib/reports";
 type Report = {
   id: string;
   reporter_id: string | null;
-  target_type: "comment" | "review" | "user" | "guild_post" | "guild_reply";
+  target_type: "comment" | "review" | "user" | "guild_post" | "guild_reply" | "message";
   target_id: string;
   target_owner: string | null;
   context_url: string | null;
@@ -109,7 +109,7 @@ export default async function AdminReportsPage({
         </h1>
 
         <p className="mt-2 text-sm text-foreground/60">
-          Reports on comments, reviews, profiles and group posts. Removing content
+          Reports on comments, reviews, profiles, group posts and private messages (a reported message is the only way the team ever sees one). Removing content
           deletes it (and any replies to a comment), tells its author, and
           closes every report on it.
         </p>

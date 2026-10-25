@@ -11,7 +11,7 @@ export default async function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updated="October 24, 2026"
+      updated="October 26, 2026"
       intro={`This explains what ${name} collects about you, why, and what you can do about it. We collect what we need to run the site and nothing we plan to sell.`}
     >
       <LegalSection title="What we collect">
@@ -37,6 +37,12 @@ export default async function PrivacyPage() {
       <LegalSection title="What other people can see">
         <p>
           Your username, display name, profile picture, bio, public activity such as comments and reviews, and your stories are visible to others. Your email address is never shown. Your profile can be hidden from search in your settings. Leaderboards show your display name, and hidden profiles are not ranked.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Private messages">
+        <p>
+          Messages are private between you and the person you write to. We don&apos;t read them as a matter of course. If someone reports a message they received, our team can see that message and a few lines around it to decide what to do. Deleting a conversation removes it from your side; it is erased completely once both people have deleted it. You can choose who may message you, and block anyone, in your settings and conversations.
         </p>
       </LegalSection>
 

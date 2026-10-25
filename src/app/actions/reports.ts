@@ -23,7 +23,7 @@ export async function reportContent(
   details?: string
 ): Promise<{ ok: boolean; message: string }> {
   if (
-    !["comment", "review", "user", "guild_post", "guild_reply"].includes(type) ||
+    !["comment", "review", "user", "guild_post", "guild_reply", "message"].includes(type) ||
     typeof targetId !== "string" ||
     !REPORT_REASONS.some((r) => r.value === reason)
   ) {

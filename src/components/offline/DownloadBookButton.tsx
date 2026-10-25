@@ -1,18 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getBookForOffline } from "@/app/story/offlineActions";
 import {
   deleteOfflineBook,
   isBookDownloaded,
   saveOfflineBook,
 } from "@/lib/offline-books";
-
-type Chapter = {
-  id: string;
-  chapter_number: number;
-  title: string;
-  content: string;
-};
 
 type DownloadBookButtonProps = {
   storyId: string;
@@ -20,7 +14,7 @@ type DownloadBookButtonProps = {
   title: string;
   description: string | null;
   coverUrl: string | null;
-  chapters: Chapter[];
+  chapterCount: number;
   copyProtected?: boolean;
 };
 
@@ -30,7 +24,7 @@ export default function DownloadBookButton({
   title,
   description,
   coverUrl,
-  chapters,
+  chapterCount,
   copyProtected = false,
 }: DownloadBookButtonProps) {
   const [downloaded, setDownloaded] =
@@ -87,7 +81,7 @@ export default function DownloadBookButton({
       return;
     }
 
-    if (chapters.length === 0) {
+    if (chapterCount === 0) {
       setMessage(
         "There are no published chapters to download."
       );
@@ -99,13 +93,17 @@ export default function DownloadBookButton({
       setMessage("");
 
       /*
-       * The complete published chapter data is already
-       * available on the story page. We save all of it
-       * directly into IndexedDB.
-       *
-       * No chapter page needs to be opened.
-       * No chapter route needs to be cached.
+       * The chapter text is fetched now, on demand, so the story
+       * page itself stays light. It is then saved straight into
+       * IndexedDB. No chapter page needs to be opened.
        */
+      const chapters = await getBookForOffline(storyId);
+
+      if (chapters.length === 0) {
+        setMessage("The download failed. Please try again.");
+        return;
+      }
+
       await saveOfflineBook({
         storyId,
         slug,
@@ -212,8 +210,8 @@ export default function DownloadBookButton({
           className="rounded-lg border px-4 py-2 text-sm transition hover:bg-black/5 disabled:opacity-50 dark:hover:bg-white/5"
         >
           {downloading
-            ? `Downloading ${chapters.length} ${
-                chapters.length === 1
+            ? `Downloading ${chapterCount} ${
+                chapterCount === 1
                   ? "chapter"
                   : "chapters"
               }...`
