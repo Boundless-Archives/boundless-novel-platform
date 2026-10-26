@@ -77,6 +77,9 @@ export async function logAppError(input: {
   digest?: string | null;
   userId?: string | null;
 }) {
+  // Your own laptop shares the live database; keep its noise out of the log.
+  if (process.env.NODE_ENV !== "production") return;
+
   try {
     const fromError = input.error !== undefined ? describe(input.error) : null;
 

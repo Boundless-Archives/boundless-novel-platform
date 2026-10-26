@@ -49,13 +49,14 @@ export async function awardCultivationXP(
       p_xp: xp,
       p_source: source,
     })
-    .single();
+    // A user who hasn't chosen a path gets no rows back; that is normal.
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const result = data as BreakthroughResult;
+  const result = data as BreakthroughResult | null;
 
   if (!result || result.cultivation_path === null) {
     // User hasn't chosen a path yet — nothing to award.
