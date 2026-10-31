@@ -2,11 +2,40 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MessageSquare, Pause, Play, X } from "lucide-react";
+import { MessageSquare, Pause, Play, Settings2, X } from "lucide-react";
 
 const GAP = 48; // space between pages (hidden, only used for sliding)
 const SPEEDS = [10, 15, 20, 30, 45, 60, 90, 120];
 const FONT_KEY = "reader-font-scale";
+const PREFS_KEY = "reader-prefs-v1";
+
+const THEMES = {
+  site: { label: "Site", bg: null, fg: null },
+  paper: { label: "Paper", bg: "#fbfaf6", fg: "#1f1d1a" },
+  sepia: { label: "Sepia", bg: "#f4ecd8", fg: "#3b3226" },
+  night: { label: "Night", bg: "#000000", fg: "#cfcac0" },
+} as const;
+
+const SPACING = { tight: 1.6, normal: 1.9, roomy: 2.25 } as const;
+
+type ThemeKey = keyof typeof THEMES;
+type SpacingKey = keyof typeof SPACING;
+type Prefs = { theme: ThemeKey; spacing: SpacingKey; serif: boolean };
+
+function loadPrefs(): Prefs {
+  const fallback: Prefs = { theme: "site", spacing: "normal", serif: false };
+  try {
+    const raw = JSON.parse(localStorage.getItem(PREFS_KEY) ?? "null");
+    if (!raw) return fallback;
+    return {
+      theme: raw.theme in THEMES ? raw.theme : fallback.theme,
+      spacing: raw.spacing in SPACING ? raw.spacing : fallback.spacing,
+      serif: raw.serif === true,
+    };
+  } catch {
+    return fallback;
+  }
+}
 
 type Props = {
   html: string;
@@ -52,6 +81,8 @@ export default function PagedReader({
 
   const [layout, setLayout] = useState({ step: 0, pages: 1 });
   const [page, setPage] = useState(0);
+  const [prefs, setPrefs] = useState<Prefs>(loadPrefs);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   const [scale, setScale] = useState(() => {
     try {
@@ -117,7 +148,7 @@ export default function PagedReader({
       observer?.disconnect();
       inner?.removeEventListener("load", measure, true);
     };
-  }, [measure, scale]);
+  }, [measure, scale, prefs.spacing, prefs.serif]);
 
   const goTo = useCallback(
     (target: number) => {
@@ -195,6 +226,14 @@ export default function PagedReader({
     return () => clearTimeout(timer);
   }, [playing, page, seconds, layout, goTo, onPlayingChange]);
 
+  function updatePrefs(patch: Partial<Prefs>) {
+    const next = { ...prefs, ...patch };
+    setPrefs(next);
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+    } catch {}
+  }
+
   function changeScale(delta: number) {
     const nextScale = Math.min(1.8, Math.max(0.8, +(scale + delta).toFixed(2)));
 
@@ -218,6 +257,11 @@ export default function PagedReader({
     <div
       data-reader-ui
       className="fixed inset-0 z-[10000] flex flex-col bg-background text-foreground"
+      style={
+        THEMES[prefs.theme].bg
+          ? { backgroundColor: THEMES[prefs.theme].bg!, color: THEMES[prefs.theme].fg! }
+          : undefined
+      }
     >
       <header className="flex h-12 shrink-0 items-center gap-2 border-b border-card-border px-3">
         <button
@@ -247,6 +291,86 @@ export default function PagedReader({
         >
           A+
         </button>
+
+        <div className="relative">
+          <button
+            onClick={() => setPanelOpen((v) => !v)}
+            aria-label="Reading settings"
+            aria-expanded={panelOpen}
+            className="flex h-9 w-9 items-center justify-center rounded-lg opacity-80 hover:opacity-100"
+          >
+            <Settings2 size={18} />
+          </button>
+
+          {panelOpen && (
+            <div
+              className="absolute right-0 top-11 z-10 w-64 space-y-4 rounded-xl border p-4 text-sm shadow-xl"
+              style={{ backgroundColor: "var(--card)", color: "var(--foreground)", borderColor: "var(--card-border)" }}
+            >
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase opacity-60">Background</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(Object.keys(THEMES) as ThemeKey[]).map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => updatePrefs({ theme: k })}
+                      className="rounded-lg border px-1 py-1.5 text-xs"
+                      style={{
+                        backgroundColor: THEMES[k].bg ?? "var(--background)",
+                        color: THEMES[k].fg ?? "var(--foreground)",
+                        borderColor: prefs.theme === k ? "var(--button)" : "var(--card-border)",
+                        borderWidth: prefs.theme === k ? 2 : 1,
+                      }}
+                    >
+                      {THEMES[k].label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase opacity-60">Line spacing</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(Object.keys(SPACING) as SpacingKey[]).map((k) => (
+                    <button
+                      key={k}
+                      onClick={() => updatePrefs({ spacing: k })}
+                      className="rounded-lg border px-2 py-1.5 text-xs capitalize"
+                      style={{
+                        borderColor: prefs.spacing === k ? "var(--button)" : "var(--card-border)",
+                        borderWidth: prefs.spacing === k ? 2 : 1,
+                      }}
+                    >
+                      {k}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase opacity-60">Typeface</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[false, true].map((serif) => (
+                    <button
+                      key={String(serif)}
+                      onClick={() => updatePrefs({ serif })}
+                      className="rounded-lg border px-2 py-1.5 text-xs"
+                      style={{
+                        fontFamily: serif ? "var(--font-spectral), Georgia, serif" : undefined,
+                        borderColor: prefs.serif === serif ? "var(--button)" : "var(--card-border)",
+                        borderWidth: prefs.serif === serif ? 2 : 1,
+                      }}
+                    >
+                      {serif ? "Serif" : "Sans"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-xs opacity-60">Saved on this device.</p>
+            </div>
+          )}
+        </div>
 
         <select
           value={seconds}
@@ -306,7 +430,10 @@ export default function PagedReader({
               className="reader-columns"
               style={{
                 fontSize: `${1.125 * scale}rem`,
-                lineHeight: 1.9,
+                lineHeight: SPACING[prefs.spacing],
+                fontFamily: prefs.serif
+                  ? "var(--font-spectral), Georgia, serif"
+                  : undefined,
                 transform: `translateX(${-page * layout.step}px)`,
                 transition: layout.step === 0 ? "none" : undefined,
               }}

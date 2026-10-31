@@ -18,7 +18,7 @@ export default async function StoriesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_author, display_name, username")
+    .select("is_author, display_name, username, bio, avatar_url")
     .eq("id", user.id)
     .single();
 
@@ -79,6 +79,63 @@ export default async function StoriesPage() {
     0
   );
 
+  /*
+   * Getting-started checklist: shown until every step is done.
+   */
+  const firstStory = (stories ?? []).at(-1) ?? null; // oldest = the first one they made
+  const chapterStoryId = (stories ?? []).find((st) => st.cover_url)?.id ?? firstStory?.id;
+
+  const [{ count: genreLinks }, { count: publishedChapters }] =
+    storyIds.length > 0
+      ? await Promise.all([
+          supabase
+            .from("story_genres")
+            .select("story_id", { count: "exact", head: true })
+            .in("story_id", storyIds),
+          supabase
+            .from("chapters")
+            .select("id", { count: "exact", head: true })
+            .in("story_id", storyIds)
+            .eq("status", "Published"),
+        ])
+      : [{ count: 0 }, { count: 0 }];
+
+  const steps = [
+    {
+      done: Boolean(profile.display_name && profile.bio && profile.avatar_url),
+      title: "Complete your author profile",
+      text: "A name, a short bio and a picture help readers trust and follow you.",
+      href: "/profile/edit",
+    },
+    {
+      done: (stories ?? []).length > 0,
+      title: "Create your first story",
+      text: "Give it a title and a hook readers can't resist.",
+      href: "/stories/new",
+    },
+    {
+      done: (stories ?? []).some((st) => Boolean(st.cover_url)),
+      title: "Add a cover",
+      text: "Stories with covers get opened far more often.",
+      href: firstStory ? `/stories/${firstStory.id}/edit` : "/stories/new",
+    },
+    {
+      done: (genreLinks ?? 0) > 0,
+      title: "Pick genres",
+      text: "Genres put your story in front of the right readers on Explore.",
+      href: firstStory ? `/stories/${firstStory.id}/edit` : "/stories/new",
+    },
+    {
+      done: (publishedChapters ?? 0) > 0,
+      title: "Publish your first chapter",
+      text: "Readers can only follow what's out there. Chapters need 300+ words to count for streaks and leaderboards.",
+      href: chapterStoryId ? `/stories/${chapterStoryId}/chapters/new` : "/stories/new",
+    },
+  ];
+
+  const stepsDone = steps.filter((st) => st.done).length;
+  const nextStep = steps.find((st) => !st.done);
+
   const publishedStories =
     (stories ?? []).filter(
       (story) => story.status !== "Draft"
@@ -103,6 +160,64 @@ export default async function StoriesPage() {
 
   return (
     <main className="max-w-7xl mx-auto px-6 py-10">
+
+      {nextStep && (
+        <section
+          className="mb-10 rounded-2xl border p-6"
+          style={{ backgroundColor: "var(--card)", borderColor: "var(--card-border)" }}
+          aria-label="Getting started"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-bold">Getting started</h2>
+            <span className="text-sm opacity-60">
+              {stepsDone} of {steps.length} done
+            </span>
+          </div>
+
+          <div
+            className="mt-3 h-2 overflow-hidden rounded-full"
+            style={{ backgroundColor: "var(--card-border)" }}
+          >
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${(stepsDone / steps.length) * 100}%`,
+                backgroundColor: "var(--button)",
+              }}
+            />
+          </div>
+
+          <ol className="mt-5 space-y-3">
+            {steps.map((st) => (
+              <li key={st.title} className="flex items-start gap-3">
+                <span
+                  className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold"
+                  style={
+                    st.done
+                      ? { backgroundColor: "var(--button)", color: "var(--button-text)", borderColor: "var(--button)" }
+                      : { borderColor: "var(--card-border)" }
+                  }
+                  aria-hidden
+                >
+                  {st.done ? "✓" : ""}
+                </span>
+                <div className={st.done ? "opacity-55" : ""}>
+                  <p className={`font-semibold ${st.done ? "line-through" : ""}`}>
+                    {st.done ? (
+                      st.title
+                    ) : (
+                      <Link href={st.href} className="underline underline-offset-4">
+                        {st.title}
+                      </Link>
+                    )}
+                  </p>
+                  {!st.done && <p className="text-sm opacity-70">{st.text}</p>}
+                </div>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
       {/* Header */}
 

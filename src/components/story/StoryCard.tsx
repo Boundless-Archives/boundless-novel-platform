@@ -4,6 +4,14 @@ import StoryStats from "./StoryStats";
 import Card from "@/components/ui/Card";
 import CanonTierBadge from "./CanonTierBadge";
 
+function updatedAgo(iso: string) {
+  const days = Math.floor((new Date().getTime() - new Date(iso).getTime()) / 86400000);
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 type StoryCardProps = {
   story: any;
   variant?: "default" | "compact" | "ranking";
@@ -151,6 +159,22 @@ export default function StoryCard({
           by {author}
         </p>
 
+        {/* Genres */}
+
+        {Array.isArray(story.genreNames) && story.genreNames.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {story.genreNames.slice(0, 3).map((name: string) => (
+              <span
+                key={name}
+                className="rounded-full border px-2.5 py-0.5 text-xs opacity-80"
+                style={{ borderColor: "var(--card-border)" }}
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Description */}
 
         {!compact && (
@@ -209,6 +233,12 @@ export default function StoryCard({
             >
               {story.status}
             </span>
+
+            {story.updated_at && (
+              <span className="text-xs opacity-55">
+                Updated {updatedAgo(story.updated_at)}
+              </span>
+            )}
           </div>
 
           <span

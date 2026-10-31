@@ -4,6 +4,7 @@ import PollCard from "@/components/chapter/PollCard";
 import { notFound } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
+import type { Metadata } from "next";
 
 import CommentForm from "@/components/chapter/CommentForm";
 import CommentList from "@/components/chapter/CommentList";
@@ -25,6 +26,61 @@ type Props = {
     id: string;
   }>;
 };
+
+function trimText(text: string | null | undefined, max = 200) {
+  const clean = (text ?? "").replace(/\s+/g, " ").trim();
+  return clean.length > max ? clean.slice(0, max - 1).trimEnd() + "…" : clean;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+
+  const { data: chapter } = await supabase
+    .from("chapters")
+    .select("chapter_number, title, status, story_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!chapter || chapter.status !== "Published") {
+    return { title: "Chapter", robots: { index: false } };
+  }
+
+  const { data: story } = await supabase
+    .from("stories")
+    .select("title, description, cover_url, status, copy_protected")
+    .eq("id", chapter.story_id)
+    .maybeSingle();
+
+  if (!story || story.status === "Draft") {
+    return { title: "Chapter", robots: { index: false } };
+  }
+
+  const title = `Chapter ${chapter.chapter_number}: ${chapter.title} · ${story.title}`;
+  const description =
+    trimText(story.description) || `Read ${story.title} on Boundless.`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/chapter/${id}` },
+    // Copy-protected books stay out of search results.
+    ...(story.copy_protected ? { robots: { index: false, follow: true } } : {}),
+    openGraph: {
+      type: "article",
+      title,
+      description,
+      url: `/chapter/${id}`,
+      ...(story.cover_url ? { images: [{ url: story.cover_url }] } : {}),
+    },
+    twitter: {
+      card: story.cover_url ? "summary_large_image" : "summary",
+      title,
+      description,
+      ...(story.cover_url ? { images: [story.cover_url] } : {}),
+    },
+  };
+}
 
 export default async function ChapterPage({
   params,

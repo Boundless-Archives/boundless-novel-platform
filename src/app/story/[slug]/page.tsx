@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import type { Metadata } from "next";
 import SaveStoryButton from "@/components/SaveStoryButton";
 import ChapterList from "@/components/story/ChapterList";
 import NextChapterCountdown from "@/components/story/NextChapterCountdown";
@@ -26,6 +27,51 @@ type Props = {
     slug: string;
   }>;
 };
+
+function trimText(text: string | null | undefined, max = 200) {
+  const clean = (text ?? "").replace(/\s+/g, " ").trim();
+  return clean.length > max ? clean.slice(0, max - 1).trimEnd() + "…" : clean;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+
+  const { data: story } = await supabase
+    .from("stories")
+    .select("title, description, cover_url, status, profiles ( display_name, username )")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (!story || story.status === "Draft") {
+    return { title: "Story not found", robots: { index: false } };
+  }
+
+  const author = Array.isArray(story.profiles) ? story.profiles[0] : story.profiles;
+  const by = author?.display_name || author?.username;
+  const description =
+    trimText(story.description) ||
+    `Read ${story.title}${by ? ` by ${by}` : ""} on Boundless.`;
+
+  return {
+    title: by ? `${story.title} by ${by}` : story.title,
+    description,
+    alternates: { canonical: `/story/${slug}` },
+    openGraph: {
+      type: "book",
+      title: story.title,
+      description,
+      url: `/story/${slug}`,
+      ...(story.cover_url ? { images: [{ url: story.cover_url }] } : {}),
+    },
+    twitter: {
+      card: story.cover_url ? "summary_large_image" : "summary",
+      title: story.title,
+      description,
+      ...(story.cover_url ? { images: [story.cover_url] } : {}),
+    },
+  };
+}
 
 export default async function PublicStoryPage({
   params,

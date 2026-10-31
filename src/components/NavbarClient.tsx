@@ -76,10 +76,27 @@ export default function NavbarClient({
   const pathname = usePathname();
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Open only for the page it was opened on, so navigating closes it.
+  const [moreFor, setMoreFor] = useState<string | null>(null);
+  const moreOpen = moreFor === pathname;
+  const setMoreOpen = (v: boolean | ((prev: boolean) => boolean)) => {
+    const next = typeof v === "function" ? v(moreOpen) : v;
+    setMoreFor(next ? pathname : null);
+  };
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  // Close the "More" menu on outside click.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const close = (e: MouseEvent) => {
+      if (!(e.target as HTMLElement).closest("[data-more-menu]")) setMoreFor(null);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [moreOpen]);
 
   useEffect(() => {
     if (searchOpen) {
@@ -300,6 +317,82 @@ export default function NavbarClient({
                 Boundless
               </span>
             </Link>
+          </div>
+
+          {/* Laptop navigation: the essentials, with the rest under More */}
+          <div className="hidden min-w-0 flex-1 justify-center lg:flex 2xl:hidden">
+            <nav className="flex items-center gap-1" aria-label="Main">
+              {(() => {
+                const visible = navItems.filter((item) => item.show);
+                const primaryHrefs = ["/", "/explore", "/library", "/guilds", "/events"];
+                const primary = visible.filter((i) => primaryHrefs.includes(i.href));
+                const rest = visible.filter((i) => !primaryHrefs.includes(i.href));
+                return (
+                  <>
+                    {primary.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="relative flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200"
+                        style={{
+                          backgroundColor: isActive(item.href) ? "var(--card)" : "transparent",
+                          color: isActive(item.href) ? "var(--accent)" : "inherit",
+                          fontWeight: isActive(item.href) ? 600 : undefined,
+                        }}
+                      >
+                        <item.Icon size={16} />
+                        {item.label}
+                      </Link>
+                    ))}
+
+                    <div className="relative" data-more-menu>
+                      <button
+                        type="button"
+                        onClick={() => setMoreOpen((v) => !v)}
+                        aria-expanded={moreOpen}
+                        aria-haspopup="menu"
+                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition hover:bg-[var(--card)]"
+                        style={{
+                          color: rest.some((i) => isActive(i.href)) ? "var(--accent)" : "inherit",
+                        }}
+                      >
+                        More
+                        <span aria-hidden className="text-xs">▾</span>
+                      </button>
+
+                      {moreOpen && (
+                        <div
+                          role="menu"
+                          className="absolute left-1/2 top-full z-[9999] mt-2 w-56 -translate-x-1/2 rounded-xl border p-1.5 shadow-xl"
+                          style={{ backgroundColor: "var(--background)", borderColor: "var(--card-border)" }}
+                        >
+                          {rest.map((item) => (
+                            <Link
+                              key={item.href}
+                              href={item.href}
+                              role="menuitem"
+                              className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition hover:bg-[var(--card)]"
+                              style={{ color: isActive(item.href) ? "var(--accent)" : "inherit" }}
+                            >
+                              <item.Icon size={16} />
+                              {item.label}
+                            </Link>
+                          ))}
+                          <Link
+                            href="/announcements"
+                            role="menuitem"
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition hover:bg-[var(--card)]"
+                          >
+                            <Megaphone size={16} />
+                            Announcements
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </nav>
           </div>
 
           {/* Full desktop navigation */}

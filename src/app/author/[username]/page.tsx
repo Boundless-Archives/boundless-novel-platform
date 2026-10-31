@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import FollowButton from "@/components/profile/FollowButton";
 import ReportButton from "@/components/moderation/ReportButton";
 import BadgeCollection from "@/components/badges/BadgeCollection";
+import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { getCultivationProfileFor } from "@/app/cultivation/actions";
 import FramedAvatar from "@/components/cosmetics/FramedAvatar";
@@ -15,6 +16,40 @@ type Props = {
     username: string;
   }>;
 };
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { username } = await params;
+  const supabase = await createClient();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name, username, bio, avatar_url, is_searchable")
+    .eq("username", username)
+    .maybeSingle();
+
+  if (!profile) return { title: "Author not found", robots: { index: false } };
+
+  const name = profile.display_name || profile.username;
+  const bio = (profile.bio ?? "").replace(/\s+/g, " ").trim();
+  const description = bio
+    ? bio.length > 200 ? bio.slice(0, 199).trimEnd() + "…" : bio
+    : `Stories and updates from ${name} on Boundless.`;
+
+  return {
+    title: name,
+    description,
+    alternates: { canonical: `/author/${profile.username}` },
+    // Profiles hidden from search stay out of search engines too.
+    ...(profile.is_searchable === false ? { robots: { index: false, follow: false } } : {}),
+    openGraph: {
+      type: "profile",
+      title: name,
+      description,
+      url: `/author/${profile.username}`,
+      ...(profile.avatar_url ? { images: [{ url: profile.avatar_url }] } : {}),
+    },
+  };
+}
 
 export default async function AuthorPage({
   params,
@@ -627,7 +662,7 @@ export default async function AuthorPage({
             </h2>
 
             <p className="mt-1 text-sm opacity-65">
-              Explore this author's stories in series order.
+              Explore this author&apos;s stories in series order.
             </p>
 
           </div>
