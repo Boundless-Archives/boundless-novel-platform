@@ -32,16 +32,18 @@ export default function StoryCard({
   const ranking = variant === "ranking";
 
   return (
-    <Card hover padding="md">
+    <Card hover padding="none" className="p-2 sm:p-5">
       <Link
       href={`/story/${story.slug}`}
       className="
         group
         flex
-        gap-5
+        gap-3
+        sm:gap-5
         rounded-2xl
         border
-        p-5
+        p-3
+        sm:p-5
         transition-all
         duration-300
         hover:-translate-y-1
@@ -62,8 +64,8 @@ export default function StoryCard({
     rounded-xl
     ${
       compact
-        ? "h-[140px] w-[95px]"
-        : "h-[180px] w-[125px]"
+        ? "h-[120px] w-[82px] sm:h-[140px] sm:w-[95px]"
+        : "h-[150px] w-[100px] sm:h-[180px] sm:w-[125px]"
     }
   `}
 >
@@ -209,22 +211,29 @@ export default function StoryCard({
           className="
             mt-auto
             flex
+            flex-wrap
             items-center
             justify-between
-            pt-6
+            gap-x-3
+            gap-y-2
+            pt-4
+            sm:pt-6
           "
         >
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <CanonTierBadge tier={story.canon_tier} size="sm" />
 
             <span
               className="
                 rounded-full
                 border
-                px-3
-                py-1
-                text-sm
+                px-2.5
+                py-0.5
+                text-xs
                 font-medium
+                sm:px-3
+                sm:py-1
+                sm:text-sm
               "
               style={{
                 borderColor:
@@ -235,7 +244,7 @@ export default function StoryCard({
             </span>
 
             {story.updated_at && (
-              <span className="text-xs opacity-55">
+              <span className="whitespace-nowrap text-xs opacity-55">
                 Updated {updatedAgo(story.updated_at)}
               </span>
             )}
@@ -243,6 +252,7 @@ export default function StoryCard({
 
           <span
             className="
+              shrink-0
               font-semibold
               text-cyan-500
               transition-transform
