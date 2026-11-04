@@ -53,6 +53,7 @@ export default function FeaturedStoryCard({
               alt={story.title}
               fill
               priority
+              sizes="(max-width: 768px) 100vw, 50vw"
               className="object-cover"
             />
           ) : (
