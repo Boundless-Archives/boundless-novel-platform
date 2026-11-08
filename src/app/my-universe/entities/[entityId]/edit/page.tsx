@@ -10,6 +10,7 @@ import {
 import { ENTITY_TYPES, getEntityTypeLabel } from "@/lib/entityTypes";
 import RelationshipManager from "@/components/wiki/RelationshipManager";
 import { createClient } from "@/utils/supabase/client";
+import { getEntityTemplate } from "@/lib/entityTemplates";
 
 type MyStory = {
   id: string;
@@ -31,6 +32,9 @@ export default function EditEntityPage() {
   const [originStoryId, setOriginStoryId] = useState("");
   const [appearanceIds, setAppearanceIds] = useState<string[]>([]);
   const [universeSlug, setUniverseSlug] = useState("");
+  const [revealChapter, setRevealChapter] = useState("");
+  const [timelineLabel, setTimelineLabel] = useState("");
+  const [timelineOrder, setTimelineOrder] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -56,6 +60,9 @@ export default function EditEntityPage() {
         )
       );
       setUniverseSlug(entity.universeSlug);
+      setRevealChapter(entity.revealChapter ? String(entity.revealChapter) : "");
+      setTimelineLabel(entity.timelineLabel);
+      setTimelineOrder(entity.timelineOrder !== null ? String(entity.timelineOrder) : "");
       setStories(myStories);
       setLoading(false);
     }
@@ -139,6 +146,9 @@ export default function EditEntityPage() {
           content,
           imageUrl,
           appearanceStoryIds: appearanceIds,
+          revealChapter: revealChapter ? Number(revealChapter) : null,
+          timelineLabel,
+          timelineOrder: timelineOrder.trim() !== "" ? Number(timelineOrder) : null,
         });
 
         router.push("/my-universe");
@@ -251,6 +261,17 @@ export default function EditEntityPage() {
             Full Entry
           </label>
 
+          {!content.trim() && (
+            <button
+              type="button"
+              onClick={() => setContent(getEntityTemplate(entityType).content)}
+              className="mb-2 rounded border px-3 py-1 text-sm"
+              style={{ borderColor: "var(--card-border)" }}
+            >
+              ✨ Insert starter template
+            </button>
+          )}
+
           <div className="flex gap-1 mb-2">
             <button type="button" onClick={() => wrapSelection("**")} className="px-2 py-1 rounded border text-sm font-bold" style={{ borderColor: "var(--card-border)" }}>B</button>
             <button type="button" onClick={() => wrapSelection("*")} className="px-2 py-1 rounded border text-sm italic" style={{ borderColor: "var(--card-border)" }}>I</button>
@@ -267,6 +288,47 @@ export default function EditEntityPage() {
             className="w-full border rounded-lg p-3"
           />
         </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block mb-2 font-medium">
+              Hide until chapter (optional)
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={revealChapter}
+              onChange={(e) => setRevealChapter(e.target.value)}
+              placeholder="e.g. 12"
+              className="w-full border rounded-lg p-3"
+            />
+            <p className="mt-1 text-xs opacity-60">
+              Readers only see this entry once they have reached that chapter of the origin story.
+            </p>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">
+              Timeline label (optional)
+            </label>
+            <input
+              value={timelineLabel}
+              onChange={(e) => setTimelineLabel(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Year 312, Ember Age"
+              className="w-full border rounded-lg p-3"
+            />
+            <input
+              type="number"
+              step="any"
+              value={timelineOrder}
+              onChange={(e) => setTimelineOrder(e.target.value)}
+              placeholder="Order on the timeline (e.g. 312)"
+              className="mt-2 w-full border rounded-lg p-3"
+            />
+          </div>
+        </div>
+
 
         {stories.length > 1 && (
           <div>

@@ -399,3 +399,16 @@ body {
     text-align: center;
   }
 }
+/* Lore marks: tappable wiki names inside chapters */
+.lore-mark {
+  cursor: pointer;
+  border-bottom: 1px dotted currentColor;
+  text-decoration: none;
+  outline-offset: 2px;
+}
+
+.lore-mark:hover,
+.lore-mark:focus-visible {
+  border-bottom-style: solid;
+  color: #06b6d4;
+}

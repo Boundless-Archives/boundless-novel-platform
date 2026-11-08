@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { reportClientError } from "@/app/actions/errorReport";
+import { isChunkLoadError, reloadForNewVersion } from "@/lib/chunkErrors";
 
 export default function GlobalError({
   error,
@@ -9,6 +10,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
+    // An old version of the site or a dropped connection: reload once to
+    // get the latest, and only report it if that doesn't help.
+    if (isChunkLoadError(error) && reloadForNewVersion()) return;
+
     if (!error.digest) {
       reportClientError(error.message, error.stack, window.location.pathname);
     }

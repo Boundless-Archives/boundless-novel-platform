@@ -5,22 +5,31 @@ import { getEntityTypeIcon, getEntityTypeLabel } from "@/lib/entityTypes";
 import CanonTierBadge from "@/components/story/CanonTierBadge";
 import { getRelationshipsForEntity } from "@/app/wiki/actions";
 import { renderMarkdown } from "@/lib/renderMarkdown";
+import { getReadingProgress, lockedUntil } from "@/lib/spoilers";
+import SpoilerGate from "@/components/wiki/SpoilerGate";
+import SuggestForm, { SUGGEST_MESSAGES } from "@/components/wiki/SuggestForm";
 
 type Props = {
   params: Promise<{
     universeSlug: string;
     entitySlug: string;
   }>;
+  searchParams: Promise<{ s?: string }>;
 };
 
-export default async function EntityPage({ params }: Props) {
+export default async function EntityPage({ params, searchParams }: Props) {
   const { universeSlug, entitySlug } = await params;
+  const { s: suggestStatus } = await searchParams;
 
   const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const { data: universe } = await supabase
     .from("universes")
-    .select("id, name, slug")
+    .select("id, name, slug, owner_id")
     .eq("slug", universeSlug)
     .maybeSingle();
 
@@ -38,6 +47,10 @@ export default async function EntityPage({ params }: Props) {
       summary,
       content,
       image_url,
+      created_by,
+      origin_story_id,
+      reveal_chapter,
+      timeline_label,
       origin_story:origin_story_id ( id, title, slug, canon_tier ),
       entity_appearances (
         stories ( id, title, slug, canon_tier )
@@ -70,6 +83,29 @@ export default async function EntityPage({ params }: Props) {
     slug: string;
     canon_tier: string;
   }[];
+
+  // co-authors and the owner always see everything
+  let isTeam = !!user && (universe.owner_id === user.id || entity.created_by === user.id);
+  if (user && !isTeam) {
+    const { data: member } = await supabase
+      .from("universe_members")
+      .select("user_id")
+      .eq("universe_id", universe.id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    isTeam = !!member;
+  }
+
+  const progress = await getReadingProgress(
+    supabase,
+    user?.id,
+    entity.origin_story_id ? [entity.origin_story_id] : []
+  );
+  const lockChapter = lockedUntil(
+    { origin_story_id: entity.origin_story_id, reveal_chapter: entity.reveal_chapter },
+    progress,
+    isTeam
+  );
 
   const isCanon = appearances.some(
     (story) => story.canon_tier === "S"
@@ -109,6 +145,39 @@ export default async function EntityPage({ params }: Props) {
         {getEntityTypeLabel(entity.entity_type)}
       </p>
 
+      {entity.timeline_label && (
+        <p className="mt-2 text-sm opacity-70">🕰️ {entity.timeline_label}</p>
+      )}
+
+      {lockChapter !== null ? (
+        <SpoilerGate chapter={lockChapter} storyTitle={originStory?.title ?? "its story"}>
+      {entity.image_url && (
+          <img
+            src={entity.image_url}
+            alt={entity.name}
+            className="mt-6 w-full max-w-sm rounded-xl border object-cover"
+            style={{ borderColor: "var(--card-border)" }}
+          />
+        )}
+  
+        {entity.summary && (
+          <p className="mt-5 text-lg opacity-90">
+            {entity.summary}
+          </p>
+        )}
+  
+        {entity.content && (
+          <div
+            className="mt-6 prose-content leading-7 opacity-90"
+            dangerouslySetInnerHTML={{
+              __html: renderMarkdown(entity.content),
+            }}
+          />
+        )}
+  
+  </SpoilerGate>
+      ) : (
+        <>
       {entity.image_url && (
         <img
           src={entity.image_url}
@@ -131,6 +200,9 @@ export default async function EntityPage({ params }: Props) {
             __html: renderMarkdown(entity.content),
           }}
         />
+      )}
+
+        </>
       )}
 
       <section
@@ -196,6 +268,24 @@ export default async function EntityPage({ params }: Props) {
           </>
         )}
       </section>
+      {suggestStatus && SUGGEST_MESSAGES[suggestStatus] && (
+        <div className="mt-6 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--card-border)" }}>
+          {SUGGEST_MESSAGES[suggestStatus]}
+        </div>
+      )}
+
+      {user && !isTeam && (
+        <div className="mt-6">
+          <SuggestForm
+            kind="edit"
+            universeId={universe.id}
+            entityId={entity.id}
+            returnTo={`/wiki/${universe.slug}/${entitySlug}`}
+            defaultSummary={entity.summary ?? ""}
+          />
+        </div>
+      )}
+
       {(outgoing.length > 0 || incoming.length > 0) && (
         <section
           className="mt-6 rounded-xl border p-5"

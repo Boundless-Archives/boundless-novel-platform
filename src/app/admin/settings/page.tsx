@@ -75,6 +75,11 @@ async function saveSettings(formData: FormData) {
     return Number.isFinite(n) ? Math.min(1000, Math.max(0, n)) : 0;
   };
 
+  const reward = (key: string) => {
+    const n = Math.floor(Number(text(key) || "0"));
+    return Number.isFinite(n) ? Math.min(500, Math.max(0, n)) : 0;
+  };
+
   const { error } = await supabase
     .from("platform_settings")
     .update({
@@ -107,6 +112,10 @@ async function saveSettings(formData: FormData) {
       lb_author_prize_1: prize("lb_author_prize_1"),
       lb_author_prize_2: prize("lb_author_prize_2"),
       lb_author_prize_3: prize("lb_author_prize_3"),
+
+      universe_reward_entries: reward("universe_reward_entries"),
+      universe_reward_relationship: reward("universe_reward_relationship"),
+      universe_reward_contribution: reward("universe_reward_contribution"),
     })
     .not("id", "is", null);
 
@@ -152,6 +161,9 @@ const FIELD_LABELS: Record<string, string> = {
   lb_author_prize_1: "Author prize #1",
   lb_author_prize_2: "Author prize #2",
   lb_author_prize_3: "Author prize #3",
+  universe_reward_entries: "Universe reward: entries",
+  universe_reward_relationship: "Universe reward: first connection",
+  universe_reward_contribution: "Universe reward: accepted suggestion",
 };
 
 function showValue(field: string, value: string | null) {
@@ -507,6 +519,50 @@ export default async function AdminSettingsPage({
                   />
                 </Field>
               ))}
+            </div>
+          </Section>
+
+          <Section
+            title="Universe rewards"
+            hint="Free Sparks for building a universe, each paid once (0 = no Sparks, the writer still gets the milestone notice). Entries only count with a real summary and body. Not multiplied by a Sparks event."
+          >
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="At 5, 15 and 30 entries (each)">
+                <input
+                  name="universe_reward_entries"
+                  type="number"
+                  min={0}
+                  max={500}
+                  step={1}
+                  defaultValue={settings.universe_reward_entries ?? 0}
+                  className={inputClass}
+                  style={{ borderColor: "var(--card-border)" }}
+                />
+              </Field>
+              <Field label="First connection drawn">
+                <input
+                  name="universe_reward_relationship"
+                  type="number"
+                  min={0}
+                  max={500}
+                  step={1}
+                  defaultValue={settings.universe_reward_relationship ?? 0}
+                  className={inputClass}
+                  style={{ borderColor: "var(--card-border)" }}
+                />
+              </Field>
+              <Field label="Accepted reader suggestion (first 10)">
+                <input
+                  name="universe_reward_contribution"
+                  type="number"
+                  min={0}
+                  max={500}
+                  step={1}
+                  defaultValue={settings.universe_reward_contribution ?? 0}
+                  className={inputClass}
+                  style={{ borderColor: "var(--card-border)" }}
+                />
+              </Field>
             </div>
           </Section>
 

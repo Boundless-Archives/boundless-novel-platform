@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { reportClientError } from "@/app/actions/errorReport";
+import { isChunkLoadError, reloadForNewVersion } from "@/lib/chunkErrors";
 
 export default function Error({
   error,
@@ -11,12 +12,18 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+    const outdated = isChunkLoadError(error);
+
   useEffect(() => {
+    // A page piece that failed to load is usually just an old version of the
+    // site: reload once to get the new one, and only report it if that fails.
+    if (outdated && reloadForNewVersion()) return;
+
     // Errors from the server already carry a digest and were logged there.
     if (!error.digest) {
       reportClientError(error.message, error.stack, window.location.pathname);
     }
-  }, [error]);
+  }, [error, outdated]);
 
   return (
     <main className="max-w-3xl mx-auto px-6 py-24 text-center">
@@ -26,18 +33,21 @@ export default function Error({
       </div>
 
       <h1 className="text-5xl font-bold">
-        Something Went Wrong
+        {outdated ? "Update Needed" : "Something Went Wrong"}
       </h1>
 
       <p className="mt-4 text-lg opacity-70">
-        An unexpected error occurred while the messengers loaded
-        this page.
+        {outdated
+          ? "Boundless was updated or your connection dropped while this page loaded. Reload to continue."
+          : "An unexpected error occurred while the messengers loaded this page."}
       </p>
 
       <div className="mt-10 flex flex-wrap justify-center gap-4">
 
         <button
-          onClick={() => reset()}
+          onClick={() =>
+            outdated ? window.location.reload() : reset()
+          }
           className="
             px-5
             py-3
@@ -48,7 +58,7 @@ export default function Error({
             borderColor: "var(--card-border)",
           }}
         >
-          Try Again
+          {outdated ? "Reload" : "Try Again"}
         </button>
 
         <Link

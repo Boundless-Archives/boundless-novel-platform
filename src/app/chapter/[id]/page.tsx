@@ -20,6 +20,8 @@ import {
 import ReaderMode from "@/components/chapter/ReaderMode";
 import CopyGuard from "@/components/chapter/CopyGuard";
 import ReportPlagiarismButton from "@/components/story/ReportPlagiarismButton";
+import LoreCards, { type LoreCardEntity } from "@/components/chapter/LoreCards";
+import { markLore } from "@/lib/loreLinks";
 
 type Props = {
   params: Promise<{
@@ -257,6 +259,43 @@ export default async function ChapterPage({
     (chapter.content ?? "").replace(/&nbsp;|\u00a0/g, " ")
   );
 
+  const isAuthor = story.author_id === user?.id;
+
+  // wiki entries that appear in this story become tappable lore cards
+  const { data: loreRows } = await supabase
+    .from("entity_appearances")
+    .select(
+      "entities ( id, name, slug, entity_type, summary, image_url, origin_story_id, reveal_chapter, universes ( slug ) )"
+    )
+    .eq("story_id", story.id);
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const loreEntities: LoreCardEntity[] = (loreRows ?? [])
+    .map((row: any) => (Array.isArray(row.entities) ? row.entities[0] : row.entities))
+    .filter((e: any) => e?.universes)
+    // spoiler gate: not before the chapter an entry is revealed in (authors see all)
+    .filter(
+      (e: any) =>
+        isAuthor ||
+        !e.reveal_chapter ||
+        e.origin_story_id !== story.id ||
+        chapter.chapter_number >= e.reveal_chapter
+    )
+    .map((e: any) => {
+      const uni = Array.isArray(e.universes) ? e.universes[0] : e.universes;
+      return {
+        id: e.id,
+        name: e.name,
+        type: e.entity_type,
+        summary: e.summary ?? null,
+        imageUrl: e.image_url ?? null,
+        href: `/wiki/${uni.slug}/${e.slug}`,
+      };
+    });
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
+  const chapterHtml = markLore(tagged.html, loreEntities);
+
   const [reactionRows, poll] = await Promise.all([
     fetchReactions(chapter.id, user?.id ?? null),
     fetchPoll(chapter.id, user?.id ?? null),
@@ -288,7 +327,6 @@ export default async function ChapterPage({
   );
 
   // Copy protection is the author's choice; authors can always copy their own text
-  const isAuthor = story.author_id === user?.id;
   const copyProtected = Boolean(story.copy_protected) && !isAuthor;
 
   const { data: authorProfile } = await supabase
@@ -420,9 +458,11 @@ export default async function ChapterPage({
           className={copyProtected ? "copy-protected" : undefined}
           data-attribute-copy={copyProtected ? undefined : ""}
           dangerouslySetInnerHTML={{
-            __html: tagged.html,
+            __html: chapterHtml,
           }}
         />
+
+        <LoreCards entities={loreEntities} />
 
 {/* ...the "End of Chapter" paragraph stays as it is... */}
 

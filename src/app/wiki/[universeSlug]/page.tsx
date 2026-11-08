@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import RelationshipGraph from "@/components/wiki/RelationshipGraph";
+import SuggestForm, { SUGGEST_MESSAGES } from "@/components/wiki/SuggestForm";
+import { getReadingProgress, lockedUntil } from "@/lib/spoilers";
 import {
   getEntityTypeIcon,
   getEntityTypeLabel,
@@ -8,14 +11,21 @@ import {
 
 type Props = {
   params: Promise<{ universeSlug: string }>;
+  searchParams: Promise<{ s?: string }>;
 };
 
 export default async function UniversePage({
   params,
+  searchParams,
 }: Props) {
   const { universeSlug } = await params;
+  const { s: suggestStatus } = await searchParams;
 
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const { data: universe } = await supabase
     .from("universes")
@@ -27,6 +37,7 @@ export default async function UniversePage({
       description,
       banner_url,
       multiverse,
+      owner_id,
       owner:owner_id ( username, display_name )
     `
     )
@@ -46,6 +57,11 @@ export default async function UniversePage({
       slug,
       entity_type,
       summary,
+      origin_story_id,
+      reveal_chapter,
+      timeline_label,
+      timeline_order,
+      created_by,
       entity_appearances (
         stories ( canon_tier )
       )
@@ -54,12 +70,48 @@ export default async function UniversePage({
     .eq("universe_id", universe.id)
     .order("name");
 
+  const entityIds = (entities ?? []).map((e: { id: string }) => e.id);
+
+  const { data: relationshipRows } =
+    entityIds.length > 0
+      ? await supabase
+          .from("entity_relationships")
+          .select("from_entity_id, to_entity_id, relationship_type")
+          .in("from_entity_id", entityIds)
+      : { data: [] };
+
   function first<T>(value: T | T[] | null): T | null {
     if (!value) return null;
     return Array.isArray(value) ? value[0] ?? null : value;
   }
 
   const owner = first(universe.owner);
+
+  const { data: memberRows } = await supabase
+    .from("universe_members")
+    .select("user_id")
+    .eq("universe_id", universe.id);
+
+  const { data: coAuthorProfiles } =
+    (memberRows ?? []).length > 0
+      ? await supabase
+          .from("profiles")
+          .select("username, display_name")
+          .in("id", (memberRows ?? []).map((m) => m.user_id))
+      : { data: [] };
+
+  const coAuthors = (coAuthorProfiles ?? []) as { username: string; display_name: string | null }[];
+
+  const isTeam =
+    !!user &&
+    (universe.owner_id === user.id ||
+      (memberRows ?? []).some((m: any) => m.user_id === user.id));
+
+  const progress = await getReadingProgress(
+    supabase,
+    user?.id,
+    [...new Set((entities ?? []).map((e: any) => e.origin_story_id).filter(Boolean))] as string[]
+  );
 
   const entityList = (entities ?? []).map((entity: any) => {
     const isCanon = (entity.entity_appearances ?? []).some(
@@ -69,8 +121,14 @@ export default async function UniversePage({
       }
     );
 
-    return { ...entity, isCanon };
+    const lock = lockedUntil(entity, progress, isTeam || entity.created_by === user?.id);
+
+    return { ...entity, isCanon, lock };
   });
+
+  const timeline = entityList
+    .filter((e: any) => e.timeline_order !== null && e.timeline_order !== undefined)
+    .sort((a: any, b: any) => Number(a.timeline_order) - Number(b.timeline_order));
 
   const grouped = entityList.reduce(
     (acc: Record<string, typeof entityList>, entity) => {
@@ -109,11 +167,39 @@ export default async function UniversePage({
         {owner?.display_name ?? owner?.username ?? "Unknown"}
       </p>
 
+      {coAuthors.length > 0 && (
+        <p className="text-sm opacity-60 mt-1">
+          With{" "}
+          {coAuthors.map((c, i) => (
+            <span key={c.username}>
+              {i > 0 && ", "}
+              <Link href={`/author/${c.username}`} className="underline">
+                {c.display_name ?? c.username}
+              </Link>
+            </span>
+          ))}
+        </p>
+      )}
+
       {universe.description && (
         <p className="mt-4 max-w-2xl opacity-80">
           {universe.description}
         </p>
       )}
+
+      <RelationshipGraph
+        nodes={entityList.map((e: { id: string; name: string; entity_type: string; slug: string }) => ({
+          id: e.id,
+          name: e.name,
+          type: e.entity_type,
+          href: `/wiki/${universe.slug}/${e.slug}`,
+        }))}
+        edges={(relationshipRows ?? []).map((r) => ({
+          from: r.from_entity_id,
+          to: r.to_entity_id,
+          label: r.relationship_type,
+        }))}
+      />
 
       {entityList.length === 0 ? (
         <div
@@ -177,10 +263,16 @@ export default async function UniversePage({
                     </span>
                   </div>
 
-                  {entity.summary && (
-                    <p className="mt-2 text-sm opacity-70 line-clamp-2">
-                      {entity.summary}
+                  {entity.lock ? (
+                    <p className="mt-2 text-sm opacity-60">
+                      🔒 Hidden until chapter {entity.lock}
                     </p>
+                  ) : (
+                    entity.summary && (
+                      <p className="mt-2 text-sm opacity-70 line-clamp-2">
+                        {entity.summary}
+                      </p>
+                    )
                   )}
                 </Link>
               ))}
@@ -188,6 +280,48 @@ export default async function UniversePage({
           </section>
         ))
       )}
+
+      {timeline.length > 0 && (
+        <section className="mt-12">
+          <h2 className="text-2xl font-bold mb-4">🕰️ Timeline</h2>
+
+          <ol className="relative ml-3 space-y-5 border-l pl-6" style={{ borderColor: "var(--card-border)" }}>
+            {timeline.map((entity: any) => (
+              <li key={entity.id} className="relative">
+                <span className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full bg-cyan-500" />
+                <p className="text-sm font-semibold text-cyan-500">
+                  {entity.timeline_label ?? ""}
+                </p>
+                <Link
+                  href={`/wiki/${universe.slug}/${entity.slug}`}
+                  className="font-semibold hover:underline"
+                >
+                  {getEntityTypeIcon(entity.entity_type)} {entity.name}
+                </Link>
+                {entity.lock ? (
+                  <p className="text-sm opacity-60">🔒 Hidden until chapter {entity.lock}</p>
+                ) : (
+                  entity.summary && (
+                    <p className="text-sm opacity-70 line-clamp-2">{entity.summary}</p>
+                  )
+                )}
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <section className="mt-12 space-y-3">
+        {suggestStatus && SUGGEST_MESSAGES[suggestStatus] && (
+          <div className="rounded-lg border p-3 text-sm" style={{ borderColor: "var(--card-border)" }}>
+            {SUGGEST_MESSAGES[suggestStatus]}
+          </div>
+        )}
+
+        {user && !isTeam && (
+          <SuggestForm kind="new" universeId={universe.id} returnTo={`/wiki/${universe.slug}`} />
+        )}
+      </section>
     </main>
   );
 }

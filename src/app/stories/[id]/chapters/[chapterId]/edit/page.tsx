@@ -340,7 +340,7 @@ export default function EditChapterPage() {
         value={content}
         onChange={setContent}
       >
-        <EditorToolbar />
+        <EditorToolbar storyId={storyId} />
       </LexicalEditor>
     </div>
 

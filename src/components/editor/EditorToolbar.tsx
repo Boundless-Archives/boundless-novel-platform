@@ -34,7 +34,7 @@ import {
   REDO_COMMAND,
 } from "lexical";
 
-export default function EditorToolbar() {
+export default function EditorToolbar({ storyId }: { storyId?: string }) {
   const [editor] =
     useLexicalComposerContext();
 
@@ -401,6 +401,27 @@ setFormats({
   `}
 >
   {"</>"}
+</button>
+
+<button
+  type="button"
+  title="Select a name, then tap to add it to your universe"
+  onClick={() => {
+    let selected = "";
+    editor.getEditorState().read(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        selected = selection.getTextContent().trim().replace(/\s+/g, " ").slice(0, 60);
+      }
+    });
+    const query = new URLSearchParams();
+    if (selected) query.set("name", selected);
+    if (storyId) query.set("story", storyId);
+    window.open(`/my-universe/entities/new?${query.toString()}`, "_blank", "noopener");
+  }}
+  className="rounded-lg px-3 py-2 hover:bg-black/10 dark:hover:bg-white/10"
+>
+  📖 Lore
 </button>
 
 <button

@@ -3,6 +3,59 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { createSlug } from "@/lib/entityTypes";
+import { createAdminClient } from "@/utils/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/* Writer may add to their own universe, or to one they were invited to. */
+async function resolveUniverseForWrite(userId: string, universeId?: string) {
+  const own = await getOrCreateMyUniverse();
+
+  if (!universeId || universeId === own.id) {
+    return { universe: own, db: (await createClient()) as SupabaseClient };
+  }
+
+  const admin = createAdminClient();
+  const { data: allowed } = await admin.rpc("can_edit_universe", {
+    p_user: userId,
+    p_universe: universeId,
+  });
+
+  if (!allowed) {
+    throw new Error("You can't add entries to that universe.");
+  }
+
+  const { data: shared } = await admin
+    .from("universes")
+    .select("*")
+    .eq("id", universeId)
+    .single();
+
+  if (!shared) throw new Error("Universe not found.");
+
+  return { universe: shared, db: admin as SupabaseClient };
+}
+
+async function awardUniverseProgress(userId: string) {
+  try {
+    await createAdminClient().rpc("award_universe_progress", { p_user: userId });
+  } catch (error) {
+    console.error("award_universe_progress failed:", error);
+  }
+}
+
+function cleanReveal(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(value)) return null;
+  const n = Math.floor(value);
+  return n >= 1 && n <= 5000 ? n : null;
+}
+
+function cleanTimeline(label: string | undefined, order: number | null | undefined) {
+  const trimmed = (label ?? "").trim().slice(0, 80);
+  return {
+    timeline_label: trimmed || null,
+    timeline_order: order != null && Number.isFinite(order) ? order : null,
+  };
+}
 
 async function getAuthenticatedUser() {
   const supabase = await createClient();
@@ -16,6 +69,27 @@ async function getAuthenticatedUser() {
   }
 
   return { supabase, user };
+}
+
+/* Owner edits through RLS; a co-author may only edit entries they created. */
+async function dbForEntityEdit(
+  supabase: SupabaseClient,
+  userId: string,
+  entity: { created_by?: string; universe_id?: string } | null | undefined,
+  universeInfo: { owner_id?: string } | null | undefined
+): Promise<SupabaseClient> {
+  if (entity && universeInfo?.owner_id === userId) return supabase;
+
+  if (entity && entity.created_by === userId && entity.universe_id) {
+    const admin = createAdminClient();
+    const { data: allowed } = await admin.rpc("can_edit_universe", {
+      p_user: userId,
+      p_universe: entity.universe_id,
+    });
+    if (allowed) return admin as SupabaseClient;
+  }
+
+  throw new Error("You can only edit entries you own or created.");
 }
 
 /*
@@ -149,6 +223,10 @@ export async function createEntity(input: {
   imageUrl: string | null;
   originStoryId: string;
   appearanceStoryIds: string[];
+  universeId?: string;
+  revealChapter?: number | null;
+  timelineLabel?: string;
+  timelineOrder?: number | null;
 }) {
   const { supabase, user } =
     await getAuthenticatedUser();
@@ -159,7 +237,10 @@ export async function createEntity(input: {
     );
   }
 
-  const universe = await getOrCreateMyUniverse();
+  const { universe, db } = await resolveUniverseForWrite(
+    user.id,
+    input.universeId
+  );
 
   const { data: originStory } = await supabase
     .from("stories")
@@ -175,7 +256,7 @@ export async function createEntity(input: {
 
   let slug = createSlug(input.name);
 
-  const { data: slugTaken } = await supabase
+  const { data: slugTaken } = await db
     .from("entities")
     .select("id")
     .eq("universe_id", universe.id)
@@ -186,9 +267,11 @@ export async function createEntity(input: {
     slug = `${slug}-${Date.now().toString(36)}`;
   }
 
-  const { data: entity, error } = await supabase
+  const { data: entity, error } = await db
     .from("entities")
     .insert({
+      reveal_chapter: cleanReveal(input.revealChapter),
+      ...cleanTimeline(input.timelineLabel, input.timelineOrder),
       universe_id: universe.id,
       origin_story_id: input.originStoryId,
       entity_type: input.entityType,
@@ -213,7 +296,7 @@ export async function createEntity(input: {
     ])
   );
 
-  const { error: appearanceError } = await supabase
+  const { error: appearanceError } = await db
     .from("entity_appearances")
     .insert(
       appearanceIds.map((storyId) => ({
@@ -231,6 +314,7 @@ export async function createEntity(input: {
 
   const { checkAndAwardBadges } = await import("@/app/badges/actions");
   await checkAndAwardBadges(user.id);
+  await awardUniverseProgress(user.id);
 
   return { entityId: entity.id, universeSlug: universe.slug };
 }
@@ -248,6 +332,9 @@ export async function updateEntity(
     content: string;
     imageUrl: string | null;
     appearanceStoryIds: string[];
+    revealChapter?: number | null;
+    timelineLabel?: string;
+    timelineOrder?: number | null;
   }
 ) {
   const { supabase, user } =
@@ -256,7 +343,7 @@ export async function updateEntity(
   const { data: entity } = await supabase
     .from("entities")
     .select(
-      "id, universe_id, origin_story_id, universes!inner(owner_id, slug)"
+      "id, universe_id, origin_story_id, created_by, universes!inner(owner_id, slug)"
     )
     .eq("id", entityId)
     .maybeSingle();
@@ -265,15 +352,14 @@ export async function updateEntity(
     ? entity?.universes[0]
     : entity?.universes;
 
-  if (!entity || universeInfo?.owner_id !== user.id) {
-    throw new Error(
-      "You can only edit entities in your own universe."
-    );
-  }
+  const db = await dbForEntityEdit(supabase, user.id, entity, universeInfo);
+  if (!entity) throw new Error("Entry not found.");
 
-  const { error } = await supabase
+  const { error } = await db
     .from("entities")
     .update({
+      reveal_chapter: cleanReveal(input.revealChapter),
+      ...cleanTimeline(input.timelineLabel, input.timelineOrder),
       entity_type: input.entityType,
       name: input.name,
       summary: input.summary || null,
@@ -294,12 +380,12 @@ export async function updateEntity(
     ])
   );
 
-  await supabase
+  await db
     .from("entity_appearances")
     .delete()
     .eq("entity_id", entityId);
 
-  const { error: appearanceError } = await supabase
+  const { error: appearanceError } = await db
     .from("entity_appearances")
     .insert(
       appearanceIds.map((storyId) => ({
@@ -335,6 +421,10 @@ export async function getEntityForEdit(entityId: string) {
       content,
       image_url,
       origin_story_id,
+      created_by,
+      reveal_chapter,
+      timeline_label,
+      timeline_order,
       universes!inner ( owner_id, slug ),
       entity_appearances ( story_id )
     `
@@ -350,11 +440,8 @@ export async function getEntityForEdit(entityId: string) {
     ? entity?.universes[0]
     : entity?.universes;
 
-  if (!entity || universeInfo?.owner_id !== user.id) {
-    throw new Error(
-      "You can only edit entities in your own universe."
-    );
-  }
+  await dbForEntityEdit(supabase, user.id, entity, universeInfo);
+  if (!entity) throw new Error("Entry not found.");
 
   return {
     id: entity.id,
@@ -365,6 +452,9 @@ export async function getEntityForEdit(entityId: string) {
     imageUrl: entity.image_url as string | null,
     originStoryId: entity.origin_story_id,
     universeSlug: universeInfo?.slug as string,
+    revealChapter: (entity.reveal_chapter as number | null) ?? null,
+    timelineLabel: (entity.timeline_label as string | null) ?? "",
+    timelineOrder: (entity.timeline_order as number | null) ?? null,
     appearanceStoryIds: (entity.entity_appearances ?? []).map(
       (appearance: any) => appearance.story_id
     ),
@@ -503,6 +593,7 @@ export async function addRelationship(
   }
 
   revalidatePath(`/wiki/${universeInfo?.slug}`);
+  await awardUniverseProgress(user.id);
 }
 
 /*

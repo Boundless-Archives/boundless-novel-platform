@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, useTransition, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState, useTransition, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   getMyStoriesForWiki,
   createEntity,
 } from "@/app/wiki/actions";
 import { ENTITY_TYPES, getEntityTypeLabel } from "@/lib/entityTypes";
 import { createClient } from "@/utils/supabase/client";
+import { getEntityTemplate, isTemplateContent } from "@/lib/entityTemplates";
 
 type MyStory = {
   id: string;
@@ -16,16 +17,30 @@ type MyStory = {
 };
 
 export default function NewEntityPage() {
+  return (
+    <Suspense fallback={null}>
+      <NewEntityForm />
+    </Suspense>
+  );
+}
+
+function NewEntityForm() {
   const router = useRouter();
+  const search = useSearchParams();
 
   const [stories, setStories] = useState<MyStory[]>([]);
   const [entityType, setEntityType] =
     useState<string>("character");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(search.get("name") ?? "");
   const [summary, setSummary] = useState("");
-  const [content, setContent] = useState("");
-  const [originStoryId, setOriginStoryId] = useState("");
+  const [content, setContent] = useState(
+    () => getEntityTemplate("character").content
+  );
+  const [originStoryId, setOriginStoryId] = useState(search.get("story") ?? "");
   const [appearanceIds, setAppearanceIds] = useState<string[]>([]);
+  const [revealChapter, setRevealChapter] = useState("");
+  const [timelineLabel, setTimelineLabel] = useState("");
+  const [timelineOrder, setTimelineOrder] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -37,6 +52,14 @@ export default function NewEntityPage() {
       .then(setStories)
       .catch(() => setStories([]));
   }, []);
+
+  function changeType(next: string) {
+    setEntityType(next);
+    // swap the starter outline only while the author hasn't written their own
+    if (isTemplateContent(content)) {
+      setContent(getEntityTemplate(next).content);
+    }
+  }
 
   function toggleAppearance(storyId: string) {
     setAppearanceIds((current) =>
@@ -108,6 +131,10 @@ export default function NewEntityPage() {
           imageUrl,
           originStoryId,
           appearanceStoryIds: appearanceIds,
+          revealChapter: revealChapter ? Number(revealChapter) : null,
+          timelineLabel,
+          timelineOrder: timelineOrder.trim() !== "" ? Number(timelineOrder) : null,
+          universeId: search.get("universe") ?? undefined,
         });
 
         router.push(`/my-universe`);
@@ -135,7 +162,7 @@ export default function NewEntityPage() {
 
           <select
             value={entityType}
-            onChange={(e) => setEntityType(e.target.value)}
+            onChange={(e) => changeType(e.target.value)}
             className="w-full border rounded-lg p-3"
           >
             {ENTITY_TYPES.map((type) => (
@@ -195,7 +222,7 @@ export default function NewEntityPage() {
             value={summary}
             onChange={(e) => setSummary(e.target.value)}
             rows={2}
-            placeholder="A one or two sentence blurb."
+            placeholder={getEntityTemplate(entityType).summary || "A one or two sentence blurb."}
             className="w-full border rounded-lg p-3"
           />
         </div>
@@ -220,6 +247,47 @@ export default function NewEntityPage() {
             placeholder="The full wiki entry — history, traits, rules, anything readers should know. Supports **bold**, *italic*, ## headings, and [links](url)."
             className="w-full border rounded-lg p-3"
           />
+        </div>
+
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block mb-2 font-medium">
+              Hide until chapter (optional)
+            </label>
+            <input
+              type="number"
+              min={1}
+              value={revealChapter}
+              onChange={(e) => setRevealChapter(e.target.value)}
+              placeholder="e.g. 12"
+              className="w-full border rounded-lg p-3"
+            />
+            <p className="mt-1 text-xs opacity-60">
+              Readers only see this entry once they have reached that chapter of the origin story.
+            </p>
+          </div>
+
+          <div>
+            <label className="block mb-2 font-medium">
+              Timeline label (optional)
+            </label>
+            <input
+              value={timelineLabel}
+              onChange={(e) => setTimelineLabel(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Year 312, Ember Age"
+              className="w-full border rounded-lg p-3"
+            />
+            <input
+              type="number"
+              step="any"
+              value={timelineOrder}
+              onChange={(e) => setTimelineOrder(e.target.value)}
+              placeholder="Order on the timeline (e.g. 312)"
+              className="mt-2 w-full border rounded-lg p-3"
+            />
+          </div>
         </div>
 
         <div>
