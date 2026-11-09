@@ -65,7 +65,27 @@ export default async function EventsPage({
       .order("starts_at", { ascending: true })
       .limit(100);
 
-    const events = (rows ?? []) as EventRow[];
+    const allEvents = (rows ?? []) as EventRow[];
+
+    // events of private groups are only for their members
+    const privateIds = new Set<string>();
+    const gIds = [...new Set(allEvents.map((e) => e.guild_id).filter(Boolean))] as string[];
+    if (gIds.length) {
+      const { data: priv } = await admin.from("guilds").select("id").in("id", gIds).eq("is_private", true);
+      (priv ?? []).forEach((g) => privateIds.add(g.id));
+    }
+    const memberOf = new Set<string>();
+    if (user && privateIds.size) {
+      const { data: mem } = await admin
+        .from("guild_members")
+        .select("guild_id")
+        .eq("user_id", user.id)
+        .in("guild_id", [...privateIds]);
+      (mem ?? []).forEach((m) => memberOf.add(m.guild_id));
+    }
+    const events = allEvents.filter(
+      (e) => !e.guild_id || !privateIds.has(e.guild_id) || memberOf.has(e.guild_id)
+    );
 
     const guildIds = [...new Set(events.map((e) => e.guild_id).filter(Boolean))] as string[];
     const { data: guilds } = guildIds.length

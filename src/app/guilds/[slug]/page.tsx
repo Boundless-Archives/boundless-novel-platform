@@ -6,7 +6,14 @@ import OfficialBadge from "@/components/guilds/OfficialBadge";
 import EventCard, { type EventRow } from "@/components/events/EventCard";
 import Card from "@/components/ui/Card";
 import ConfirmButton from "@/components/guilds/ConfirmButton";
-import { KIND_META, guildProgress, isoFromNow, timeAgo, type Guild } from "@/lib/guilds";
+import {
+  KIND_META,
+  canModerate,
+  guildProgress,
+  isoFromNow,
+  timeAgo,
+  type Guild,
+} from "@/lib/guilds";
 import {
   createPostAction,
   disbandGuildAction,
@@ -150,6 +157,10 @@ export default async function GuildPage({
   const isMember = !!membership;
   const isOwner = membership?.role === "owner";
   const isSuper = viewer?.role === "superadmin";
+  const mods = canModerate(membership?.role, isSuper);
+  const locked = guild.is_private && !isMember && !isSuper;
+  const pinned = posts.find((p) => p.id === guild.pinned_post_id) ?? null;
+  const restPosts = posts.filter((p) => p.id !== guild.pinned_post_id);
 
   const field = "w-full rounded-lg border bg-transparent px-3 py-2";
   const border = { borderColor: "var(--card-border)" };
@@ -164,11 +175,45 @@ export default async function GuildPage({
         ← Sects, Covens, Cults &amp; Guilds
       </Link>
 
-      <header className="mt-4 mb-8">
-        <p className="text-sm uppercase tracking-wide opacity-60">
+      {guild.banner_url ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={guild.banner_url}
+          alt=""
+          className="mt-4 aspect-[3/1] w-full rounded-2xl object-cover"
+        />
+      ) : (
+        <div
+          className="mt-4 aspect-[3/1] w-full rounded-2xl"
+          style={{
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--button) 35%, transparent), transparent 70%)",
+            border: "1px solid var(--card-border)",
+          }}
+        />
+      )}
+
+      <header className="mb-8">
+        <div className="-mt-10 flex items-end gap-4 px-4 sm:-mt-12 sm:px-6">
+          <div
+            className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-4 text-4xl sm:h-24 sm:w-24"
+            style={{ backgroundColor: "var(--card)", borderColor: "var(--background)" }}
+          >
+            {guild.emblem_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={guild.emblem_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <span aria-hidden>{meta?.icon}</span>
+            )}
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm uppercase tracking-wide opacity-60">
           {meta?.icon} {meta?.label}
+          {guild.is_private && " · 🔒 Private"}
         </p>
         <h1 className="mt-1 text-3xl font-bold">{guild.name}</h1>
+        {guild.motto && <p className="mt-1 italic opacity-70">&ldquo;{guild.motto}&rdquo;</p>}
         {guild.is_official && (
           <div className="mt-2">
             <OfficialBadge />
@@ -180,7 +225,13 @@ export default async function GuildPage({
           </p>
         )}
         <p className="mt-3 text-sm opacity-60">
-          {guild.member_count} {guild.member_count === 1 ? "member" : "members"}
+          {locked ? (
+            <>{guild.member_count} {guild.member_count === 1 ? "member" : "members"}</>
+          ) : (
+            <Link href={`/guilds/${guild.slug}/members`} className="underline underline-offset-4">
+              {guild.member_count} {guild.member_count === 1 ? "member" : "members"}
+            </Link>
+          )}
           {owner && (
             <>
               {" · "}Founded by{" "}
@@ -245,7 +296,7 @@ export default async function GuildPage({
             >
               Sign in to join
             </Link>
-          ) : !isMember ? (
+          ) : !isMember && !guild.is_private ? (
             <form action={joinGuildAction}>
               <input type="hidden" name="guildId" value={guild.id} />
               <input type="hidden" name="slug" value={guild.slug} />
@@ -257,6 +308,14 @@ export default async function GuildPage({
                 Join
               </button>
             </form>
+          ) : guild.is_private && !isMember ? (
+            <Link
+              href="/guilds/join"
+              className="rounded-lg px-4 py-2 text-sm font-semibold"
+              style={btn}
+            >
+              Enter invite code
+            </Link>
           ) : !isOwner ? (
             <form action={leaveGuildAction}>
               <input type="hidden" name="guildId" value={guild.id} />
@@ -265,6 +324,15 @@ export default async function GuildPage({
             </form>
           ) : (
             <span className="text-sm opacity-60">You founded this</span>
+          )}
+
+          {(isOwner || isSuper) && (
+            <Link
+              href={`/guilds/${guild.slug}/settings`}
+              className="text-sm underline underline-offset-4 opacity-80 hover:opacity-100"
+            >
+              ⚙️ Settings
+            </Link>
           )}
 
           {(isOwner || isSuper) && (
@@ -285,7 +353,38 @@ export default async function GuildPage({
         <p className="mb-4 text-sm text-red-500">{ERRORS[sp.e] ?? ERRORS.failed}</p>
       )}
 
-      {(events.length > 0 || isOwner || isSuper) && (
+      {locked && (
+        <div
+          className="rounded-xl border p-6 text-center"
+          style={{ backgroundColor: "var(--card)", borderColor: "var(--card-border)" }}
+        >
+          <p className="text-3xl">🔒</p>
+          <p className="mt-2 font-semibold">This group is private</p>
+          <p className="mt-1 text-sm opacity-70">
+            Its discussions and events are only visible to members. You need an invite code to join.
+          </p>
+        </div>
+      )}
+
+      {!locked && mods && guild.is_private && guild.invite_code && (
+        <p className="mb-6 rounded-lg border p-3 text-sm" style={{ borderColor: "var(--card-border)" }}>
+          🔑 Invite code: <code className="font-mono font-semibold">{guild.invite_code}</code>
+          <span className="opacity-60"> · share the link </span>
+          <code className="font-mono text-xs">/guilds/join?code={guild.invite_code}</code>
+        </p>
+      )}
+
+      {!locked && guild.rules && (
+        <details
+          className="mb-6 rounded-xl border p-4"
+          style={{ backgroundColor: "var(--card)", borderColor: "var(--card-border)" }}
+        >
+          <summary className="cursor-pointer text-sm font-semibold">📜 Rules</summary>
+          <p className="mt-3 whitespace-pre-wrap text-sm opacity-85">{guild.rules}</p>
+        </details>
+      )}
+
+      {!locked && (events.length > 0 || isOwner || isSuper) && (
         <section className="mb-8">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-semibold">Upcoming events</h2>
@@ -317,7 +416,7 @@ export default async function GuildPage({
         </section>
       )}
 
-      {isMember && (
+      {!locked && isMember && (
         <form action={createPostAction} className="mb-8 space-y-3">
           <input type="hidden" name="guildId" value={guild.id} />
           <input type="hidden" name="slug" value={guild.slug} />
@@ -349,16 +448,19 @@ export default async function GuildPage({
         </form>
       )}
 
-      {posts.length === 0 ? (
+      {locked ? null : posts.length === 0 ? (
         <p className="text-sm opacity-60">
           No discussions yet.{isMember ? " Start the first one above." : ""}
         </p>
       ) : (
         <div className="space-y-3">
-          {posts.map((p) => (
+          {(pinned ? [pinned, ...restPosts] : restPosts).map((p) => (
             <Link key={p.id} href={`/guilds/${guild.slug}/post/${p.id}`} className="block">
               <Card hover>
-                <h2 className="font-semibold">{p.title}</h2>
+                <h2 className="font-semibold">
+                  {p.id === guild.pinned_post_id && <span title="Pinned">📌 </span>}
+                  {p.title}
+                </h2>
                 <p className="mt-1 line-clamp-2 text-sm opacity-70">{p.body}</p>
                 <p className="mt-2 text-xs opacity-60">
                   {(p.author_id && nameOf.get(p.author_id)) || "A former member"}

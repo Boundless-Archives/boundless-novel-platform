@@ -4,11 +4,12 @@ import { createClient } from "@/utils/supabase/server";
 import { createAdminClient } from "@/utils/supabase/admin";
 import ConfirmButton from "@/components/guilds/ConfirmButton";
 import ReportButton from "@/components/moderation/ReportButton";
-import { timeAgo } from "@/lib/guilds";
+import { canModerate as canModerateRole, timeAgo } from "@/lib/guilds";
 import {
   createReplyAction,
   deletePostAction,
   deleteReplyAction,
+  pinPostAction,
 } from "../../../actions";
 
 const ERRORS: Record<string, string> = {
@@ -36,7 +37,7 @@ export default async function GuildPostPage({
 
   const { data: guild } = await admin
     .from("guilds")
-    .select("id, name, slug")
+    .select("id, name, slug, is_private, pinned_post_id")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -94,9 +95,12 @@ export default async function GuildPostPage({
   };
 
   const isMember = !!membership;
-  const isOwner = membership?.role === "owner";
   const isSuper = viewer?.role === "superadmin";
-  const canModerate = isOwner || isSuper;
+  const canModerate = canModerateRole(membership?.role, isSuper);
+  const isPinned = guild.pinned_post_id === post.id;
+
+  // private groups keep their discussions to members
+  if (guild.is_private && !isMember && !isSuper) notFound();
 
   const border = { borderColor: "var(--card-border)" };
 
@@ -119,6 +123,17 @@ export default async function GuildPostPage({
         <div className="mt-4 flex flex-wrap items-center gap-4">
           {user && user.id !== post.author_id && (
             <ReportButton type="guild_post" targetId={post.id} />
+          )}
+          {canModerate && (
+            <form action={pinPostAction}>
+              <input type="hidden" name="guildId" value={guild.id} />
+              <input type="hidden" name="postId" value={post.id} />
+              <input type="hidden" name="slug" value={guild.slug} />
+              {isPinned && <input type="hidden" name="unpin" value="1" />}
+              <button type="submit" className="text-sm underline underline-offset-4 opacity-70 hover:opacity-100">
+                {isPinned ? "📌 Unpin" : "📌 Pin to top"}
+              </button>
+            </form>
           )}
           {user && (user.id === post.author_id || canModerate) && (
             <form action={deletePostAction}>

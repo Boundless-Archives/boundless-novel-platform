@@ -59,8 +59,26 @@ export type Guild = {
   cultivation_xp: number;
   level: number;
   is_official: boolean;
+  emblem_url: string | null;
+  banner_url: string | null;
+  motto: string | null;
+  rules: string | null;
+  is_private: boolean;
+  invite_code: string | null;
+  pinned_post_id: string | null;
   created_at: string;
 };
+
+export const GUILD_ROLE_LABEL: Record<string, string> = {
+  owner: "Founder",
+  officer: "Officer",
+  member: "Member",
+};
+
+/* Owner and officers moderate; the superadmin always can. */
+export function canModerate(role: string | null | undefined, isSuper: boolean) {
+  return isSuper || role === "owner" || role === "officer";
+}
 
 export function timeAgo(iso: string) {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
