@@ -20,14 +20,14 @@ export default function WinterBanner({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-semibold uppercase tracking-wide opacity-70">
-            ❄️ Winter at Boundless
+            🕯️ Winter at the Hearth
           </p>
           <h2 className="mt-1 text-xl font-bold sm:text-2xl">
             {sprintLive ? "The Winter Writing Sprint is on" : "Wishing every reader a warm season"}
           </h2>
           <p className="mt-1 text-sm opacity-75">
             {sprintLive
-              ? "Publish chapters, earn winter badges and climb the board until 5 January."
+              ? "New prompts, winter badges and cash prizes for the best stories. Writing runs until 5 January."
               : "Curl up with a good story."}
           </p>
         </div>
@@ -54,6 +54,11 @@ export default function WinterBanner({
             style={{ backgroundColor: "var(--button)", color: "var(--button-text)" }}
           >
             See the sprint
+          </Link>
+        )}
+        {sprintLive && (
+          <Link href="/sprint/prizes" className="text-sm font-semibold underline underline-offset-4">
+            🏆 Prize Track
           </Link>
         )}
         <WinterToggle />

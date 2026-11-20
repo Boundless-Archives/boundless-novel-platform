@@ -157,6 +157,7 @@ export default async function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
+      data-season={winter ? "winter" : undefined}
       className={`${geistSans.variable} ${geistMono.variable} ${spectral.variable} h-full antialiased`}
     >
       <body
@@ -171,6 +172,11 @@ export default async function RootLayout({
         <Script id="bip-capture" strategy="beforeInteractive">
           {`window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__bip=e;});`}
         </Script>
+        {winter && (
+          <Script id="winter-pref" strategy="beforeInteractive">
+            {`try{if(localStorage.getItem("winter-off")==="1")document.documentElement.dataset.winter="off"}catch(e){}`}
+          </Script>
+        )}
         <AppSplash />
         <div className="cosmic-backdrop" aria-hidden="true" />
 

@@ -9,6 +9,7 @@ import AnnouncementBanner from "@/components/home/AnnouncementBanner";
 import { getContinueReading, type ContinueItem } from "@/lib/continueReading";
 import HomeGreeting from "@/components/home/HomeGreeting";
 import WinterBanner from "@/components/winter/WinterBanner";
+import HearthHero from "@/components/winter/HearthHero";
 import { isWinterSeason } from "@/lib/season";
 import { getCurrentSprint } from "@/lib/sprint";
 import { nowMs } from "@/lib/guilds";
@@ -153,6 +154,7 @@ export default async function HomePage() {
 
       <section
         className="
+          hearth-hero
           relative
           overflow-hidden
           rounded-3xl
@@ -167,7 +169,9 @@ export default async function HomePage() {
         }}
       >
 
-        <div className="flex flex-col items-center">
+        {winter && <HearthHero />}
+
+        <div className="relative flex flex-col items-center">
 
           <Image
             src="/branding/hero-logo.png"
@@ -175,7 +179,7 @@ export default async function HomePage() {
             width={950}
             height={620}
             priority
-            className="w-full max-w-5xl object-contain drop-shadow-xl"
+            className="hearth-logo w-full max-w-5xl object-contain drop-shadow-xl"
           />
 
           <p

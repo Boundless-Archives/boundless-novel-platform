@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/* Lets anyone switch the falling snow and string lights off (and back on). */
+/* Lets anyone switch the whole winter look (colours, scenery, snow, lights) off and back on. */
 export default function WinterToggle({ className = "" }: { className?: string }) {
   const [off, setOff] = useState(false);
 
@@ -33,9 +33,9 @@ export default function WinterToggle({ className = "" }: { className?: string })
     <button
       type="button"
       onClick={toggle}
-      className={`text-xs underline underline-offset-4 opacity-70 hover:opacity-100 ${className}`}
+      className={`winter-toggle text-xs underline underline-offset-4 opacity-70 hover:opacity-100 ${className}`}
     >
-      {off ? "❄️ Turn winter effects on" : "Turn winter effects off"}
+      {off ? "🕯️ Bring back the winter look" : "Switch to the classic look"}
     </button>
   );
 }

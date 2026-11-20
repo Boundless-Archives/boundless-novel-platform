@@ -93,6 +93,20 @@ export default async function SprintPage({
 
       {note && <p className={`mb-4 text-sm ${note.bad ? "text-red-500" : ""}`}>{note.text}</p>}
 
+      {(sprint as unknown as { prize_enabled?: boolean }).prize_enabled && (
+        <Link
+          href="/sprint/prizes"
+          className="mb-6 block rounded-2xl border p-5 sm:p-6"
+          style={{ ...border, backgroundColor: "var(--card)" }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide opacity-70">🏆 New: Winter Prize Track</p>
+          <p className="mt-1 text-lg font-bold">Write to a prompt and win up to ₦20,000</p>
+          <p className="mt-1 text-sm opacity-80">
+            Genre prompts, reader voting and judges. Cash prizes for 1st, 2nd and 3rd. See the prompts, enter your story and read the rules →
+          </p>
+        </Link>
+      )}
+
       <section className="rounded-2xl border p-5 sm:p-6" style={{ ...border, backgroundColor: "var(--card)" }}>
         {!user ? (
           <div className="flex flex-wrap items-center justify-between gap-3">

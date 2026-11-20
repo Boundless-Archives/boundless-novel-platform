@@ -1,4 +1,5 @@
 import Link from "next/link";
+import WinterToggle from "@/components/winter/WinterToggle";
 
 export default function SiteFooter({
   name,
@@ -27,6 +28,7 @@ export default function SiteFooter({
           <Link href="/leaderboard" className="hover:underline">
             Leaderboard
           </Link>
+          <WinterToggle className="!opacity-80" />
           {supportEmail && (
             <a href={`mailto:${supportEmail}`} className="hover:underline">
               Contact

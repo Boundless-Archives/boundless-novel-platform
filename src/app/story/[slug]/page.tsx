@@ -21,11 +21,13 @@ import {
   getStorySupporters,
 } from "@/app/gifts/actions";
 import ReportPlagiarismButton from "@/components/story/ReportPlagiarismButton";
+import PrizeVoteCard from "@/components/winter/PrizeVoteCard";
 
 type Props = {
   params: Promise<{
     slug: string;
   }>;
+  searchParams?: Promise<{ v?: string }>;
 };
 
 function trimText(text: string | null | undefined, max = 200) {
@@ -75,8 +77,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicStoryPage({
   params,
+  searchParams,
 }: Props) {
   const { slug } = await params;
+  const vote = (await searchParams)?.v;
 
   const supabase = await createClient();
 
@@ -372,6 +376,8 @@ relatedStories?.sort(
   return (
 
   <main className="max-w-6xl mx-auto p-8">
+
+<PrizeVoteCard storyId={story.id} storySlug={story.slug} vote={vote} />
 
 
 <div

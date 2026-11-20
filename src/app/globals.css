@@ -460,3 +460,149 @@ html[data-winter="off"] .winter-lights {
     animation: none;
   }
 }
+
+/* ===========================
+   Winter Realm ("Cozy Hearth")
+   On from 20 Nov to 5 Jan (html[data-season="winter"]). Visitors can switch
+   back to the classic look (html[data-winter="off"]), saved in localStorage.
+=========================== */
+
+.hearth-only { display: none; }
+
+html:not([data-season="winter"]) .winter-toggle { display: none; }
+
+html[data-season="winter"]:not([data-winter="off"]) {
+  --background: #f6eedd;
+  --foreground: #2b1d14;
+  --card: #fcf5e4;
+  --card-border: #dfc9a0;
+  --button: #9c1f2a;
+  --button-text: #fff6e4;
+  --accent: #9c1f2a;
+  --accent-deep: #6e1420;
+  --accent-soft: rgba(156, 31, 42, 0.1);
+  --hearth-gold: #b8862f;
+  --hearth-glow: rgba(214, 140, 50, 0.3);
+
+  &.dark {
+    --background: #0d1914;
+    --foreground: #f2e8d0;
+    --card: #14251d;
+    --card-border: #4a3a22;
+    --button: #b3262e;
+    --button-text: #fff3dc;
+    --accent: #e3b04b;
+    --accent-deep: #a8782a;
+    --accent-soft: rgba(227, 176, 75, 0.14);
+    --hearth-gold: #e3b04b;
+    --hearth-glow: rgba(255, 170, 70, 0.26);
+  }
+
+  .hearth-only { display: block; }
+  .classic-only { display: none; }
+
+  & h1, & h2, & h3 {
+    font-family: var(--font-spectral), Georgia, "Times New Roman", serif;
+    letter-spacing: 0.005em;
+  }
+
+  & ::selection {
+    background: rgba(179, 38, 46, 0.55);
+    color: #fff6e4;
+  }
+
+  /* Candlelit cards */
+  & [style*="background-color: var(--card)"] {
+    background-image: linear-gradient(165deg, rgba(255, 205, 130, 0.1), transparent 48%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 225, 170, 0.18),
+      0 12px 30px -16px rgba(0, 0, 0, 0.5),
+      0 0 24px -10px var(--hearth-glow);
+  }
+
+  /* Wax-seal buttons */
+  & [style*="background-color: var(--button)"] {
+    box-shadow:
+      inset 0 0 0 1px rgba(227, 176, 75, 0.55),
+      0 6px 18px -6px rgba(179, 38, 46, 0.6);
+  }
+
+  /* Warm bulbs on the garland */
+  & .winter-lights span:nth-child(4n + 1) { background: #e3b04b !important; color: #e3b04b !important; }
+  & .winter-lights span:nth-child(4n + 2) { background: #d9434a !important; color: #d9434a !important; }
+  & .winter-lights span:nth-child(4n + 3) { background: #6fbf86 !important; color: #6fbf86 !important; }
+  & .winter-lights span:nth-child(4n) { background: #ffd18a !important; color: #ffd18a !important; }
+
+  /* A hearth-lit backdrop in place of the starfield */
+  &.dark .atmosphere {
+    background-color: #0d1914;
+    background-image:
+      radial-gradient(ellipse 90% 40% at 50% 108%, rgba(255, 150, 60, 0.18), transparent 70%),
+      radial-gradient(ellipse 70% 40% at 50% -8%, rgba(46, 120, 88, 0.3), transparent 70%),
+      radial-gradient(1px 1px at 12% 18%, rgba(255, 240, 210, 0.8), transparent),
+      radial-gradient(1px 1px at 38% 8%, rgba(255, 240, 210, 0.6), transparent),
+      radial-gradient(1.5px 1.5px at 66% 14%, rgba(255, 220, 160, 0.8), transparent),
+      radial-gradient(1px 1px at 88% 26%, rgba(255, 240, 210, 0.6), transparent);
+    background-repeat: no-repeat;
+    animation: none;
+  }
+
+  &:not(.dark) .atmosphere {
+    background-color: #f6eedd;
+    background-image:
+      radial-gradient(ellipse 70% 40% at 50% -10%, rgba(156, 31, 42, 0.09), transparent 65%),
+      radial-gradient(ellipse 80% 40% at 50% 112%, rgba(214, 150, 60, 0.2), transparent 70%);
+  }
+
+  /* Hero scene */
+  & .hearth-hero { color: #f6ecd6; }
+  /* the logo file has a black background: blend it into the night sky */
+  & .hearth-logo { mix-blend-mode: screen; filter: none; }
+  & .hearth-hero p { opacity: 0.92; text-shadow: 0 1px 12px rgba(0, 0, 0, 0.6); }
+
+  & .winter-banner {
+    background-image:
+      radial-gradient(ellipse at 100% 0%, rgba(255, 170, 70, 0.18), transparent 55%),
+      radial-gradient(ellipse at 0% 100%, rgba(179, 38, 46, 0.14), transparent 55%);
+    border-color: color-mix(in srgb, var(--hearth-gold) 45%, transparent) !important;
+  }
+}
+
+.hearth-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hearth-divider {
+  display: flex !important;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--hearth-gold, currentColor);
+  margin: 1.5rem auto;
+  max-width: 28rem;
+}
+
+.hearth-divider span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
+  opacity: 0.6;
+}
+
+.hearth-star { animation: hearth-twinkle 4.5s ease-in-out infinite; }
+.hearth-flicker { animation: hearth-flicker 3.4s ease-in-out infinite; }
+.hearth-smoke { animation: hearth-smoke 7s ease-in-out infinite; transform-box: fill-box; }
+
+@keyframes hearth-twinkle { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes hearth-flicker { 0%, 100% { opacity: 1; } 40% { opacity: 0.82; } 60% { opacity: 0.95; } }
+@keyframes hearth-smoke {
+  0% { transform: translateY(6px); opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { transform: translateY(-14px); opacity: 0.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hearth-star, .hearth-flicker, .hearth-smoke { animation: none; }
+}
