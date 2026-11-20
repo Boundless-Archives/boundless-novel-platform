@@ -20,6 +20,17 @@ type Star = {
   gold: boolean;
 };
 
+type Flake = {
+  x: number;
+  y: number;
+  vy: number;
+  sway: number;
+  swaySpeed: number;
+  phase: number;
+  size: number;
+  alpha: number;
+};
+
 type Ember = {
   x: number;
   y: number;
@@ -47,7 +58,7 @@ function makeEmberSprite() {
   return c;
 }
 
-export default function Starfield() {
+export default function Starfield({ winter = false }: { winter?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -63,11 +74,22 @@ export default function Starfield() {
     let h = 0;
     let stars: Star[] = [];
     let embers: Ember[] = [];
+    let flakes: Flake[] = [];
     let raf = 0;
     let last = 0;
     let t = 0;
 
     const isDark = () => root.classList.contains("dark");
+    // winter snow is on in season unless the visitor switched it off
+    const snowing = () => winter && root.dataset.winter !== "off";
+
+    if (winter) {
+      try {
+        if (localStorage.getItem("winter-off") === "1") root.dataset.winter = "off";
+      } catch {
+        /* storage can be unavailable; snow just stays on */
+      }
+    }
 
     function build() {
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
@@ -95,6 +117,21 @@ export default function Starfield() {
         };
       });
 
+      const flakeCount = w < 640 ? 45 : 95;
+      flakes = Array.from({ length: flakeCount }, () => {
+        const near = Math.random() < 0.25;
+        return {
+          x: Math.random() * w,
+          y: Math.random() * h,
+          vy: near ? 38 + Math.random() * 30 : 14 + Math.random() * 18,
+          sway: 8 + Math.random() * 22,
+          swaySpeed: 0.25 + Math.random() * 0.6,
+          phase: Math.random() * Math.PI * 2,
+          size: near ? 2.4 + Math.random() * 1.6 : 1 + Math.random() * 1.4,
+          alpha: near ? 0.85 : 0.5 + Math.random() * 0.3,
+        };
+      });
+
       const emberCount = w < 640 ? 8 : 16;
       embers = Array.from({ length: emberCount }, () => ({
         x: Math.random() * w,
@@ -107,8 +144,22 @@ export default function Starfield() {
       }));
     }
 
+    function drawSnow() {
+      const dark = isDark();
+      ctx!.fillStyle = dark ? "#f4f7ff" : "#9fb4d6";
+      for (const f of flakes) {
+        const x = f.x + Math.sin(t * f.swaySpeed + f.phase) * f.sway;
+        ctx!.globalAlpha = f.alpha * (dark ? 1 : 0.8);
+        ctx!.beginPath();
+        ctx!.arc(x, f.y, f.size, 0, Math.PI * 2);
+        ctx!.fill();
+      }
+      ctx!.globalAlpha = 1;
+    }
+
     function draw() {
       ctx!.clearRect(0, 0, w, h);
+      if (snowing() && !reduce) drawSnow();
       if (!isDark()) return;
 
       const cx = w * 0.5;
@@ -140,7 +191,7 @@ export default function Starfield() {
 
     function step(now: number) {
       raf = requestAnimationFrame(step);
-      if (document.hidden || !isDark()) {
+      if (document.hidden || (!isDark() && !snowing())) {
         if (!isDark()) ctx!.clearRect(0, 0, w, h);
         last = now;
         return;
@@ -151,6 +202,16 @@ export default function Starfield() {
 
       const sec = Math.min(dt, 100) / 1000;
       t += sec;
+
+      if (snowing()) {
+        for (const f of flakes) {
+          f.y += f.vy * sec;
+          if (f.y > h + 6) {
+            f.y = -6;
+            f.x = Math.random() * w;
+          }
+        }
+      }
 
       for (const e of embers) {
         e.y -= e.vy * sec;
@@ -176,14 +237,14 @@ export default function Starfield() {
 
     // Redraw (or clear) when the theme flips.
     const mo = new MutationObserver(draw);
-    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+    mo.observe(root, { attributes: true, attributeFilter: ["class", "data-winter"] });
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", onResize);
       mo.disconnect();
     };
-  }, []);
+  }, [winter]);
 
   return (
     <canvas

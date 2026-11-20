@@ -4,6 +4,7 @@ import { MessageCircle } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import WritingGoalCard from "@/components/writing/WritingGoalCard";
 import { getWritingProgress } from "@/lib/writingGoals";
+import SprintCard from "@/components/winter/SprintCard";
 
 export default async function StoriesPage() {
   const supabase = await createClient();
@@ -299,6 +300,8 @@ export default async function StoriesPage() {
         </div>
 
       </section>
+
+      <SprintCard userId={user.id} />
 
       <WritingGoalCard progress={writingProgress} />
 

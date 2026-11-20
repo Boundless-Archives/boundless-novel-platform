@@ -15,6 +15,8 @@ import {
   Bug,
   Moon,
   Ghost,
+  Snowflake,
+  Wind,
   type LucideIcon,
 } from "lucide-react";
 
@@ -34,6 +36,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Bug,
   Moon,
   Ghost,
+  Snowflake,
+  Wind,
 };
 
 type BadgeCardProps = {

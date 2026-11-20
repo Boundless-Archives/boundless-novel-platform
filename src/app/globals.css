@@ -412,3 +412,51 @@ body {
   border-bottom-style: solid;
   color: #06b6d4;
 }
+
+/* ===========================
+   Winter season: string lights + banner
+=========================== */
+
+.winter-lights {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+}
+
+.winter-lights span {
+  width: 6px;
+  height: 8px;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 0 8px 2px currentColor;
+  opacity: 0.9;
+  animation: winter-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes winter-twinkle {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 0.35; }
+}
+
+html[data-winter="off"] .winter-lights {
+  display: none;
+}
+
+.winter-banner {
+  background-image:
+    radial-gradient(ellipse at 100% 0%, rgba(142, 201, 255, 0.18), transparent 55%),
+    radial-gradient(ellipse at 0% 100%, rgba(232, 184, 74, 0.12), transparent 55%);
+  background-color: var(--card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .winter-lights span {
+    animation: none;
+  }
+}

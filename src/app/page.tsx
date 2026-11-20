@@ -8,6 +8,10 @@ import AnnouncementBanner from "@/components/home/AnnouncementBanner";
 
 import { getContinueReading, type ContinueItem } from "@/lib/continueReading";
 import HomeGreeting from "@/components/home/HomeGreeting";
+import WinterBanner from "@/components/winter/WinterBanner";
+import { isWinterSeason } from "@/lib/season";
+import { getCurrentSprint } from "@/lib/sprint";
+import { nowMs } from "@/lib/guilds";
 import ContinueReadingRow from "@/components/library/ContinueReadingRow";
 
 import StoryGrid from "@/components/story/StoryGrid";
@@ -48,6 +52,12 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const now = nowMs();
+  const winter = isWinterSeason(now);
+  const sprintLive = winter
+    ? (await getCurrentSprint(new Date(now).toISOString()))?.live ?? false
+    : false;
 
   let continueItems: ContinueItem[] = [];
   let userTimezone: string | null = null;
@@ -208,6 +218,8 @@ export default async function HomePage() {
         </div>
 
       </section>
+
+      {winter && <WinterBanner nowMs={now} sprintLive={sprintLive} />}
 
       {user && (
         <HomeGreeting

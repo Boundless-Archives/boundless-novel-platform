@@ -18,6 +18,9 @@ import PlatformBanner from "@/components/platform/PlatformBanner";
 import SiteFooter from "@/components/layout/SiteFooter";
 import FirstVisitTour from "@/components/tour/FirstVisitTour";
 import Starfield from "@/components/atmosphere/Starfield";
+import WinterLights from "@/components/winter/WinterLights";
+import { isWinterSeason } from "@/lib/season";
+import { nowMs } from "@/lib/guilds";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -142,6 +145,8 @@ export default async function RootLayout({
     }
   }
 
+  const winter = isWinterSeason(nowMs());
+
   const pathname = (await headers()).get("x-pathname") ?? "";
   const lockedOut =
     settings.maintenance_mode &&
@@ -171,8 +176,10 @@ export default async function RootLayout({
 
         <ThemeProvider>
           <div className="atmosphere" aria-hidden="true">
-            <Starfield />
+            <Starfield winter={winter} />
           </div>
+
+          {winter && <WinterLights />}
 
           <BreakthroughFanfare />
 
