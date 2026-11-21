@@ -1,4 +1,5 @@
 import Image from "next/image";
+import ShareButton from "@/components/share/ShareButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
@@ -613,6 +614,8 @@ relatedStories?.sort(
           liked={liked}
           likes={storyStats?.likes ?? 0}
         />
+
+        <ShareButton path={`/story/${story.slug}`} title={story.title} />
 
         <DownloadBookButton
           storyId={story.id}

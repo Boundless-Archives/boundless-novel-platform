@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { registerMyWriterStreak } from "@/app/streaks/actions";
+import { celebratePublish } from "@/lib/shareClient";
 
 type Props = {
   chapterId: string;
@@ -33,6 +34,7 @@ export default function PublishChapterButton({
         // A streak hiccup must never block publishing.
       }
 
+      await celebratePublish(supabase, chapterId);
       router.refresh();
     }
   }

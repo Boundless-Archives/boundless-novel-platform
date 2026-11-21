@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ShareButton from "@/components/share/ShareButton";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import PublishChapterButton from "@/components/story/PublishChapterButton";
@@ -217,6 +218,13 @@ export default async function ChaptersPage({
               {chapter.status === "Draft" && (
                 <PublishChapterButton
                   chapterId={chapter.id}
+                />
+              )}
+
+              {chapter.status === "Published" && (
+                <ShareButton
+                  path={`/chapter/${chapter.id}`}
+                  title={`${chapter.title}`}
                 />
               )}
 

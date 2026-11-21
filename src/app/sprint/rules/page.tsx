@@ -86,6 +86,7 @@ export default async function PrizeRulesPage() {
             The story must be new: created on or after {start}. It must be published (drafts cannot enter), original, and
             written by you. You can withdraw until entries close.
           </li>
+          <li>The “Hook” in each prompt is a suggestion, not a requirement. Judges reward how well the story answers the prompt&apos;s spirit.</li>
           <li>
             Pick a prompt, and give your story that prompt&apos;s genre. You are ranked against the other stories in that
             genre.

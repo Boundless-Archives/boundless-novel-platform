@@ -19,6 +19,7 @@ import SiteFooter from "@/components/layout/SiteFooter";
 import FirstVisitTour from "@/components/tour/FirstVisitTour";
 import Starfield from "@/components/atmosphere/Starfield";
 import WinterLights from "@/components/winter/WinterLights";
+import PublishCelebration from "@/components/share/PublishCelebration";
 import { isWinterSeason } from "@/lib/season";
 import { nowMs } from "@/lib/guilds";
 
@@ -188,6 +189,7 @@ export default async function RootLayout({
           {winter && <WinterLights />}
 
           <BreakthroughFanfare />
+          <PublishCelebration />
 
           {lockedOut ? null : <Navbar />}
 

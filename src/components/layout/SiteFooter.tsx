@@ -1,4 +1,7 @@
 import Link from "next/link";
+
+/* Used when no support email is set in Admin > Platform Settings. */
+const DEFAULT_CONTACT_EMAIL = "boundlessarchives@gmail.com";
 import WinterToggle from "@/components/winter/WinterToggle";
 
 export default function SiteFooter({
@@ -29,11 +32,9 @@ export default function SiteFooter({
             Leaderboard
           </Link>
           <WinterToggle className="!opacity-80" />
-          {supportEmail && (
-            <a href={`mailto:${supportEmail}`} className="hover:underline">
-              Contact
-            </a>
-          )}
+          <a href={`mailto:${supportEmail || DEFAULT_CONTACT_EMAIL}`} className="hover:underline">
+            Contact
+          </a>
         </nav>
       </div>
     </footer>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ShareButton from "@/components/share/ShareButton";
 import { fetchReactions, fetchPoll } from "@/lib/engageData";
 import PollCard from "@/components/chapter/PollCard";
 import { notFound } from "next/navigation";
@@ -385,6 +386,15 @@ export default async function ChapterPage({
         <p className="mt-4 text-2xl opacity-85">
           {chapter.title}
         </p>
+
+        {chapter.status === "Published" && (
+          <div className="mt-4">
+            <ShareButton
+              path={`/chapter/${chapter.id}`}
+              title={`${story.title}: Chapter ${chapter.chapter_number}`}
+            />
+          </div>
+        )}
 
       </header>
 

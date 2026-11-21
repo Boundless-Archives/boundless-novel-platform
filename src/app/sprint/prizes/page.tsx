@@ -305,7 +305,7 @@ export default async function PrizeTrackPage({
       {/* Prompts */}
       <section className="mt-10">
         <h2 className="text-xl font-bold">The prompts</h2>
-        <p className="mt-1 text-sm opacity-75">Pick one prompt in your story&apos;s genre. Treat it as a spark, not a cage.</p>
+        <p className="mt-1 text-sm opacity-75">Pick one prompt in your story&apos;s genre. The “Hook” is a suggested twist: use it, bend it, or build your own. Treat the prompt as a spark, not a cage.</p>
         <div className="mt-4 space-y-3">
           {promptGenres.map((g) => (
             <details key={g} className="rounded-2xl border p-4" style={card}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { celebratePublish } from "@/lib/shareClient";
 import Button from "@/components/ui/Button";
 import { useEffect, useState } from "react";
 import {
@@ -133,6 +134,8 @@ export default function NewChapterPage() {
         await checkAndAwardBadges(user.id);
         await claimWritingXP(newChapter.id);
       }
+
+      await celebratePublish(supabase, newChapter.id);
     }
 
     router.push(
