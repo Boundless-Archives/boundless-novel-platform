@@ -80,8 +80,9 @@ export default function AnnouncementBanner({
       "
       style={{
         borderColor: "var(--card-border)",
-        background:
-          "linear-gradient(135deg, rgba(99,102,241,.12), rgba(59,130,246,.06))",
+        backgroundColor: "var(--card)",
+        backgroundImage:
+          "linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent) 4%, transparent))",
       }}
     >
       <Link

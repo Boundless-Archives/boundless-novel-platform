@@ -407,8 +407,9 @@ export default async function HomePage() {
             md:p-14
           "
           style={{
-            background:
-              "linear-gradient(135deg, rgba(99,102,241,.12), rgba(59,130,246,.05))",
+            backgroundColor: "var(--card)",
+            backgroundImage:
+              "linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), color-mix(in srgb, var(--accent) 4%, transparent))",
             borderColor: "var(--card-border)",
           }}
         >
